@@ -126,4 +126,27 @@ public class GrpcClient {
   public NumberMessage getTotalTransaction(){
     return blockingStub.totalTransaction(EmptyMessage.newBuilder().build());
   }
+
+  /*
+   * # Jorge
+   */
+  public Contract.ContractCreationContract getContract(byte[] address) {
+    ByteString byteString = ByteString.copyFrom(address);
+    BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
+    return blockingStub.getContract(bytesMessage);
+  }
+
+  /*
+   * # Jorge
+   */
+  public Transaction createContract(Contract.ContractCreationContract request) {
+    return blockingStub.createContract(request);
+  }
+
+  /*
+   * # Jorge
+   */
+  public Transaction callContract(Contract.ContractCallContract request) {
+    return blockingStub.callContract(request);
+  }
 }

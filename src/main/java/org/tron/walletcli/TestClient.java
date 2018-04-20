@@ -8,6 +8,7 @@ import org.tron.api.GrpcAPI.*;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.protos.Contract;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -518,6 +519,114 @@ public class TestClient {
     }
   }
 
+  /*
+   * Query the contract by the address # by Jorge
+   */
+  private void getContract(String[] parameters) {
+    if (parameters == null ||
+            parameters.length != 1) {
+      System.out.println("GetContract: invalid arguments!");
+      return;
+    }
+
+    byte[] addressBytes = WalletClient.decodeFromBase58Check(parameters[0]);
+    if (addressBytes == null) {
+      System.out.println("GetContract: invalid address!");
+      return;
+    }
+
+    Contract.ContractCreationContract contractCreationContract = WalletClient.getContract(addressBytes);
+    if (contractCreationContract != null) {
+      System.out.println("contract :" +
+              "\tcreater:" + contractCreationContract.getOwnerAddress().toByteArray() +
+              "\tcontract address:" + contractCreationContract.getContractAddress().toByteArray());
+    } else {
+      System.out.println("query contract failed!");
+    }
+  }
+
+  /*
+   * Create contract # by Jorge
+   */
+  /*
+   pragma solidity ^0.4.0;
+contract Ballot {
+
+    address chairperson;
+    mapping(address => uint) voters;
+
+    function Ballot() public {
+        chairperson = msg.sender;
+        voters[chairperson] = 1;
+    }
+
+    function set(uint value) public {
+        voters[msg.sender] = value;
+    }
+
+    function get(address account) public constant returns (uint) {
+        return voters[account];
+    }
+}
+   */
+  private void createContract(String[] parameters) {
+    /*
+    if (parameters == null ||
+            parameters.length != 4) {
+      System.out.println("Create contract invalid arguments");
+      return;
+    }*/
+    /*
+     * Contract Address: 27WU3s5gexfL6KMQJ26MohXzvzntvAH1mQd
+     * priv_key: T428PuByxZF4OvK0uYYHNIHoDstMsbD8xBak/Nfx5ak=
+     * priv_key:4F8DBC3EE072C591783AF2B4B986073481E80ECB4CB1B0FCC416A4FCD7F1E5A9
+     */
+    String AddrBase58 = "27WU3s5gexfL6KMQJ26MohXzvzntvAH1mQd";
+
+    String password = parameters[0];
+    byte[] contractAddress = WalletClient.decodeFromBase58Check(AddrBase58); //parameters[1];
+    String ABI; //= parameters[2];
+    String codeStr; // = parameters[3];
+
+    ABI = "[{\"constant\":false,\"inputs\":[{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}," +
+            "{\"constant\":true,\"inputs\":[{\"name\":\"account\",\"type\":\"address\"}],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}," +
+            "{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}]";
+    codeStr = "6060604052341561000f57600080fd5b336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555060018060008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555061017d806100c36000396000f30060606040526004361061004c576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806360fe47b114610051578063c2bc2efc14610074575b600080fd5b341561005c57600080fd5b61007260048080359060200190919050506100c1565b005b341561007f57600080fd5b6100ab600480803573ffffffffffffffffffffffffffffffffffffffff16906020019091905050610108565b6040518082815260200191505060405180910390f35b80600160003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555050565b6000600160008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205490509190505600a165627a7a72305820cb0570c138c8993c75fd222a49d1b054956ac21367bd9c0e5cf8d94628769d8d0029";
+
+    boolean result = client.createContract(password, contractAddress, ABI, codeStr);
+    if (result) {
+      System.out.println("Deploy the contract successfully");
+    } else {
+      System.out.println("Deploy the contract failed");
+    }
+
+  }
+
+  /*
+   * Call contract # by Jorge
+   */
+  private void callContract(String[] parameters) {
+    if (parameters == null ||
+            parameters.length != 4) {
+      System.out.println("Call contract invalid arguments");
+      return;
+    }
+
+    String password = parameters[0];
+    String contractAddr = parameters[1];
+    String callValue = parameters[2];
+    String func = parameters[3];
+
+    boolean result = client.callContract(password, contractAddr,
+            callValue, func);
+    if (result) {
+      System.out.println("Call the contract successfully");
+    } else {
+      System.out.println("Call the contract failed");
+    }
+  }
+
+
   private void help() {
     System.out.println("You can enter the following command: ");
 
@@ -570,6 +679,28 @@ public class TestClient {
             help();
             break;
           }
+
+          /*
+           * # Jorge
+           */
+          case "getcontract": {
+            getContract(parameters);
+            return;
+            //break;
+          }
+          case "cc":
+          case "createcontract": {
+            // login(parameters);
+            createContract(parameters);
+            return;
+            //break;
+          }
+          case "callcontract": {
+            callContract(parameters);
+            return;
+            //break;
+          }
+
           case "registerwallet": {
             registerWallet(parameters);
             break;

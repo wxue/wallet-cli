@@ -389,4 +389,50 @@ public class Client {
     return WalletClient.getTotalTransaction();
   }
 
+  /*
+   *
+   */
+  public boolean createContract(String password, byte[] contractAddress,
+                                String ABI, String code) {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: createContract failed,  Please login first !!");
+      return false;
+    }
+    if (!WalletClient.passwordValid(password)) {
+      return false;
+    }
+
+    if (wallet.getEcKey() == null || wallet.getEcKey().getPrivKey() == null) {
+      wallet = WalletClient.GetWalletByStorage(password);
+      if (wallet == null) {
+        logger.warn("Warning: createContract failed, Load wallet failed !!");
+        return false;
+      }
+    }
+
+    return wallet.createContract(contractAddress, ABI, code);
+  }
+
+  public boolean callContract(String password, String contractAddr,
+                              String callValue, String func) {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: callContract failed,  Please login first !!");
+      return false;
+    }
+    if (!WalletClient.passwordValid(password)) {
+      return false;
+    }
+
+    if (wallet.getEcKey() == null || wallet.getEcKey().getPrivKey() == null) {
+      wallet = WalletClient.GetWalletByStorage(password);
+      if (wallet == null) {
+        logger.warn("Warning: callContract failed, Load wallet failed !!");
+        return false;
+      }
+    }
+
+    return wallet.callContract(contractAddr, callValue, func);
+  }
+
+
 }
