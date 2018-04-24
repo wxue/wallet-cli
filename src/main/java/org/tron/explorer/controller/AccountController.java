@@ -64,13 +64,13 @@ public class AccountController {
   }
 
   @GetMapping("/updateAccount")
-  public ModelAndView viewCreateWitness() {
+  public ModelAndView updateAccount() {
     return new ModelAndView("updateAccount");
   }
 
 
   @PostMapping("/updateAccountToView")
-  public byte[] updateAccount(@ModelAttribute AccountVo account) {
+  public byte[] updateAccountToView(@ModelAttribute AccountVo account) {
     String address = account.getAddress();
     String accountName = account.getName();
 
