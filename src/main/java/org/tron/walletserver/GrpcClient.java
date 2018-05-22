@@ -130,14 +130,16 @@ public class GrpcClient {
         && i > 0) {
       i--;
       response = blockingStubFull.broadcastTransaction(signaturedTransaction);
-      logger.info("Code = " + response.getCode());
-      logger.info("Message = " + response.getMessage().toStringUtf8());
-      logger.info("i = " + i);
+      logger.info("SERVER_BUSY try " + (11-i) + " times.");
       try {
         Thread.sleep(300);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
+    }
+    if (response.getResult() == false){
+      logger.info("Code = " + response.getCode());
+      logger.info("Message = " + response.getMessage().toStringUtf8());
     }
     return response.getResult();
   }
