@@ -598,6 +598,10 @@ public class Utils {
       result += "\n";
     }
 
+    result += "expiration: ";
+    result += new Date(raw.getExpiration());
+    result += "\n";
+
     if (raw.getContractCount() > 0) {
       result += "contract: ";
       result += "\n";
