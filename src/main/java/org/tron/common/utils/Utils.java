@@ -332,13 +332,13 @@ public class Utils {
     result += "free_asset_net_limit: ";
     result += assetIssue.getFreeAssetNetLimit();
     result += "\n";
-    result += "public_free_asset_net_limit";
+    result += "public_free_asset_net_limit: ";
     result += assetIssue.getPublicFreeAssetNetLimit();
     result += "\n";
-    result += "public_free_asset_net_usage";
+    result += "public_free_asset_net_usage: ";
     result += assetIssue.getPublicFreeAssetNetUsage();
     result += "\n";
-    result += "public_latest_free_net_time";
+    result += "public_latest_free_net_time: ";
     result += assetIssue.getPublicLatestFreeNetTime();
     result += "\n";
 
