@@ -930,7 +930,7 @@ public class TestClient {
     System.out.println("GetBalance");
     System.out.println("GetAccount");
     System.out.println("GetAssetIssueByAccount");
-    System.out.println("GetAccountNetLimit");
+    System.out.println("GetAccountNet");
     System.out.println("GetAssetIssueByName");
     System.out.println("SendCoin");
     System.out.println("TransferAsset");
