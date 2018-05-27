@@ -329,6 +329,18 @@ public class Utils {
     result += "url: ";
     result += new String(assetIssue.getUrl().toByteArray(), Charset.forName("UTF-8"));
     result += "\n";
+    result += "free_asset_net_limit: ";
+    result += assetIssue.getFreeAssetNetLimit();
+    result += "\n";
+    result += "public_free_asset_net_limit";
+    result += assetIssue.getPublicFreeAssetNetLimit();
+    result += "\n";
+    result += "public_free_asset_net_usage";
+    result += assetIssue.getPublicFreeAssetNetUsage();
+    result += "\n";
+    result += "public_latest_free_net_time";
+    result += assetIssue.getPublicLatestFreeNetTime();
+    result += "\n";
 
     if (assetIssue.getFrozenSupplyCount() > 0) {
       for (FrozenSupply frozenSupply : assetIssue.getFrozenSupplyList()) {
