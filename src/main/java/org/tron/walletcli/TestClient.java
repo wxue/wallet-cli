@@ -754,17 +754,22 @@ public class TestClient {
 
   private void deployContract(String[] parameters) {
     if (parameters == null ||
-            parameters.length != 6) {
+            parameters.length < 4) {
       System.out.println("Create contract invalid arguments");
       return;
     }
 
+    System.out.println("Create contract arguments len:" + parameters.length);
     String passwordStr = parameters[0];
     String contractAddrStr = parameters[1];
     String abiStr = parameters[2];
     String codeStr = parameters[3];
-    String data = parameters[4];
-    String value = parameters[5];
+    String data = null;
+    String value = null;
+    if (parameters.length > 4)
+      data = parameters[4];
+    if (parameters.length > 5)
+      value = parameters[5];
 
     boolean result = client.deployContract(passwordStr, contractAddrStr, abiStr, codeStr, data, value);
     if (result) {
