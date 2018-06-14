@@ -781,7 +781,7 @@ public class TestClient {
 
   private void triggerContract(String[] parameters) {
     if (parameters == null ||
-            parameters.length < 3) {
+            parameters.length < 4) {
       System.out.println("Call contract invalid arguments");
       return;
     }
@@ -790,10 +790,11 @@ public class TestClient {
     String contractAddrStr = parameters[1];
     String selectorStr = parameters[2];
     String dataStr = parameters[3];
+    String valueStr = parameters[4];
 
     byte[] contractAddress = WalletClient.decodeFromBase58Check(contractAddrStr);
     byte[] data;
-    byte[] callValue = null;
+    byte[] callValue = Hex.decode(valueStr);
     byte[] selector = new byte[4];
     System.arraycopy(Hash.sha3(selectorStr.getBytes()), 0, selector, 0, 4);
     System.out.println(selectorStr + ":" + Hex.toHexString(selector));
