@@ -99,7 +99,7 @@ public class TestClient {
   }
 
   private void registerWallet() throws CipherException, IOException {
-    char[] password = inputPassword2Twice();
+    char[] password = new String("21e36943ae8ade91a0e6333d67d1b21f").toCharArray();//inputPassword2Twice();
     String fileName = client.registerWallet(password);
     StringUtils.clear(password);
 
@@ -1041,7 +1041,9 @@ public class TestClient {
             break;
           }
           case "registerwallet": {
-            registerWallet();
+            for (int i = 0; i < 30; i++) {
+              registerWallet();
+            }
             break;
           }
           case "importwallet": {
