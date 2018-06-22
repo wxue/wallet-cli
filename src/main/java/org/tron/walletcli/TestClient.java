@@ -1234,6 +1234,10 @@ public class TestClient {
             getTransactionById(parameters);
             break;
           }
+          case "gettransactioninfobyid": {
+            getTransactionInfoById(parameters);
+            break;
+          }
           case "getblockbyid": {
             getBlockById(parameters);
             break;
