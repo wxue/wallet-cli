@@ -15,12 +15,12 @@ public class GenKeys {
         byte[] priKey = eCkey.getPrivKeyBytes();
         byte[] addresss = eCkey.getAddress();
         String address = WalletClient.encode58Check(addresss);
-        if (address.startsWith("TRX") && address.toLowerCase().startsWith("trxs")) {
+        if(address.toLowerCase().endsWith("huzy")) {
           System.out.println(address + " " + Hex.encodeHexString(priKey));
         }
-        if (address.startsWith("TRX") && address.toLowerCase().startsWith("trxz")) {
-          System.out.println(address + " " + Hex.encodeHexString(priKey));
-        }
+//        if (address.startsWith("TRX") && address.toLowerCase().startsWith("trxz")) {
+//          System.out.println(address + " " + Hex.encodeHexString(priKey));
+//        }
       }
     });
   }
