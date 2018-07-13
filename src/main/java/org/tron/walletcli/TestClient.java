@@ -472,7 +472,7 @@ public class TestClient {
     String toAddress = parameters[0];
     String assertName = parameters[1];
     String amountStr = parameters[2];
-    long amount = new Integer(amountStr);
+    long amount = Long.parseLong(amountStr);
 
     boolean result = client.participateAssetIssue(toAddress, assertName, amount);
     if (result) {
@@ -988,7 +988,8 @@ public class TestClient {
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
             parameters.length < 3) {
-      System.out.println("Create contract invalid arguments");
+      System.out.println("DeployContract needs at least 3 parameters like following: ");
+      System.out.println("DeployContract password ABI code <data value>");
       return;
     }
 
@@ -1015,7 +1016,8 @@ public class TestClient {
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
         parameters.length < 5) {
-      System.out.println("Call contract invalid arguments");
+      System.out.println("TriggerContract needs 5 parameters like following: ");
+      System.out.println("TriggerContract password contractAddress selector data value");
       return;
     }
 
@@ -1051,7 +1053,8 @@ public class TestClient {
   private void getContract(String[] parameters) {
     if (parameters == null ||
         parameters.length != 1) {
-      System.out.println("GetContract: invalid arguments!");
+      System.out.println("GetContract needs 1 parameter like following: ");
+      System.out.println("GetContract contractAddress");
       return;
     }
 
@@ -1131,9 +1134,9 @@ public class TestClient {
     System.out.println("WithdrawBalance");
     System.out.println("UpdateAccount");
     System.out.println("unfreezeasset");
-    System.out.println("deploycontract(password, ABI, code, data, value)");
-    System.out.println("triggercontract(passwork, contractAddress, selector, data, value)");
-    System.out.println("getcontract(contractAddress)");
+    System.out.println("deploycontract password ABI code data value");
+    System.out.println("triggercontract passwork contractAddress selector data value");
+    System.out.println("getcontract contractAddress");
     System.out.println("UpdateAsset");
     System.out.println("UnfreezeAsset");
     System.out.println("Exit or Quit");

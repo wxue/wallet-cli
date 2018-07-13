@@ -20,6 +20,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AddressPrKeyPairMessage;
@@ -40,8 +41,8 @@ import org.tron.common.utils.Utils;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
 import org.tron.core.exception.CancelException;
-import org.tron.keystore.CheckStrength;
 import org.tron.core.exception.CipherException;
+import org.tron.keystore.CheckStrength;
 import org.tron.keystore.Credentials;
 import org.tron.keystore.Wallet;
 import org.tron.keystore.WalletFile;
@@ -58,7 +59,6 @@ import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.protos.Protocol.TransactionSign;
 import org.tron.protos.Protocol.Witness;
-import org.spongycastle.util.encoders.Hex;
 
 class AccountComparator implements Comparator {
 
@@ -1100,7 +1100,7 @@ public class WalletClient {
   }
 
   public static Contract.SmartContract createContractDeployContract(byte[] address,
-                                                                             String ABI, String code, String data, String value) {
+    String ABI, String code, String data, String value) {
     Contract.SmartContract.ABI abi = jsonStr2ABI(ABI);
     if (abi == null) {
       logger.error("abi is null");
@@ -1161,8 +1161,6 @@ public class WalletClient {
             ABI, code, data, value);
 
     Transaction transaction = rpcCli.deployContract(contractDeployContract);
-    // contract para cacheUnpack is null
-
     if (transaction == null || transaction.getRawData().getContractCount() == 0) {
       logger.error("RPC create trx failed!");
       return false;
