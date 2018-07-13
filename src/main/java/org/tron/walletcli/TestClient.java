@@ -987,31 +987,28 @@ public class TestClient {
   private void deployContract(String[] parameters)
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
-        parameters.length < 4) {
+            parameters.length < 3) {
       System.out.println("Create contract invalid arguments");
       return;
     }
 
     String passwordStr = parameters[0];
-    String contractAddrStr = parameters[1];
-    String abiStr = parameters[2];
-    String codeStr = parameters[3];
+    String abiStr = parameters[1];
+    String codeStr = parameters[2];
     String data = null;
     String value = null;
-    if (parameters.length > 4) {
-      data = parameters[4];
-    }
-    if (parameters.length > 5) {
-      value = parameters[5];
-    }
+    if (parameters.length > 3)
+      data = parameters[3];
+    if (parameters.length > 4)
+      value = parameters[4];
 
-    boolean result = client
-        .deployContract(passwordStr, contractAddrStr, abiStr, codeStr, data, value);
+    boolean result = client.deployContract(passwordStr, abiStr, codeStr, data, value);
     if (result) {
       System.out.println("Deploy the contract successfully");
     } else {
       System.out.println("Deploy the contract failed");
     }
+
   }
 
   private void triggerContract(String[] parameters)
@@ -1134,7 +1131,7 @@ public class TestClient {
     System.out.println("WithdrawBalance");
     System.out.println("UpdateAccount");
     System.out.println("unfreezeasset");
-    System.out.println("deploycontract(password, contractAddress, ABI, code, data, value)");
+    System.out.println("deploycontract(password, ABI, code, data, value)");
     System.out.println("triggercontract(passwork, contractAddress, selector, data, value)");
     System.out.println("getcontract(contractAddress)");
     System.out.println("UpdateAsset");
