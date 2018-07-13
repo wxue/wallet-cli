@@ -1112,8 +1112,8 @@ public class WalletClient {
     builder.setOwnerAddress(ByteString.copyFrom(address));
 
     // String contractAddrStr = "TTjeJfz2ebKfGgEjGZdHcaSiTCQGW7mdSH";
-    // String contractAddrStr = "TXxr8dsgBgSiXC4mKV7JTAZJosyBzngptZ";
-    // builder.setContractAddress(ByteString.copyFrom(WalletClient.decodeFromBase58Check(contractAddrStr)));
+   // String contractAddrStr = "TXxr8dsgBgSiXC4mKV7JTAZJosyBzngptZ";
+   // builder.setContractAddress(ByteString.copyFrom(WalletClient.decodeFromBase58Check(contractAddrStr)));
 
     builder.setAbi(abi);
     builder.setBytecode(ByteString.copyFrom(codeBytes));
@@ -1161,6 +1161,8 @@ public class WalletClient {
             ABI, code, data, value);
 
     Transaction transaction = rpcCli.deployContract(contractDeployContract);
+    // contract para cacheUnpack is null
+
     if (transaction == null || transaction.getRawData().getContractCount() == 0) {
       logger.error("RPC create trx failed!");
       return false;
