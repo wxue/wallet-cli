@@ -981,9 +981,9 @@ public class TestClient {
     String codeStr = parameters[3];
     String data = null;
     String value = null;
-    if (parameters.length > 4)
+    if (parameters.length > 4 && !parameters[4].equalsIgnoreCase("#"))
       data = parameters[4];
-    if (parameters.length > 5)
+    if (parameters.length > 5 && !parameters[5].equalsIgnoreCase("#"))
       value = parameters[5];
 
     boolean result = client.deployContract(passwordStr, contractAddrStr, abiStr, codeStr, data, value);

@@ -1080,7 +1080,7 @@ public class WalletClient {
     builder.setAbi(abi);
     builder.setBytecode(ByteString.copyFrom(codeBytes));
     if(data != null)
-      builder.setCallValue(ByteString.copyFrom(Hex.decode(data)));
+      builder.setData(ByteString.copyFrom(Hex.decode(data)));
     if (value != null)
       builder.setCallValue(ByteString.copyFrom(Hex.decode(value)));
     return builder.build();

@@ -408,14 +408,14 @@ public class Client {
   public boolean callContract(String password, byte[] contractAddress,
                               byte[] callValue, byte[] data)
       throws CipherException, IOException, CancelException {
-    if (wallet == null || !wallet.isLoginState()) {
-      logger.warn("Warning: callContract failed,  Please login first !!");
-      return false;
-    }
-    if (!WalletClient.passwordValid(password.toCharArray())) {
-      return false;
-    }
-    byte[] passwd = org.tron.keystore.StringUtils.char2Byte(password.toCharArray());
+//    if (wallet == null || !wallet.isLoginState()) {
+//      logger.warn("Warning: callContract failed,  Please login first !!");
+//      return false;
+//    }
+//    if (!WalletClient.passwordValid(password.toCharArray())) {
+//      return false;
+//    }
+//    byte[] passwd = org.tron.keystore.StringUtils.char2Byte(password.toCharArray());
 //    if (wallet.getEcKey(passwd) == null || wallet.getEcKey(passwd).getPrivKey() == null) {
 //      wallet = WalletClient.GetWalletByStorage(password);
 //      if (wallet == null) {
