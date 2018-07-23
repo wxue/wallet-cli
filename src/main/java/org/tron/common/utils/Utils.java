@@ -347,8 +347,8 @@ public class Utils {
   public static String printChainParameters(ChainParameters chainParameters) {
     String result = "\n";
     result += "ChainParameters : \n";
-    for (Map.Entry entry : chainParameters.getParametersMap().entrySet()) {
-      result +=  entry.getKey() + " : " + entry.getValue();
+    for (ChainParameters.ChainParameter chainParameter : chainParameters.getChainParameterList()) {
+      result +=  chainParameter.getKey() + " : " + chainParameter.getValue();
       result += "\n";
     }
     return result;
@@ -669,7 +669,7 @@ public class Utils {
         case CreateSmartContract:
           CreateSmartContract createSmartContract = contract.getParameter()
               .unpack(CreateSmartContract.class);
-          SmartContract newContract = createSmartContract.getNewContrect();
+          SmartContract newContract = createSmartContract.getNewContract();
           result += "owner_address: ";
           result += WalletClient
               .encode58Check(createSmartContract.getOwnerAddress().toByteArray());
