@@ -465,6 +465,37 @@ public class Client {
 
     return wallet.deleteProposal(id);
   }
+
+  public boolean buyStorage(long trx)
+      throws CipherException, IOException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: buystorage failed, Please login first !!");
+      return false;
+    }
+
+    return wallet.buyStorage(trx);
+  }
+
+  public boolean buyStorageBytes(long bytes)
+      throws CipherException, IOException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: buystoragebytes failed, Please login first !!");
+      return false;
+    }
+
+    return wallet.buyStorageBytes(bytes);
+  }
+
+  public boolean sellStorage(long bytes)
+      throws CipherException, IOException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: sellstorage failed, Please login first !!");
+      return false;
+    }
+
+    return wallet.sellStorage(bytes);
+  }
+
   public boolean deployContract(String password,
                                 String abiStr, String codeStr, String data, String value)
       throws CipherException, IOException, CancelException {

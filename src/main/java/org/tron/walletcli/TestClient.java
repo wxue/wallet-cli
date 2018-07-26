@@ -858,8 +858,56 @@ public class TestClient {
     }
   }
 
+  private void buyStorage(String[] parameters)
+      throws IOException, CipherException, CancelException {
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("Use buystorage command with below syntax: ");
+      System.out.println("buystorage trxNumToBuy");
+      return;
+    }
 
+    long trx = Long.valueOf(parameters[0]);
+    boolean result = client.buyStorage(trx);
+    if (result) {
+      logger.info("buystorage " + " successful !!");
+    } else {
+      logger.info("buystorage " + " failed !!");
+    }
+  }
 
+  private void buyStorageBytes(String[] parameters)
+      throws IOException, CipherException, CancelException {
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("Use buystoragebytes command with below syntax: ");
+      System.out.println("buystoragebytes storageBytesToBuy");
+      return;
+    }
+
+    long bytes = Long.valueOf(parameters[0]);
+    boolean result = client.buyStorageBytes(bytes);
+    if (result) {
+      logger.info("buystoragebytes " + " successful !!");
+    } else {
+      logger.info("buystoragebytes " + " failed !!");
+    }
+  }
+
+  private void sellStorage(String[] parameters)
+      throws IOException, CipherException, CancelException {
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("Use sellstorage command with below syntax: ");
+      System.out.println("sellstorage storageBytesToSell");
+      return;
+    }
+
+    long bytes = Long.valueOf(parameters[0]);
+    boolean result = client.sellStorage(bytes);
+    if (result) {
+      logger.info("sellstorage " + " successful !!");
+    } else {
+      logger.info("sellstorage " + " failed !!");
+    }
+  }
 
   private void withdrawBalance() throws IOException, CipherException, CancelException {
     boolean result = client.withdrawBalance();
@@ -1275,6 +1323,9 @@ public class TestClient {
     System.out.println("GetProposal");
     System.out.println("ApproveProposal");
     System.out.println("DeleteProposal");
+    System.out.println("BuyStorage");
+    System.out.println("BuyStorageBytes");
+    System.out.println("SellStorage");
     System.out.println("Exit or Quit");
 
     System.out.println("Input any one of the listed commands, to display how-to tips.");
@@ -1486,6 +1537,18 @@ public class TestClient {
           }
           case "getproposal": {
             getProposal(parameters);
+            break;
+          }
+          case "buystorage": {
+            buyStorage(parameters);
+            break;
+          }
+          case "buystoragebytes": {
+            buyStorageBytes(parameters);
+            break;
+          }
+          case "sellstorage": {
+            sellStorage(parameters);
             break;
           }
           case "getchainparameters": {

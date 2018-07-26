@@ -1115,6 +1115,68 @@ public class WalletClient {
     return builder.build();
   }
 
+  public boolean buyStorage(long trx)
+      throws CipherException, IOException, CancelException {
+    byte[] owner = getAddress();
+    Contract.BuyStorageContract contract = createBuyStorageContract(owner, trx);
+    Transaction transaction = rpcCli.buyStorage(contract);
+    if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      return false;
+    }
+
+    transaction = signTransaction(transaction);
+    return rpcCli.broadcastTransaction(transaction);
+  }
+
+  public static Contract.BuyStorageContract createBuyStorageContract(byte[] owner,
+      long trx) {
+    Contract.BuyStorageContract.Builder builder = Contract.BuyStorageContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
+    builder.setQuant(trx);
+    return builder.build();
+  }
+
+  public boolean buyStorageBytes(long trx)
+      throws CipherException, IOException, CancelException {
+    byte[] owner = getAddress();
+    Contract.BuyStorageBytesContract contract = createBuyStorageBytesContract(owner, trx);
+    Transaction transaction = rpcCli.buyStorageBytes(contract);
+    if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      return false;
+    }
+
+    transaction = signTransaction(transaction);
+    return rpcCli.broadcastTransaction(transaction);
+  }
+
+  public static Contract.BuyStorageBytesContract createBuyStorageBytesContract(byte[] owner,
+      long bytes) {
+    Contract.BuyStorageBytesContract.Builder builder = Contract.BuyStorageBytesContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
+    builder.setStorageBytes(bytes);
+    return builder.build();
+  }
+
+  public boolean sellStorage(long trx)
+      throws CipherException, IOException, CancelException {
+    byte[] owner = getAddress();
+    Contract.SellStorageContract contract = createSellStorageContract(owner, trx);
+    Transaction transaction = rpcCli.sellStorage(contract);
+    if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      return false;
+    }
+
+    transaction = signTransaction(transaction);
+    return rpcCli.broadcastTransaction(transaction);
+  }
+
+  public static Contract.SellStorageContract createSellStorageContract(byte[] owner,
+      long bytes) {
+    Contract.SellStorageContract.Builder builder = Contract.SellStorageContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
+    builder.setStorageBytes(bytes);
+    return builder.build();
+  }
 
   public static SmartContract.ABI.Entry.EntryType getEntryType(String type) {
     switch (type) {

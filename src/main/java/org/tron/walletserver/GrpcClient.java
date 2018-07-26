@@ -216,6 +216,18 @@ public class GrpcClient {
     return blockingStubFull.proposalDelete(contract);
   }
 
+  public Transaction buyStorage(Contract.BuyStorageContract contract) {
+    return blockingStubFull.buyStorage(contract);
+  }
+
+  public Transaction buyStorageBytes(Contract.BuyStorageBytesContract contract) {
+    return blockingStubFull.buyStorageBytes(contract);
+  }
+
+  public Transaction sellStorage(Contract.SellStorageContract contract) {
+    return blockingStubFull.sellStorage(contract);
+  }
+
   public Transaction createAccount(Contract.AccountCreateContract contract) {
     return blockingStubFull.createAccount(contract);
   }
