@@ -508,7 +508,7 @@ public class Client {
   }
 
   public boolean callContract(byte[] contractAddress,
-                              byte[] callValue, byte[] data,
+                              long callValue, byte[] data,
       Long max_cpu_usage, Long max_net_usage, Long max_storage)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {

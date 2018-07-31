@@ -1331,7 +1331,7 @@ public class TestClient {
     }
     byte[] input =  Hex.decode(AbiUtil.parseMethod(methodStr, argsStr, isHex));
     byte[] contractAddress = WalletClient.decodeFromBase58Check(contractAddrStr);
-    byte[] callValue = Hex.decode(valueStr);
+    long callValue = Long.valueOf(valueStr);
 
     boolean result = client.callContract(contractAddress, callValue, input, max_cpu_usage, max_net_usage, max_storage);
     if (result) {
