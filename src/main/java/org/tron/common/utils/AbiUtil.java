@@ -112,7 +112,11 @@ public class AbiUtil {
 
     @Override
     byte[] encode(String value) {
-      return new byte[0];
+      if (!value.startsWith("0x")) {
+        return new DataWord(value.substring(2)).getData();
+      } else {
+        return new DataWord(value).getData();
+      }
     }
 
     @Override
