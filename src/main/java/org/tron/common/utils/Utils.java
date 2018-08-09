@@ -1004,6 +1004,14 @@ public class Utils {
     result += "\n";
     result += transactionInfo.getBlockTimeStamp();
     result += "\n";
+    result += "unfreezeAmount: ";
+    result += "\n";
+    result += transactionInfo.getUnfreezeAmount();
+    result += "\n";
+    result += "withdrawAmount: ";
+    result += "\n";
+    result += transactionInfo.getWithdrawAmount();
+    result += "\n";
     result += "result: ";
     result += "\n";
     result += transactionInfo.getResult();
