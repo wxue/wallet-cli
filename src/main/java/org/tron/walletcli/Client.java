@@ -183,7 +183,7 @@ public class Client {
     return wallet.participateAssetIssue(to, assertName.getBytes(), amount);
   }
 
-  public boolean assetIssue(String name, long totalSupply, int trxNum, int icoNum,
+  public boolean assetIssue(String name, String abbr, long totalSupply, int trxNum, int icoNum,
       long startTime, long endTime, int voteScore, String description, String url,
       long freeNetLimit, long publicFreeNetLimit, HashMap<String, String> frozenSupply)
       throws CipherException, IOException, CancelException {
@@ -195,6 +195,7 @@ public class Client {
     Contract.AssetIssueContract.Builder builder = Contract.AssetIssueContract.newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(wallet.getAddress()));
     builder.setName(ByteString.copyFrom(name.getBytes()));
+    builder.setAbbr(ByteString.copyFrom(abbr.getBytes()));
     if (totalSupply <= 0) {
       return false;
     }

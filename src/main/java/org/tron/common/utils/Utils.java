@@ -1012,10 +1012,12 @@ public class Utils {
     result += "\n";
     result += ByteArray.toStr(transactionInfo.getResMessage().toByteArray());
     result += "\n";
-    result += "contractResult: ";
-    result += "\n";
-    result += ByteArray.toHexString(transactionInfo.getContractResult(0).toByteArray());
-    result += "\n";
+    if (transactionInfo.getContractResultCount() > 0 ){
+      result += "contractResult: ";
+      result += "\n";
+      result += ByteArray.toHexString(transactionInfo.getContractResult(0).toByteArray());
+      result += "\n";
+    }
     result += "contractAddress: ";
     result += "\n";
     result += WalletClient.encode58Check(transactionInfo.getContractAddress().toByteArray());
