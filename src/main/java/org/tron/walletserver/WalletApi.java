@@ -357,19 +357,20 @@ public class WalletApi {
     System.out.println(Utils.printTransaction(transaction));
 
     Scanner in = new Scanner(System.in);
-    System.out.println("Please confirm that you want to continue enter y or Y, else any other.");
+//    System.out.println("Please confirm that you want to continue enter y or Y, else any other.");
 
-    while (true) {
-      String input = in.nextLine().trim();
-      String str = input.split("\\s+")[0];
-      if ("y".equalsIgnoreCase(str)) {
-        break;
-      } else {
-        throw new CancelException("User cancelled");
-      }
-    }
+//    while (true) {
+//      String input = in.nextLine().trim();
+//      String str = input.split("\\s+")[0];
+//      if ("y".equalsIgnoreCase(str)) {
+//        break;
+//      } else {
+//        throw new CancelException("User cancelled");
+//      }
+//    }
     System.out.println("Please input your password.");
-    char[] password = Utils.inputPassword(false);
+//    char[] password = Utils.inputPassword(false);
+    char[] password = "Aashu123".toCharArray();
     byte[] passwd = org.tron.keystore.StringUtils.char2Byte(password);
     org.tron.keystore.StringUtils.clear(password);
     System.out.println(
@@ -397,7 +398,16 @@ public class WalletApi {
     }
     System.out.println(
         "Receive txid = " + ByteArray.toHexString(transactionExtention.getTxid().toByteArray()));
-    transaction = signTransaction(transaction);
+//    transaction
+
+    Transaction.Builder builder = Transaction.newBuilder(transaction);
+//    builder.getRawData().
+//    builder.setRawData(builder.getRawData().getContract(0).toBuilder().set)
+
+    Transaction fakeTrans = builder.build();
+    transaction = signTransaction(fakeTrans);
+
+
     return rpcCli.broadcastTransaction(transaction);
   }
 
