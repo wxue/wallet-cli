@@ -1,19 +1,16 @@
 package org.tron.common.crypto.blake2b;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tron.common.crypto.blake2b.security.Blake2b256Digest;
-import org.tron.common.crypto.blake2b.security.Blake2bProvider;
 import org.tron.common.utils.ByteArray;
-import org.tron.keystore.StringUtils;
 
 public class Blake2bTest {
 
 
   @Test
-  public void isCharEqual() throws NoSuchAlgorithmException {
+  public void hell() {
 
     Blake2b256Digest digest = new Blake2b256Digest();
 
