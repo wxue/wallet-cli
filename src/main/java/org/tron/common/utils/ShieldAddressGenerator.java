@@ -1,11 +1,8 @@
-package org.tron.demo;
+package org.tron.common.utils;
 
-import java.security.KeyPair;
 import java.util.Random;
-import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.Prf;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
-import org.tron.common.utils.ByteArray;
-import org.tron.keystore.StringUtils;
 
 public class ShieldAddressGenerator {
 

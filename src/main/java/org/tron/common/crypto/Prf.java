@@ -1,4 +1,4 @@
-package org.tron.demo;
+package org.tron.common.crypto;
 
 import org.apache.commons.lang.CharUtils;
 import org.tron.common.crypto.Sha256Hash;
