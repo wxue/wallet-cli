@@ -10,6 +10,10 @@ import com.typesafe.config.ConfigObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -45,6 +49,7 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.TransactionUtils;
@@ -399,6 +404,32 @@ public class WalletApi {
     return rpcCli.broadcastTransaction(transaction);
   }
 
+  private boolean processTransactionExtention(TransactionExtention transactionExtention,
+      PrivateKey privateKey, boolean havePubInput)
+      throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
+    if (transactionExtention == null) {
+      return false;
+    }
+    Return ret = transactionExtention.getResult();
+    if (!ret.getResult()) {
+      System.out.println("Code = " + ret.getCode());
+      System.out.println("Message = " + ret.getMessage().toStringUtf8());
+      return false;
+    }
+    Transaction transaction = transactionExtention.getTransaction();
+    if (transaction == null || transaction.getRawData().getContractCount() == 0) {
+      System.out.println("Transaction is empty");
+      return false;
+    }
+    System.out.println(
+        "Receive txid = " + ByteArray.toHexString(transactionExtention.getTxid().toByteArray()));
+    if (havePubInput) {
+      transaction = signTransaction(transaction);
+    }
+    transaction = TransactionUtils.zkSign(transaction, privateKey);
+    return rpcCli.broadcastTransaction(transaction);
+  }
+
   private boolean processTransaction(Transaction transaction)
       throws IOException, CipherException, CancelException {
     if (transaction == null || transaction.getRawData().getContractCount() == 0) {
@@ -443,17 +474,22 @@ public class WalletApi {
   }
 
   public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
-      String cm2, byte[] to1, long v1, byte[] to2, long v2) {
-    byte[] owner = getAddress();
+      String cm2, byte[] to1, long v1, byte[] to2, long v2)
+      throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
+    boolean havePubInput = false;
     if (vFromPub != 0) {
+      byte[] owner = getAddress();
       zkBuilder.setOwnerAddress(ByteString.copyFrom(owner));
       zkBuilder.setVFromPub(vFromPub);
+      havePubInput = true;
     }
     if (toPub != null && vToPub != 0) {
       zkBuilder.setToAddress(ByteString.copyFrom(toPub));
       zkBuilder.setVToPub(vToPub);
     }
+    KeyPairGenerator generator = new KeyPairGenerator();
+    KeyPair keyPair = generator.generateKeyPair();
     //todo: get rt
     byte[] rt = null;
     //todo: get path of cm
@@ -464,7 +500,9 @@ public class WalletApi {
     //c_old2 = find(cm2)
     //proof
     zkv0proof proof = null;
-    return false;
+
+    TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
+    return processTransactionExtention(transactionExtention, keyPair.getPrivate(), havePubInput);
   }
 
   public boolean sendCoin(byte[] to, long amount)

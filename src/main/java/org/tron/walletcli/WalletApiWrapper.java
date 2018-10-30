@@ -2,6 +2,8 @@ package org.tron.walletcli;
 
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.util.HashMap;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -145,7 +147,8 @@ public class WalletApiWrapper {
 
 
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
-      String cm2, String toAddress1, long v1, String toAddress2, long v2) {
+      String cm2, String toAddress1, long v1, String toAddress2, long v2)
+      throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
     if (wallet == null || (vFromPub != 0 && !wallet.isLoginState())) {
       System.out.println("Warning: sendCoinShield failed,  Please login first !!");
       return false;

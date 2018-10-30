@@ -177,6 +177,10 @@ public class GrpcClient {
     return blockingStubFull.createTransaction2(contract);
   }
 
+  public TransactionExtention zksnarkV0TransferTrx(Contract.ZksnarkV0TransferContract contract){
+    return blockingStubFull.zksnarkV0TransferTrx(contract);
+  }
+
   public Transaction createTransaction(Contract.FreezeBalanceContract contract) {
     return blockingStubFull.freezeBalance(contract);
   }
