@@ -1,15 +1,18 @@
 package org.tron.demo;
 
 import com.google.protobuf.ByteString;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SignatureException;
 import org.tron.common.utils.ByteArray;
-import org.tron.eddsa.EdDSAPrivateKey;
-import org.tron.eddsa.EdDSAPublicKey;
-import org.tron.eddsa.KeyPairGenerator;
-import org.tron.eddsa.MathUtils;
-import org.tron.eddsa.math.GroupElement;
+import org.tron.common.crypto.eddsa.EdDSAEngine;
+import org.tron.common.crypto.eddsa.EdDSAPrivateKey;
+import org.tron.common.crypto.eddsa.EdDSAPublicKey;
+import org.tron.common.crypto.eddsa.KeyPairGenerator;
+import org.tron.common.crypto.eddsa.MathUtils;
+import org.tron.common.crypto.eddsa.math.GroupElement;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.walletserver.WalletApi;
@@ -57,6 +60,31 @@ public class ZksnarkTransferDemo {
     System.out.println(ByteArray.toHexString(b));
     System.out.println(ByteArray.toHexString(C.toByteArray()));
     System.out.println(ByteArray.toHexString(C1.toByteArray()));
+
+    EdDSAEngine engine = new EdDSAEngine();
+    try {
+      engine.initSign(privateKeyA);
+      byte[] sign = engine.signOneShot("just test 1".getBytes());
+      System.out.println(ByteArray.toHexString(sign));
+
+      engine.initVerify(publickeyA);
+      boolean r =  engine.verifyOneShot("just test 1".getBytes(), sign);
+      System.out.println(r);
+
+      engine.initSign(privateKeyA);
+      engine.update("just test 1".getBytes());
+      byte[] sign1 = engine.sign();
+      System.out.println(ByteArray.toHexString(sign1));
+
+      engine.initVerify(publickeyA);
+      engine.update("just test 1".getBytes());
+      boolean r1 = engine.verify(sign1);
+      System.out.println(r1);
+    } catch (InvalidKeyException e) {
+      e.printStackTrace();
+    } catch (SignatureException e) {
+      e.printStackTrace();
+    }
 
   }
 
