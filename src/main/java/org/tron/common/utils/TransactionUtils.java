@@ -26,6 +26,7 @@ import org.tron.common.crypto.ECKey.ECDSASignature;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract;
+import java.security.PrivateKey;
 
 public class TransactionUtils {
 
@@ -176,6 +177,12 @@ public class TransactionUtils {
 
     transaction = transactionBuilderSigned.build();
     return transaction;
+  }
+
+  public static Transaction zkSign(Transaction transaction, PrivateKey privateKey) {
+    Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
+    byte[] rawData = transaction.getRawData().toByteArray();
+    return transactionBuilderSigned.build();
   }
 
   public static Transaction setTimestamp(Transaction transaction) {
