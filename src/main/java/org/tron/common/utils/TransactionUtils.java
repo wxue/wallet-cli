@@ -216,7 +216,7 @@ public class TransactionUtils {
       EdDSAEngine engine = new EdDSAEngine();
       engine.initSign(privateKey);
       byte[] zkSign = engine.signOneShot(input);
-      transactionBuilderSigned.addSignature(ByteString.copyFrom(zkSign));
+      transactionBuilderSigned.addSignatureZk(ByteString.copyFrom(zkSign));
     }
     return transactionBuilderSigned.build();
   }
