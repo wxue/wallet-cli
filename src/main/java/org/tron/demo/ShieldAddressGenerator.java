@@ -1,7 +1,9 @@
 package org.tron.demo;
 
+import java.security.KeyPair;
 import java.util.Random;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.ByteArray;
 import org.tron.keystore.StringUtils;
 
@@ -27,13 +29,25 @@ public class ShieldAddressGenerator {
 
 
   private byte[] generatePublicKey(byte[] privateKey) {
-    if (privateKey.length != 32) {
-      throw new RuntimeException("Wrong length，expect：256，real：" + privateKey.length);
-    }
-    if ((privateKey[0] & 0xF0) != 0) {
-      throw new RuntimeException("The first 4 digits must be 0");
-    }
-    return Sha256Hash.hash(privateKey);
+//    if (privateKey.length != 32) {
+//      throw new RuntimeException("Wrong length，expect：256，real：" + privateKey.length);
+//    }
+//    if ((privateKey[0] & 0xF0) != 0) {
+//      throw new RuntimeException("The first 4 digits must be 0");
+//    }
+    return Prf.prfAddrAPk(privateKey);
+  }
+
+  private byte[] generatePrivateKeyEnc(byte[] privateKey) {
+    return Prf.prfAddrSkEnc(privateKey);
+  }
+
+
+  private byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
+    KeyPairGenerator generator = new KeyPairGenerator();
+    generator.initializeDefault();
+    byte[] A1 = generator.getPubkey(privateKeyEnc);
+    return A1;
   }
 
   public static void main(String[] args) {
@@ -42,11 +56,19 @@ public class ShieldAddressGenerator {
     byte[] privateKey = shieldAddressGenerator.generatePrivateKey(100L);
     byte[] publicKey = shieldAddressGenerator.generatePublicKey(privateKey);
 
+    byte[] privateKeyEnc = shieldAddressGenerator.generatePrivateKeyEnc(privateKey);
+    byte[] publicKeyEnc = shieldAddressGenerator.generatePublicKeyEnc(privateKey);
+
     String privateKeyString = ByteArray.toHexString(privateKey);
     String publicKeyString = ByteArray.toHexString(publicKey);
+    String privateKeyEncString = ByteArray.toHexString(privateKeyEnc);
+    String publicKeyEncString = ByteArray.toHexString(publicKeyEnc);
 
     System.out.println("privateKey:" + privateKeyString);
     System.out.println("publicKey :" + publicKeyString);
+    System.out.println("privateKeyEnc :" + privateKeyEncString);
+    System.out.println("publicKeyEnc :" + publicKeyEncString);
+
 
   }
 
