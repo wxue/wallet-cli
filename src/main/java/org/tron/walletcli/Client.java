@@ -470,6 +470,13 @@ public class Client {
     String amout2 = parameters[8];
     long v2 = new Long(amout2);
 
+    boolean result = walletApiWrapper
+        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2);
+    if (result) {
+      System.out.println("SendCoinShield successful !!");
+    } else {
+      System.out.println("SendCoinShield failed !!");
+    }
   }
 
   private void transferAsset(String[] parameters)

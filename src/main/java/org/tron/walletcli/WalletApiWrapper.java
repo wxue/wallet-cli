@@ -147,22 +147,44 @@ public class WalletApiWrapper {
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
       String cm2, String toAddress1, long v1, String toAddress2, long v2) {
     if (wallet == null || (vFromPub != 0 && !wallet.isLoginState())) {
-      logger.warn("Warning: sendCoinShield failed,  Please login first !!");
+      System.out.println("Warning: sendCoinShield failed,  Please login first !!");
+      return false;
+    }
+    if ((toPubAddress == null) ^ (vToPub == 0)) {
+      System.out.println("Warning: need both toPubAddress is null and vToPub is zero or both not");
+      return false;
+    }
+    if ((toAddress1 == null) ^ (v1 == 0)) {
+      System.out.println("Warning: need both toAddress1 is null and v1 is zero or both not");
+      return false;
+    }
+    if ((toAddress2 == null) ^ (v2 == 0)) {
+      System.out.println("Warning: need both toAddress2 is null and v2 is zero or both not");
       return false;
     }
 
-    if ((toPubAddress==null )){
-
-    }
-
-    byte[] toPub;
+    byte[] toPub = null;
     if (toPubAddress != null) {
       toPub = WalletApi.decodeFromBase58Check(toPubAddress);
       if (toPub == null) {
         return false;
       }
     }
-    return false;
+    byte[] to1 = null;
+    if (toAddress1 != null){
+      to1 = WalletApi.decodeFromBase58Check(toAddress1);
+      if (to1 == null){
+        return false;
+      }
+    }
+    byte[] to2 = null;
+    if (toAddress2 != null){
+      to2 = WalletApi.decodeFromBase58Check(toAddress2);
+      if (to2 == null){
+        return false;
+      }
+    }
+    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2);
   }
 
   public boolean sendCoin(String toAddress, long amount)

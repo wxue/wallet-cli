@@ -69,6 +69,8 @@ import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
 import org.tron.protos.Contract.UpdateSettingContract;
 import org.tron.protos.Contract.WithdrawBalanceContract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
+import org.tron.protos.Contract.zkv0proof;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -438,6 +440,31 @@ public class WalletApi {
   public static EasyTransferResponse easyTransferByPrivate(byte[] privateKey, byte[] toAddress,
       long amount) {
     return rpcCli.easyTransferByPrivate(privateKey, toAddress, amount);
+  }
+
+  public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
+      String cm2, byte[] to1, long v1, byte[] to2, long v2) {
+    byte[] owner = getAddress();
+    ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
+    if (vFromPub != 0) {
+      zkBuilder.setOwnerAddress(ByteString.copyFrom(owner));
+      zkBuilder.setVFromPub(vFromPub);
+    }
+    if (toPub != null && vToPub != 0) {
+      zkBuilder.setToAddress(ByteString.copyFrom(toPub));
+      zkBuilder.setVToPub(vToPub);
+    }
+    //todo: get rt
+    byte[] rt = null;
+    //todo: get path of cm
+    byte[] path1 = null;
+    byte[] path2 = null;
+    //todo: find c_old
+    //c_old1 = find(cm1)
+    //c_old2 = find(cm2)
+    //proof
+    zkv0proof proof = null;
+    return false;
   }
 
   public boolean sendCoin(byte[] to, long amount)
@@ -908,8 +935,6 @@ public class WalletApi {
   }
 
 
-
-
   public static Optional<NodeList> listNodes() {
     return rpcCli.listNodes();
   }
@@ -1257,7 +1282,8 @@ public class WalletApi {
 
   public static Contract.ExchangeWithdrawContract createExchangeWithdrawContract(byte[] owner,
       long exchangeId, byte[] tokenId, long quant) {
-    Contract.ExchangeWithdrawContract.Builder builder = Contract.ExchangeWithdrawContract.newBuilder();
+    Contract.ExchangeWithdrawContract.Builder builder = Contract.ExchangeWithdrawContract
+        .newBuilder();
     builder
         .setOwnerAddress(ByteString.copyFrom(owner))
         .setExchangeId(exchangeId)

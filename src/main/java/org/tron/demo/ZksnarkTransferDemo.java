@@ -68,6 +68,8 @@ public class ZksnarkTransferDemo {
     System.out.println(ByteArray.toHexString(A1));
     System.out.println(ByteArray.toHexString(A2.toByteArray()));
 
+    
+
     System.out.println(ByteArray.toHexString(B.toByteArray()));
     System.out.println(ByteArray.toHexString(b));
     System.out.println(ByteArray.toHexString(C.toByteArray()));
