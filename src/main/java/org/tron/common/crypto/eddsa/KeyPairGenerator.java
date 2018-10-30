@@ -71,6 +71,26 @@ public final class KeyPairGenerator extends KeyPairGeneratorSpi {
     initialized = true;
   }
 
+
+  public void initializeDefault() {
+    AlgorithmParameterSpec params = edParameters.get(Integer.valueOf(DEFAULT_KEYSIZE));
+    if (params == null) {
+      throw new InvalidParameterException("unknown key type.");
+    }
+    try {
+      if (params instanceof EdDSAParameterSpec) {
+        edParams = (EdDSAParameterSpec) params;
+      } else if (params instanceof EdDSAGenParameterSpec) {
+        edParams = createNamedCurveSpec(((EdDSAGenParameterSpec) params).getName());
+      } else {
+        throw new InvalidAlgorithmParameterException("parameter object not a EdDSAParameterSpec");
+      }
+    } catch (InvalidAlgorithmParameterException e) {
+      throw new InvalidParameterException("key type not configurable.");
+    }
+  }
+
+
   public KeyPair generateKeyPair() {
     if (!initialized) {
       initialize(DEFAULT_KEYSIZE, new SecureRandom());
