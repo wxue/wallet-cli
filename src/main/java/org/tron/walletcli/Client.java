@@ -2,6 +2,8 @@ package org.tron.walletcli;
 
 import com.beust.jcommander.JCommander;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -448,7 +450,8 @@ public class Client {
     }
   }
 
-  private void sendCoinShield(String[] parameters) {
+  private void sendCoinShield(String[] parameters)
+      throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
     if (parameters == null || parameters.length != 9) {
       System.out.println("SendCoinShield needs 8 parameters like following: ");
       System.out.println(
