@@ -343,7 +343,8 @@ public class Client {
     long newLimit = new Long(newLimitString);
     long newPublicLimit = new Long(newPublicLimitString);
 
-    boolean ret = walletApiWrapper.updateAsset(descriptionBytes, urlBytes, newLimit, newPublicLimit);
+    boolean ret = walletApiWrapper
+        .updateAsset(descriptionBytes, urlBytes, newLimit, newPublicLimit);
     if (ret) {
       logger.info("Update Asset successful !!!!");
     } else {
@@ -441,71 +442,33 @@ public class Client {
 
     boolean result = walletApiWrapper.sendCoin(toAddress, amount);
     if (result) {
-      logger.info("Send " + amount + " drop to " + toAddress + " successful !!");
+      logger.info("Send " + amount + " sun to " + toAddress + " successful !!");
     } else {
-      logger.info("Send " + amount + " drop to " + toAddress + " failed !!");
+      logger.info("Send " + amount + " sun to " + toAddress + " failed !!");
     }
   }
 
-  private void testTransaction(String[] parameters)
-      throws IOException, CipherException, CancelException {
-    if (parameters == null || (parameters.length != 3 && parameters.length != 4)) {
-      System.out.println("testTransaction needs 3 or 4 parameters using the following syntax: ");
-      System.out.println("testTransaction ToAddress assertName times");
-      System.out.println("testTransaction ToAddress assertName times interval");
-      System.out.println("If needing transferAsset, assertName input null");
+  private void sendCoinShield(String[] parameters) {
+    if (parameters == null || parameters.length != 9) {
+      System.out.println("SendCoinShield needs 8 parameters like following: ");
+      System.out.println(
+          "SendCoinShield AmountFromPub ToPubAddress AmoutToPub CM1 CM2 ToAddress1 Amount1 ToAddress2 Amout2");
+      System.out.println("If donot input you can input null or 0");
       return;
     }
-
-    String toAddress = parameters[0];
-    String assertName = parameters[1];
-    String loopTime = parameters[2];
-    int intervalInt = 0;//s
-    if (parameters.length == 5) {
-      String interval = parameters[4];
-      intervalInt = Integer.parseInt(interval);//s
-    }
-    intervalInt *= 500; //ms
-    long times = new Long(loopTime);
-
-    for (int i = 1; i <= times; i++) {
-      long amount = i;
-      boolean result = walletApiWrapper.sendCoin(toAddress, amount);
-      if (result) {
-        logger.info("Send " + amount + " drop to " + toAddress + " successful !!");
-        if (intervalInt > 0) {
-          try {
-            Thread.sleep(intervalInt);
-          } catch (Exception e) {
-            e.printStackTrace();
-            break;
-          }
-        }
-      } else {
-        logger.info("Send " + amount + " drop to " + toAddress + " failed !!");
-        break;
-      }
-
-      if (!"null".equalsIgnoreCase(assertName)) {
-        result = walletApiWrapper.transferAsset(toAddress, assertName, amount);
-        if (result) {
-          logger
-              .info(
-                  "transferAsset " + amount + assertName + " to " + toAddress + " successful !!");
-          if (intervalInt > 0) {
-            try {
-              Thread.sleep(intervalInt);
-            } catch (Exception e) {
-              e.printStackTrace();
-              break;
-            }
-          }
-        } else {
-          logger.info("transferAsset " + amount + assertName + " to " + toAddress + " failed !!");
-          break;
-        }
-      }
-    }
+    String amoutFromPub = parameters[0];
+    long vFromPub = new Long(amoutFromPub);
+    String toPubAddress = parameters[1].equalsIgnoreCase("null") ? null : parameters[1];
+    String amoutToPub = parameters[2];
+    long vToPub = new Long(amoutToPub);
+    String cm1 = parameters[3].equalsIgnoreCase("null") ? null : parameters[3];
+    String cm2 = parameters[4].equalsIgnoreCase("null") ? null : parameters[4];
+    String toAddress1 = parameters[5].equalsIgnoreCase("null") ? null : parameters[5];
+    String amout1 = parameters[6];
+    long v1 = new Long(amout1);
+    String toAddress2 = parameters[7].equalsIgnoreCase("null") ? null : parameters[7];
+    String amout2 = parameters[8];
+    long v2 = new Long(amout2);
 
   }
 
@@ -736,7 +699,6 @@ public class Client {
   }
 
 
-
   private void listNodes() {
     Optional<NodeList> result = walletApiWrapper.listNodes();
     if (result.isPresent()) {
@@ -824,7 +786,8 @@ public class Client {
     if (parameters == null || !(parameters.length == 2 || parameters.length == 3)) {
       System.out.println("Use freezeBalance command with below syntax: ");
       System.out
-          .println("freezeBalance frozen_balance frozen_duration [ResourceCode:0 BANDWIDTH,1 ENERGY]");
+          .println(
+              "freezeBalance frozen_balance frozen_duration [ResourceCode:0 BANDWIDTH,1 ENERGY]");
       return;
     }
 
@@ -1822,8 +1785,8 @@ public class Client {
             sendCoin(parameters);
             break;
           }
-          case "testtransaction": {
-            testTransaction(parameters);
+          case "sendcoinshield": {
+            sendCoinShield(parameters);
             break;
           }
           case "transferasset": {

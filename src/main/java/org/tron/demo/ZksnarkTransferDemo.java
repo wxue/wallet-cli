@@ -44,7 +44,10 @@ public class ZksnarkTransferDemo {
     byte[] a = ((EdDSAPrivateKey)(privateKeyA)).geta();
 
     EdDSANamedCurveSpec ed25519 = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519);
-    GroupElement A1 = MathUtils.scalarMultiplyGroupElement(ed25519.getB(), MathUtils.toFieldElement(MathUtils.toBigInteger(a)));
+    GroupElement A2 = MathUtils.scalarMultiplyGroupElement(ed25519.getB(), MathUtils.toFieldElement(MathUtils.toBigInteger(a)));
+
+    byte[] A1 = generator.getPubkey(a);
+
 
     KeyPair keyPairB = generator.generateKeyPair();
 
@@ -61,8 +64,10 @@ public class ZksnarkTransferDemo {
    // GroupElement C1 = A.scalarMultiply(b);
 
     System.out.println(ByteArray.toHexString(A.toByteArray()));
-    System.out.println(ByteArray.toHexString(A1.toByteArray()));
     System.out.println(ByteArray.toHexString(a));
+    System.out.println(ByteArray.toHexString(A1));
+    System.out.println(ByteArray.toHexString(A2.toByteArray()));
+
     System.out.println(ByteArray.toHexString(B.toByteArray()));
     System.out.println(ByteArray.toHexString(b));
     System.out.println(ByteArray.toHexString(C.toByteArray()));

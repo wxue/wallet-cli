@@ -143,6 +143,28 @@ public class WalletApiWrapper {
     return wallet.queryAccount();
   }
 
+
+  public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
+      String cm2, String toAddress1, long v1, String toAddress2, long v2) {
+    if (wallet == null || (vFromPub != 0 && !wallet.isLoginState())) {
+      logger.warn("Warning: sendCoinShield failed,  Please login first !!");
+      return false;
+    }
+
+    if ((toPubAddress==null )){
+
+    }
+
+    byte[] toPub;
+    if (toPubAddress != null) {
+      toPub = WalletApi.decodeFromBase58Check(toPubAddress);
+      if (toPub == null) {
+        return false;
+      }
+    }
+    return false;
+  }
+
   public boolean sendCoin(String toAddress, long amount)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {
@@ -350,7 +372,6 @@ public class WalletApiWrapper {
       return Optional.empty();
     }
   }
-
 
 
   public Optional<NodeList> listNodes() {
