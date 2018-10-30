@@ -6,6 +6,10 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
+import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
+import org.tron.common.crypto.eddsa.spec.EdDSAParameterSpec;
+import org.tron.common.crypto.eddsa.spec.EdDSAPrivateKeySpec;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.crypto.eddsa.EdDSAEngine;
 import org.tron.common.crypto.eddsa.EdDSAPrivateKey;
@@ -39,6 +43,8 @@ public class ZksnarkTransferDemo {
     GroupElement A = ((EdDSAPublicKey)(publickeyA)).getA();
     byte[] a = ((EdDSAPrivateKey)(privateKeyA)).geta();
 
+    EdDSANamedCurveSpec ed25519 = EdDSANamedCurveTable.getByName(EdDSANamedCurveTable.ED_25519);
+    GroupElement A1 = MathUtils.scalarMultiplyGroupElement(ed25519.getB(), MathUtils.toFieldElement(MathUtils.toBigInteger(a)));
 
     KeyPair keyPairB = generator.generateKeyPair();
 
@@ -55,11 +61,15 @@ public class ZksnarkTransferDemo {
    // GroupElement C1 = A.scalarMultiply(b);
 
     System.out.println(ByteArray.toHexString(A.toByteArray()));
+    System.out.println(ByteArray.toHexString(A1.toByteArray()));
     System.out.println(ByteArray.toHexString(a));
     System.out.println(ByteArray.toHexString(B.toByteArray()));
     System.out.println(ByteArray.toHexString(b));
     System.out.println(ByteArray.toHexString(C.toByteArray()));
     System.out.println(ByteArray.toHexString(C1.toByteArray()));
+
+
+
 
     EdDSAEngine engine = new EdDSAEngine();
     try {
