@@ -49,9 +49,12 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.CmUtils;
+import org.tron.common.utils.CmUtils.CmTuple;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.core.config.Configuration;
@@ -490,17 +493,16 @@ public class WalletApi {
     }
     KeyPairGenerator generator = new KeyPairGenerator();
     KeyPair keyPair = generator.generateKeyPair();
+    zkBuilder.setPksig(ByteString.copyFrom(((EdDSAPublicKey)(keyPair.getPublic())).getAbyte()));
     //todo: get rt
     byte[] rt = null;
     //todo: get path of cm
     byte[] path1 = null;
     byte[] path2 = null;
-    //todo: find c_old
-    //c_old1 = find(cm1)
-    //c_old2 = find(cm2)
+    CmTuple c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
+    CmTuple c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
     //proof
     zkv0proof proof = null;
-
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
     return processTransactionExtention(transactionExtention, keyPair.getPrivate(), havePubInput);
   }

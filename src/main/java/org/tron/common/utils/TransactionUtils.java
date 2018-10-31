@@ -187,21 +187,6 @@ public class TransactionUtils {
     return transaction;
   }
 
-  public static byte[] computeHSig(ZksnarkV0TransferContract zkContract) {
-    byte[] message = ByteUtil
-        .merge(zkContract.getRandomSeed().toByteArray(), zkContract.getNf1().toByteArray(),
-            zkContract.getNf2().toByteArray(), zkContract.getPksig().toByteArray());
-    return Blake2b.hash(message);
-  }
-
-  public static byte[] computeZkSignInput(ZksnarkV0TransferContract zkContract) {
-    byte[] hSig = computeHSig(zkContract);
-    ZksnarkV0TransferContract.Builder builder = zkContract.toBuilder();
-    builder.setRandomSeed(ByteString.EMPTY);
-    builder.setPksig(ByteString.copyFrom(hSig));
-    return builder.build().toByteArray();
-  }
-
   public static Transaction zkSign(Transaction transaction, PrivateKey privateKey)
       throws InvalidKeyException, InvalidProtocolBufferException, SignatureException {
     Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
@@ -212,7 +197,7 @@ public class TransactionUtils {
       }
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      byte[] input = computeZkSignInput(zkContract);
+      byte[] input = ZksnarkUtils.computeZkSignInput(zkContract);
       EdDSAEngine engine = new EdDSAEngine();
       engine.initSign(privateKey);
       byte[] zkSign = engine.signOneShot(input);

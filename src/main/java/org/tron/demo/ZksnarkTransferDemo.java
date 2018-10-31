@@ -17,6 +17,7 @@ import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.crypto.eddsa.MathUtils;
 import org.tron.common.crypto.eddsa.math.GroupElement;
+import org.tron.common.utils.ZksnarkUtils;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.walletserver.WalletApi;
@@ -93,7 +94,8 @@ public class ZksnarkTransferDemo {
       byte[] sign1 = engine.sign();
       System.out.println(ByteArray.toHexString(sign1));
 
-      engine.initVerify(publickeyA);
+      PublicKey publicKeyA1 = ZksnarkUtils.byte2PublicKey(A1);
+      engine.initVerify(publicKeyA1);
       engine.update("just test 1".getBytes());
       boolean r1 = engine.verify(sign1);
       System.out.println(r1);
