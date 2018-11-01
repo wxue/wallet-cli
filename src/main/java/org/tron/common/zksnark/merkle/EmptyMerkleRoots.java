@@ -10,7 +10,7 @@ public class EmptyMerkleRoots {
 
   private List<SHA256Compress> emptyRoots = new ArrayList<>();
 
-  public void EmptyMerkleRoots() {
+  public EmptyMerkleRoots() {
     emptyRoots.add(SHA256Compress.uncommitted());
     for (int d = 1; d <= IncrementalMerkleTree.DEPTH; d++) {
       emptyRoots

@@ -5,19 +5,23 @@ import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.zksnark.SHA256Compress;
 
 public class IncrementalMerkleTree {
 
+  //need persist
+  public static HashMap<String, IncrementalMerkleTree> treeMap = new HashMap();
   public static Integer DEPTH = 29;
 
-  private Optional<SHA256Compress> left;
-  private Optional<SHA256Compress> right;
+  private Optional<SHA256Compress> left = Optional.empty();
+  private Optional<SHA256Compress> right = Optional.empty();
 
   public int DynamicMemoryUsage() {
-    return 32 +    32 +    parents.size() * 32;
+    return 32 + 32 + parents.size() * 32;
   }
 
   public int size() {
@@ -76,6 +80,10 @@ public class IncrementalMerkleTree {
     return root(DEPTH, new ArrayDeque<SHA256Compress>());
   }
 
+  public String getRootKey() {
+    return ByteArray.toHexString(root().getContent());
+  }
+
   public SHA256Compress last() {
 
     if (right.isPresent()) {
@@ -95,7 +103,7 @@ public class IncrementalMerkleTree {
     return EmptyMerkleRoots.emptyMerkleRootsInstance.emptyRoot(DEPTH);
   }
 
-  private List<Optional<SHA256Compress>> parents;
+  private List<Optional<SHA256Compress>> parents = new ArrayList<>();
 
   private MerklePath path() {
     Deque<SHA256Compress> filler_hashes = new ArrayDeque<SHA256Compress>();
@@ -263,4 +271,21 @@ public class IncrementalMerkleTree {
     }
   }
 
+
+  public static void main(String[] args) {
+
+
+
+    //add
+    IncrementalMerkleTree tree = new IncrementalMerkleTree();
+    String s1 = "2ec45f5ae2d1bc7a80df02abfb2814a1239f956c6fb3ac0e112c008ba2c1ab91";
+    SHA256Compress a = new SHA256Compress(ByteArray.fromHexString(s1));
+    String s2 = "9b3eba79a06c4f37edce2f0e7957c22c0f712d9c071ac87f253ae6ddefb24bb1";
+    SHA256Compress b = new SHA256Compress(ByteArray.fromHexString(s2));
+    tree.append(a);
+    tree.append(b);
+    IncrementalMerkleTree.treeMap.put(tree.getRootKey(), tree);
+    //get
+    IncrementalMerkleTree.treeMap.get(tree.getRootKey());
+  }
 }

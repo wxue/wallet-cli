@@ -14,7 +14,7 @@ public class SHA256Compress {
     this.content = content;
   }
 
-  public byte[] getContent(){
+  public byte[] getContent() {
     return content;
   }
 
@@ -26,8 +26,8 @@ public class SHA256Compress {
     byte[] res;
     byte[] blob = new byte[64];
 
-    System.arraycopy(a, 0, blob, 0, 32);
-    System.arraycopy(b, 0, blob, 32, 32);
+    System.arraycopy(a.getContent(), 0, blob, 0, 32);
+    System.arraycopy(b.getContent(), 0, blob, 32, 32);
     res = Sha256Hash.hash(blob);
 
     return new SHA256Compress(res);
