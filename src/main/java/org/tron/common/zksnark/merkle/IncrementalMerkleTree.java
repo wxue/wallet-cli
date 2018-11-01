@@ -17,9 +17,7 @@ public class IncrementalMerkleTree {
   private Optional<SHA256Compress> right;
 
   public int DynamicMemoryUsage() {
-    return 32 + // left
-        32 + // right
-        parents.size() * 32; // parents
+    return 32 +    32 +    parents.size() * 32;
   }
 
   public int size() {
@@ -31,8 +29,6 @@ public class IncrementalMerkleTree {
     if (right.isPresent()) {
       ret++;
     }
-    // Treat occupation of parents array as a binary number
-    // (right-shifted by 1)
     for (int i = 0; i < parents.size(); i++) {
       if (parents.get(i).isPresent()) {
         ret += (1 << (i + 1));
@@ -48,17 +44,13 @@ public class IncrementalMerkleTree {
     }
 
     if (!left.isPresent()) {
-      // Set the left leaf
       left = Optional.of(obj);
     } else if (!right.isPresent()) {
-      // Set the right leaf
       right = Optional.of(obj);
     } else {
-      // Combine the leaves and propagate it up the tree
       Optional<SHA256Compress> combined = Optional.of(
           SHA256Compress.combine(left.get(), right.get(), 0));
 
-      // Set the "left" leaf to the object and make the "right" leaf none
       left = Optional.of(obj);
       right = Optional.empty();
 
@@ -95,7 +87,6 @@ public class IncrementalMerkleTree {
     }
   }
 
-  //构造IncrementalWitness
   public IncrementalWitness witness() {
     return new IncrementalWitness(this);
   }
@@ -104,7 +95,6 @@ public class IncrementalMerkleTree {
     return EmptyMerkleRoots.emptyMerkleRootsInstance.emptyRoot(DEPTH);
   }
 
-  // Collapsed "left" subtrees ordered toward the root of the tree.
   private List<Optional<SHA256Compress>> parents;
 
   private MerklePath path() {
@@ -125,11 +115,9 @@ public class IncrementalMerkleTree {
     List<Boolean> index = new ArrayList<>();
 
     if (right.isPresent()) {
-      //所在位置是右支时为true,左支时为false
       index.add(true);
       path.add(left.get());
     } else {
-      //右支为空时填充
       index.add(false);
       path.add(filler.next(0));
     }
@@ -190,8 +178,6 @@ public class IncrementalMerkleTree {
       d++;
     }
 
-    // We may not have parents for ancestor trees, so we fill
-    // the rest in here.
     while (d < depth) {
       root = SHA256Compress.combine(root, filler.next(d), d);
       d++;
@@ -263,20 +249,14 @@ public class IncrementalMerkleTree {
       throw new RuntimeException("tree has too many parents");
     }
 
-    //不能往parent中填充null
-    // The last parent cannot be null.
     if ((!parents.isEmpty()) && (!parents.get(parents.size() - 1).isPresent())) {
       throw new RuntimeException("tree has non-canonical representation of parent");
     }
 
-    //先填充left再填充right
-    // Left cannot be empty when right exists.
     if ((!left.isPresent()) && right.isPresent()) {
       throw new RuntimeException("tree has non-canonical representation; right should not exist");
     }
 
-    //先填充left,再填充parents
-    // Left cannot be empty when parents is nonempty.
     if ((!left.isPresent()) && parents.size() > 0) {
       throw new RuntimeException(
           "tree has non-canonical representation; parents should not be unempty");

@@ -35,8 +35,6 @@ public class IncrementalWitness {
     return tree.path(partial_path());
   }
 
-  // Return the element being witnessed (should be a note
-  // commitment!)
   public SHA256Compress element() {
     return tree.last();
   }

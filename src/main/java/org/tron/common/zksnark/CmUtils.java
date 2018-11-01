@@ -155,7 +155,6 @@ public class CmUtils {
   }
 
   public static void main(String[] args) {
-    //test load/save/add/use
     //add
     byte[] cm = {0x0001};
     byte[] addr_pk = {0x02};

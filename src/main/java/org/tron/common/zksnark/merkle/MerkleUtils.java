@@ -5,7 +5,6 @@ import java.util.List;
 
 public class MerkleUtils {
 
-  // Convert bytes into boolean vector. (MSB to LSB)
   public static List<Boolean> convertBytesVectorToVector(final byte[] bytes) {
     List<Boolean> ret = new ArrayList<>();
 
