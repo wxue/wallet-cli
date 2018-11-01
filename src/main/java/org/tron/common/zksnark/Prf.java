@@ -1,4 +1,4 @@
-package org.tron.common.crypto;
+package org.tron.common.zksnark;
 
 import org.apache.commons.lang.CharUtils;
 import org.tron.common.crypto.Sha256Hash;

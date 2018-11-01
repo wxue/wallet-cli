@@ -1,4 +1,4 @@
-package org.tron.common.utils;
+package org.tron.common.zksnark;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.Utils;
 
 public class CmUtils {
 
@@ -171,7 +173,6 @@ public class CmUtils {
     CmTuple cm1 = CmUtils.getCm(cm);
     //use
     CmUtils.useCmInfo(cm);
-
 
   }
 

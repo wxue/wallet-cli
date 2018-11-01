@@ -1,8 +1,8 @@
-package org.tron.common.utils;
+package org.tron.common.zksnark;
 
 import java.util.Random;
-import org.tron.common.crypto.Prf;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
+import org.tron.common.utils.ByteArray;
 
 public class ShieldAddressGenerator {
 
