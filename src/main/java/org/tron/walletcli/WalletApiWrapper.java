@@ -149,9 +149,12 @@ public class WalletApiWrapper {
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
       String cm2, String toAddress1, long v1, String toAddress2, long v2)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
-    if (wallet == null || (vFromPub != 0 && !wallet.isLoginState())) {
+    if ((vFromPub != 0 && (wallet == null || !wallet.isLoginState()))) {
       System.out.println("Warning: sendCoinShield failed,  Please login first !!");
       return false;
+    }
+    if (wallet == null) {
+      wallet = new WalletApi();
     }
     if ((toPubAddress == null) ^ (vToPub == 0)) {
       System.out.println("Warning: need both toPubAddress is null and vToPub is zero or both not");
@@ -174,16 +177,16 @@ public class WalletApiWrapper {
       }
     }
     byte[] to1 = null;
-    if (toAddress1 != null){
+    if (toAddress1 != null) {
       to1 = WalletApi.decodeFromBase58Check(toAddress1);
-      if (to1 == null){
+      if (to1 == null) {
         return false;
       }
     }
     byte[] to2 = null;
-    if (toAddress2 != null){
+    if (toAddress2 != null) {
       to2 = WalletApi.decodeFromBase58Check(toAddress2);
-      if (to2 == null){
+      if (to2 == null) {
         return false;
       }
     }
