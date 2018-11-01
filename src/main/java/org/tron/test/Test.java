@@ -358,7 +358,8 @@ public class Test {
     }
   }
   public static void main(String[] args) throws Exception {
-
-    testPasswordStrength();
+    BigInteger i = BigInteger.valueOf(1);
+    byte[] b = i.toByteArray();
+    System.out.println(ByteArray.toHexString(b));
   }
 }

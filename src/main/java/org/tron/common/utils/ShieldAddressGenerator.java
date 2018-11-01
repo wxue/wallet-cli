@@ -1,8 +1,8 @@
-package org.tron.common.zksnark;
+package org.tron.common.utils;
 
 import java.util.Random;
+import org.tron.common.crypto.Prf;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
-import org.tron.common.utils.ByteArray;
 
 public class ShieldAddressGenerator {
 
@@ -25,7 +25,7 @@ public class ShieldAddressGenerator {
   }
 
 
-  public byte[] generatePublicKey(byte[] privateKey) {
+  private byte[] generatePublicKey(byte[] privateKey) {
 //    if (privateKey.length != 32) {
 //      throw new RuntimeException("Wrong length，expect：256，real：" + privateKey.length);
 //    }
@@ -35,12 +35,12 @@ public class ShieldAddressGenerator {
     return Prf.prfAddrAPk(privateKey);
   }
 
-  public byte[] generatePrivateKeyEnc(byte[] privateKey) {
+  private byte[] generatePrivateKeyEnc(byte[] privateKey) {
     return Prf.prfAddrSkEnc(privateKey);
   }
 
 
-  public byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
+  private byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
     KeyPairGenerator generator = new KeyPairGenerator();
     generator.initializeDefault();
     byte[] A1 = generator.getPubkey(privateKeyEnc);

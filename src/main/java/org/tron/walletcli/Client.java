@@ -131,6 +131,10 @@ public class Client {
     logger.info("Register a wallet successful, keystore file name is " + fileName);
   }
 
+  private void generateShieldAddress() {
+    walletApiWrapper.generateShieldAddress();
+  }
+
   private void importWallet() throws CipherException, IOException {
     char[] password = inputPassword2Twice();
     byte[] priKey = inputPrivateKey();
@@ -1572,6 +1576,7 @@ public class Client {
         "For more information on a specific command, type the command and it will display tips");
     System.out.println("");
     System.out.println("RegisterWallet");
+    System.out.println("GenerateShieldAddress");
     System.out.println("ImportWallet");
     System.out.println("ImportWalletByBase64");
     System.out.println("ChangePassword");
@@ -1579,7 +1584,7 @@ public class Client {
     System.out.println("Logout");
     System.out.println("BackupWallet");
     System.out.println("BackupWallet2Base64");
-    System.out.println("GenerateAAddress");
+    System.out.println("GenerateAddress");
     System.out.println("GetAddress");
     System.out.println("GetBalance");
     System.out.println("GetAccount");
@@ -1588,6 +1593,7 @@ public class Client {
     System.out.println("GetAccountResource");
     System.out.println("GetAssetIssueByName");
     System.out.println("SendCoin");
+    System.out.println("sendCoinShield");
     System.out.println("TransferAsset");
     System.out.println("ParticipateAssetIssue");
     System.out.println("AssetIssue");
@@ -1717,6 +1723,10 @@ public class Client {
           }
           case "registerwallet": {
             registerWallet();
+            break;
+          }
+          case "generateshieldaddress": {
+            generateShieldAddress();
             break;
           }
           case "importwallet": {

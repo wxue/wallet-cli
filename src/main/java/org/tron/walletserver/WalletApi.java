@@ -53,8 +53,8 @@ import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
-import org.tron.common.zksnark.CmUtils;
-import org.tron.common.zksnark.CmUtils.CmTuple;
+import org.tron.common.utils.CmUtils;
+import org.tron.common.utils.CmUtils.CmTuple;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.core.config.Configuration;
@@ -72,6 +72,7 @@ import org.tron.protos.Contract.BuyStorageBytesContract;
 import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
+import org.tron.protos.Contract.MerkelRoot;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
@@ -180,6 +181,9 @@ public class WalletApi {
 
   public static int getRpcVersion() {
     return rpcVersion;
+  }
+
+  public WalletApi() {
   }
 
   /**
@@ -493,7 +497,7 @@ public class WalletApi {
     }
     KeyPairGenerator generator = new KeyPairGenerator();
     KeyPair keyPair = generator.generateKeyPair();
-    zkBuilder.setPksig(ByteString.copyFrom(((EdDSAPublicKey)(keyPair.getPublic())).getAbyte()));
+    zkBuilder.setPksig(ByteString.copyFrom(((EdDSAPublicKey) (keyPair.getPublic())).getAbyte()));
     //todo: get rt
     byte[] rt = null;
     //todo: get path of cm
@@ -503,6 +507,21 @@ public class WalletApi {
     CmTuple c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
     //proof
     zkv0proof proof = null;
+    MerkelRoot.Builder rtB = MerkelRoot.newBuilder();
+    rtB.setRt(ByteString.copyFromUtf8("1122222"));
+    zkBuilder.setRt(rtB);
+    if (cm1 != null){
+      zkBuilder.setNf1(ByteString.copyFromUtf8("test123456"));
+    }
+    if (cm2 != null){
+      zkBuilder.setNf2(ByteString.copyFromUtf8("test123456"));
+    }
+    if (to1 != null){
+      zkBuilder.setCm1(ByteString.copyFromUtf8("test123456"));
+    }
+    if (to2 != null){
+      zkBuilder.setCm2(ByteString.copyFromUtf8("test123456"));
+    }
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
     return processTransactionExtention(transactionExtention, keyPair.getPrivate(), havePubInput);
   }

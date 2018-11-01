@@ -16,6 +16,8 @@ import org.tron.api.GrpcAPI.ExchangeList;
 import org.tron.api.GrpcAPI.NodeList;
 import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.common.utils.ByteUtil;
+import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
@@ -45,6 +47,24 @@ public class WalletApiWrapper {
     String keystoreName = wallet.store2Keystore();
     logout();
     return keystoreName;
+  }
+
+  public void generateShieldAddress(){
+    ShieldAddressGenerator shieldAddressGenerator = new ShieldAddressGenerator();
+
+    byte[] privateKey = shieldAddressGenerator.generatePrivateKey();
+    byte[] publicKey = shieldAddressGenerator.generatePublicKey(privateKey);
+
+    byte[] privateKeyEnc = shieldAddressGenerator.generatePrivateKeyEnc(privateKey);
+    byte[] publicKeyEnc = shieldAddressGenerator.generatePublicKeyEnc(privateKey);
+
+    byte[] addPrivate = ByteUtil.merge(privateKey, privateKeyEnc);
+    byte[] addPublic = ByteUtil.merge(publicKey, publicKeyEnc);
+
+    String addPri = WalletApi.encode58Check(addPrivate);
+    String addPub = WalletApi.encode58Check(addPublic);
+    System.out.printf("Private address : %s\n",addPri);
+    System.out.printf("Private address : %s\n", addPub);
   }
 
   public String importWallet(char[] password, byte[] priKey) throws CipherException, IOException {
@@ -149,9 +169,12 @@ public class WalletApiWrapper {
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
       String cm2, String toAddress1, long v1, String toAddress2, long v2)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
-    if (wallet == null || (vFromPub != 0 && !wallet.isLoginState())) {
+    if ((vFromPub != 0 && (wallet == null || !wallet.isLoginState()))) {
       System.out.println("Warning: sendCoinShield failed,  Please login first !!");
       return false;
+    }
+    if (wallet == null) {
+      wallet = new WalletApi();
     }
     if ((toPubAddress == null) ^ (vToPub == 0)) {
       System.out.println("Warning: need both toPubAddress is null and vToPub is zero or both not");
@@ -174,16 +197,16 @@ public class WalletApiWrapper {
       }
     }
     byte[] to1 = null;
-    if (toAddress1 != null){
+    if (toAddress1 != null) {
       to1 = WalletApi.decodeFromBase58Check(toAddress1);
-      if (to1 == null){
+      if (to1 == null) {
         return false;
       }
     }
     byte[] to2 = null;
-    if (toAddress2 != null){
+    if (toAddress2 != null) {
       to2 = WalletApi.decodeFromBase58Check(toAddress2);
-      if (to2 == null){
+      if (to2 == null) {
         return false;
       }
     }
