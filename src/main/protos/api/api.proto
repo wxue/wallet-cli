@@ -32,7 +32,6 @@ service Wallet {
     };
   };
 
-
   //Please use CreateTransaction2 instead of this function.
   rpc CreateTransaction (TransferContract) returns (Transaction) {
     option (google.api.http) = {
@@ -419,14 +418,14 @@ service Wallet {
   };
 
   rpc GetDelegatedResourceAccountIndex (BytesMessage) returns (DelegatedResourceAccountIndex) {
-      option (google.api.http) = {
+    option (google.api.http) = {
         post: "/wallet/getdelegatedresourceaccountindex"
         body: "*"
         additional_bindings {
           get: "/wallet/getdelegatedresourceaccountindex"
         }
       };
-    };
+  };
 
   rpc ListProposals (EmptyMessage) returns (ProposalList) {
     option (google.api.http) = {
@@ -595,6 +594,16 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/gettransactioninfobyid"
+      }
+    };
+  }
+
+  rpc GetNullifier (BytesMessage) returns (BytesMessage) {
+    option (google.api.http) = {
+      post: "/wallet/getnullifier"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getnullifier"
       }
     };
   }
@@ -811,7 +820,6 @@ message DelegatedResourceList {
   repeated DelegatedResource delegatedResource = 1;
 }
 
-
 // Gossip node list
 message NodeList {
   repeated Node nodes = 1;
@@ -908,7 +916,7 @@ message EasyTransferByPrivateMessage {
 message EasyTransferResponse {
   Transaction transaction = 1;
   Return result = 2;
-  bytes txid = 3;   //transaction id =  sha256(transaction.rowdata)
+  bytes txid = 3; //transaction id =  sha256(transaction.rowdata)
 }
 
 message AddressPrKeyPairMessage {
@@ -918,7 +926,7 @@ message AddressPrKeyPairMessage {
 
 message TransactionExtention {
   Transaction transaction = 1;
-  bytes txid = 2;   //transaction id =  sha256(transaction.rowdata)
+  bytes txid = 2; //transaction id =  sha256(transaction.rowdata)
   repeated bytes constant_result = 3;
   Return result = 4;
 }

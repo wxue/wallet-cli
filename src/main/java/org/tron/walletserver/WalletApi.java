@@ -33,6 +33,7 @@ import org.tron.api.GrpcAPI.AssetIssueList;
 import org.tron.api.GrpcAPI.BlockExtention;
 import org.tron.api.GrpcAPI.BlockList;
 import org.tron.api.GrpcAPI.BlockListExtention;
+import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.GrpcAPI.DelegatedResourceList;
 import org.tron.api.GrpcAPI.EasyTransferResponse;
 import org.tron.api.GrpcAPI.EmptyMessage;
@@ -911,8 +912,6 @@ public class WalletApi {
   }
 
 
-
-
   public static Optional<NodeList> listNodes() {
     return rpcCli.listNodes();
   }
@@ -1014,14 +1013,14 @@ public class WalletApi {
   }
 
   private FreezeBalanceContract createFreezeBalanceContract(long frozen_balance,
-      long frozen_duration, int resourceCode,String receiverAddress) {
+      long frozen_duration, int resourceCode, String receiverAddress) {
     byte[] address = getAddress();
     Contract.FreezeBalanceContract.Builder builder = Contract.FreezeBalanceContract.newBuilder();
     ByteString byteAddress = ByteString.copyFrom(address);
     builder.setOwnerAddress(byteAddress).setFrozenBalance(frozen_balance)
         .setFrozenDuration(frozen_duration).setResourceValue(resourceCode);
 
-    if(receiverAddress != null && !receiverAddress.equals("")){
+    if (receiverAddress != null && !receiverAddress.equals("")) {
       ByteString receiverAddressBytes = ByteString.copyFrom(
           Objects.requireNonNull(WalletApi.decodeFromBase58Check(receiverAddress)));
       builder.setReceiverAddress(receiverAddressBytes);
@@ -1068,8 +1067,6 @@ public class WalletApi {
       return processTransaction(transaction);
     }
   }
-
-
 
 
   private UnfreezeBalanceContract createUnfreezeBalanceContract(int resourceCode) {
@@ -1165,8 +1162,9 @@ public class WalletApi {
   }
 
   public static Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(String address) {
-    return rpcCli.getDelegatedResourceAccountIndex(address );
+    return rpcCli.getDelegatedResourceAccountIndex(address);
   }
+
   public static Optional<ExchangeList> listExchanges() {
     return rpcCli.listExchanges();
   }
@@ -1179,6 +1177,9 @@ public class WalletApi {
     return rpcCli.getChainParameters();
   }
 
+  public static Optional<BytesMessage> getNullifier(String nfID) {
+    return rpcCli.getNullifier(nfID);
+  }
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,
       HashMap<Long, Long> parametersMap) {

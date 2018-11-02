@@ -289,7 +289,7 @@ public class GrpcClient {
         .setFromAddress(fromAddressBS)
         .setToAddress(toAddressBS)
         .build();
-    DelegatedResourceList delegatedResource= blockingStubFull
+    DelegatedResourceList delegatedResource = blockingStubFull
         .getDelegatedResource(request);
     return Optional.ofNullable(delegatedResource);
   }
@@ -301,7 +301,7 @@ public class GrpcClient {
 
     BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(addressBS).build();
 
-    DelegatedResourceAccountIndex accountIndex= blockingStubFull
+    DelegatedResourceAccountIndex accountIndex = blockingStubFull
         .getDelegatedResourceAccountIndex(bytesMessage);
     return Optional.ofNullable(accountIndex);
   }
@@ -693,6 +693,14 @@ public class GrpcClient {
     NumberMessage numberMessage = NumberMessage.newBuilder().setNum(num).build();
     BlockListExtention blockList = blockingStubFull.getBlockByLatestNum2(numberMessage);
     return Optional.ofNullable(blockList);
+  }
+
+  public Optional<BytesMessage> getNullifier(String nfID) {
+    ByteString bsNfid = ByteString.copyFrom(ByteArray.fromHexString(nfID));
+    BytesMessage request = BytesMessage.newBuilder().setValue(bsNfid).build();
+    BytesMessage trxId;
+    trxId = blockingStubFull.getNullifier(request);
+    return Optional.ofNullable(trxId);
   }
 
   public TransactionExtention updateSetting(Contract.UpdateSettingContract request) {

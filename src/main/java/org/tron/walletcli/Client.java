@@ -27,6 +27,7 @@ import org.tron.api.GrpcAPI.AssetIssueList;
 import org.tron.api.GrpcAPI.BlockExtention;
 import org.tron.api.GrpcAPI.BlockList;
 import org.tron.api.GrpcAPI.BlockListExtention;
+import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.GrpcAPI.DelegatedResourceList;
 import org.tron.api.GrpcAPI.ExchangeList;
 import org.tron.api.GrpcAPI.Node;
@@ -739,7 +740,6 @@ public class Client {
   }
 
 
-
   private void listNodes() {
     Optional<NodeList> result = walletApiWrapper.listNodes();
     if (result.isPresent()) {
@@ -932,8 +932,6 @@ public class Client {
   }
 
 
-
-
   private void unfreezeAsset() throws IOException, CipherException, CancelException {
     boolean result = walletApiWrapper.unfreezeAsset();
     if (result) {
@@ -1031,7 +1029,7 @@ public class Client {
 
   private void getDelegatedResource(String[] parameters)
       throws IOException, CipherException, CancelException {
-    if (parameters == null ||parameters.length != 2) {
+    if (parameters == null || parameters.length != 2) {
       System.out.println("Use getDelegatedResource command with below syntax: ");
       System.out.println("getDelegatedResource fromAddress toAddress");
       return;
@@ -1049,7 +1047,7 @@ public class Client {
 
   private void getDelegatedResourceAccountIndex(String[] parameters)
       throws IOException, CipherException, CancelException {
-    if (parameters == null ||parameters.length != 1) {
+    if (parameters == null || parameters.length != 1) {
       System.out.println("Use getDelegatedResourceAccountIndex command with below syntax: ");
       System.out.println("getDelegatedResourceAccountIndex address ");
       return;
@@ -1063,9 +1061,6 @@ public class Client {
       logger.info("getDelegatedResourceAccountIndex " + " failed !!");
     }
   }
-
-
-
 
 
   private void exchangeCreate(String[] parameters)
@@ -1481,6 +1476,23 @@ public class Client {
     }
   }
 
+  private void getNullifier(String[] parameters) {
+    String hash = "";
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("get needs 1 parameter, nullifier hash");
+      return;
+    } else {
+      hash = parameters[0];
+    }
+    Optional<BytesMessage> result = WalletApi.getNullifier(hash);
+    if (result.isPresent()) {
+      BytesMessage trxId = result.get();
+      logger.info(trxId.toString());
+    } else {
+      logger.info("getNullifier " + " failed !!");
+    }
+  }
+
   private void updateSetting(String[] parameters)
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
@@ -1710,6 +1722,7 @@ public class Client {
     System.out.println("UpdateAccount");
     System.out.println("SetAccountId");
     System.out.println("unfreezeasset");
+    System.out.println("GetNullifier");
     System.out.println(
         "DeployContract contractName ABI byteCode constructor params isHex fee_limit consume_user_resource_percent <value> <library:address,library:address,...>");
     System.out.println("updateSetting contract_address consume_user_resource_percent");
@@ -2085,6 +2098,10 @@ public class Client {
           }
           case "getblockbylatestnum": {
             getBlockByLatestNum(parameters);
+            break;
+          }
+          case "getnullifier": {
+            getNullifier(parameters);
             break;
           }
           case "updatesetting": {
