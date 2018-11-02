@@ -46,6 +46,9 @@ import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.api.ZkGrpcAPI.ProofInputMsg;
+import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
+import org.tron.api.ZkGrpcAPI.Uint256Msg;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Hash;
@@ -53,10 +56,11 @@ import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
-import org.tron.common.utils.CmUtils;
-import org.tron.common.utils.CmUtils.CmTuple;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
+import org.tron.common.utils.ZksnarkUtils;
+import org.tron.common.zksnark.CmUtils;
+import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
 import org.tron.core.exception.CancelException;
@@ -79,7 +83,6 @@ import org.tron.protos.Contract.UnfreezeBalanceContract;
 import org.tron.protos.Contract.UpdateSettingContract;
 import org.tron.protos.Contract.WithdrawBalanceContract;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
-import org.tron.protos.Contract.zkv0proof;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -136,7 +139,13 @@ public class WalletApi {
     if (config.hasPath("RPC_version")) {
       rpcVersion = config.getInt("RPC_version");
     }
-    return new GrpcClient(fullNode, solidityNode);
+
+    String zksnarkserver = "127.0.0.1:50053";
+    if (config.hasPath("zksnarkserver")) {
+      zksnarkserver = config.getString("zksnarkserver");
+    }
+
+    return new GrpcClient(fullNode, solidityNode, zksnarkserver);
   }
 
   public static String selectFullNode() {
@@ -497,33 +506,85 @@ public class WalletApi {
     }
     KeyPairGenerator generator = new KeyPairGenerator();
     KeyPair keyPair = generator.generateKeyPair();
-    zkBuilder.setPksig(ByteString.copyFrom(((EdDSAPublicKey) (keyPair.getPublic())).getAbyte()));
-    //todo: get rt
-    byte[] rt = null;
-    //todo: get path of cm
-    byte[] path1 = null;
-    byte[] path2 = null;
+    byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
+    zkBuilder.setPksig(ByteString.copyFrom(pkSig));
+
     CmTuple c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
     CmTuple c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
-    //proof
-    zkv0proof proof = null;
+
+    //TODO: getbestMerkel
+    byte[] rt = null;
     MerkelRoot.Builder rtB = MerkelRoot.newBuilder();
     rtB.setRt(ByteString.copyFromUtf8("1122222"));
     zkBuilder.setRt(rtB);
-    if (cm1 != null){
-      zkBuilder.setNf1(ByteString.copyFromUtf8("test123456"));
+
+    ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
+
+    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1));
+    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2));
+
+    builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
+    builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
+    builder.setPubkeyhash(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(pkSig)));
+    //TODO: vToPub + Fee();
+    builder.setVpubOld(vFromPub);
+    builder.setVpubNew(vToPub);
+    builder.setRt(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(rt)));
+    builder.setComputeProof(true);
+
+    ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
+
+    if (outputMsg.getRet().getResultCode() != 0) {
+      System.out.printf("Proof code = %d, desc is %s\n", outputMsg.getRet().getResultCode(),
+          outputMsg.getRet().getResultDesc());
+      return false;
     }
-    if (cm2 != null){
-      zkBuilder.setNf2(ByteString.copyFromUtf8("test123456"));
+
+    if (outputMsg.getOutNullifiersCount() != 2) {
+      System.out.printf("Nf count is %d\n", outputMsg.getOutNullifiersCount());
+      return false;
     }
-    if (to1 != null){
-      zkBuilder.setCm1(ByteString.copyFromUtf8("test123456"));
+    zkBuilder.setNf1(outputMsg.getOutNullifiers(0).getHash());
+    zkBuilder.setNf2(outputMsg.getOutNullifiers(1).getHash());
+
+    if (outputMsg.getOutCommitmentsCount() != 2) {
+      System.out.printf("Cm count is %d\n", outputMsg.getOutCommitmentsCount());
+      return false;
     }
-    if (to2 != null){
-      zkBuilder.setCm2(ByteString.copyFromUtf8("test123456"));
+    zkBuilder.setCm1(outputMsg.getOutCommitments(0).getHash());
+    zkBuilder.setCm2(outputMsg.getOutCommitments(1).getHash());
+
+    zkBuilder.setRandomSeed(outputMsg.getOutRandomSeed().getHash());
+    zkBuilder.setEpk(outputMsg.getOutEphemeralKey().getHash());
+
+    if (outputMsg.getOutMacsCount() != 2) {
+      System.out.printf("Macs count is %d\n", outputMsg.getOutMacsCount());
+      return false;
     }
+    zkBuilder.setH1(outputMsg.getOutMacs(0).getHash());
+    zkBuilder.setH2(outputMsg.getOutMacs(1).getHash());
+
+    if (outputMsg.getOutCiphertextsCount() != 2) {
+      System.out.printf("Ciphertexts count is %d\n", outputMsg.getOutCiphertextsCount());
+      return false;
+    }
+    zkBuilder.setC1(outputMsg.getOutCiphertexts(0));
+    zkBuilder.setC2(outputMsg.getOutCiphertexts(1));
+
+    if (outputMsg.getOutNotesCount() != 2) {
+      System.out.printf("New note count is %d\n", outputMsg.getOutNotesCount());
+      return false;
+    }
+    
+    zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
+
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
-    return processTransactionExtention(transactionExtention, keyPair.getPrivate(), havePubInput);
+    boolean result = processTransactionExtention(transactionExtention, keyPair.getPrivate(),
+        havePubInput);
+    if (result) {
+      //TODO: save outputMsg.getOutNotesCount()
+    }
+    return result;
   }
 
   public boolean sendCoin(byte[] to, long amount)
