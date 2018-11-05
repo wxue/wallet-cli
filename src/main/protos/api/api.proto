@@ -410,6 +410,27 @@ service Wallet {
     };
   };
 
+
+  rpc GetDelegatedResource (DelegatedResourceMessage) returns (DelegatedResourceList) {
+    option (google.api.http) = {
+      post: "/wallet/getdelegatedresource"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getdelegatedresource"
+      }
+    };
+  };
+
+  rpc GetDelegatedResourceAccountIndex (BytesMessage) returns (DelegatedResourceAccountIndex) {
+    option (google.api.http) = {
+        post: "/wallet/getdelegatedresourceaccountindex"
+        body: "*"
+        additional_bindings {
+          get: "/wallet/getdelegatedresourceaccountindex"
+        }
+      };
+  };
+
   rpc ListProposals (EmptyMessage) returns (ProposalList) {
     option (google.api.http) = {
       post: "/wallet/listproposals"
@@ -419,15 +440,15 @@ service Wallet {
       }
     };
   };
- rpc GetPaginatedProposalList (PaginatedMessage) returns (ProposalList) {
-      option (google.api.http) = {
-          post: "/wallet/getpaginatedproposallist"
-          body: "*"
-          additional_bindings {
-            get: "/wallet/getpaginatedproposallist"
-          }
-        };
-    }
+  rpc GetPaginatedProposalList (PaginatedMessage) returns (ProposalList) {
+    option (google.api.http) = {
+      post: "/wallet/getpaginatedproposallist"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getpaginatedproposallist"
+      }
+    };
+  }
   rpc GetProposalById (BytesMessage) returns (Proposal) {
     option (google.api.http) = {
         post: "/wallet/getproposalbyid"
@@ -448,14 +469,14 @@ service Wallet {
     };
   };
   rpc GetPaginatedExchangeList (PaginatedMessage) returns (ExchangeList) {
-      option (google.api.http) = {
-          post: "/wallet/getpaginatedexchangelist"
-          body: "*"
-          additional_bindings {
-            get: "/wallet/getpaginatedexchangelist"
-          }
-        };
-    }
+    option (google.api.http) = {
+      post: "/wallet/getpaginatedexchangelist"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getpaginatedexchangelist"
+      }
+    };
+  }
   rpc GetExchangeById (BytesMessage) returns (Exchange) {
     option (google.api.http) = {
         post: "/wallet/getexchangebyid"
@@ -577,6 +598,16 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/gettransactioninfobyid"
+      }
+    };
+  }
+
+  rpc GetNullifier (BytesMessage) returns (BytesMessage) {
+    option (google.api.http) = {
+      post: "/wallet/getnullifier"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getnullifier"
       }
     };
   }
@@ -785,6 +816,13 @@ message BlockList {
 message TransactionList {
   repeated Transaction transaction = 1;
 }
+message DelegatedResourceMessage {
+  bytes fromAddress = 1;
+  bytes toAddress = 2;
+}
+message DelegatedResourceList {
+  repeated DelegatedResource delegatedResource = 1;
+}
 
 // Gossip node list
 message NodeList {
@@ -882,7 +920,7 @@ message EasyTransferByPrivateMessage {
 message EasyTransferResponse {
   Transaction transaction = 1;
   Return result = 2;
-  bytes txid = 3;   //transaction id =  sha256(transaction.rowdata)
+  bytes txid = 3; //transaction id =  sha256(transaction.rowdata)
 }
 
 message AddressPrKeyPairMessage {
@@ -892,7 +930,7 @@ message AddressPrKeyPairMessage {
 
 message TransactionExtention {
   Transaction transaction = 1;
-  bytes txid = 2;   //transaction id =  sha256(transaction.rowdata)
+  bytes txid = 2; //transaction id =  sha256(transaction.rowdata)
   repeated bytes constant_result = 3;
   Return result = 4;
 }
