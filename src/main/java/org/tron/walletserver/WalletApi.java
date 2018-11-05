@@ -513,8 +513,14 @@ public class WalletApi {
     byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
     zkBuilder.setPksig(ByteString.copyFrom(pkSig));
 
-    CmTuple c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
-    CmTuple c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
+    CmTuple c_old1 = null;
+    if (!StringUtils.isEmpty(cm1)) {
+      c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
+    }
+    CmTuple c_old2 = null;
+    if (!StringUtils.isEmpty(cm2)) {
+      c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
+    }
 
     //TODO: getbestMerkel
     byte[] rt = null;
@@ -579,7 +585,7 @@ public class WalletApi {
       System.out.printf("New note count is %d\n", outputMsg.getOutNotesCount());
       return false;
     }
-    
+
     zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
 
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
@@ -1308,7 +1314,8 @@ public class WalletApi {
     return rpcCli.getDelegatedResource(fromAddress, toAddress);
   }
 
-  public static Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(String address) {
+  public static Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(
+      String address) {
     return rpcCli.getDelegatedResourceAccountIndex(address);
   }
 
