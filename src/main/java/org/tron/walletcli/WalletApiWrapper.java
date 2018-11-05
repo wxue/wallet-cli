@@ -198,7 +198,7 @@ public class WalletApiWrapper {
     }
     byte[] to1 = null;
     if (toAddress1 != null) {
-      to1 = WalletApi.decodeFromBase58Check(toAddress1);
+      to1 = WalletApi.decodeBase58Check(toAddress1);
       if (to1 == null) {
         return false;
       }
