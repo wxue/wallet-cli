@@ -15,7 +15,12 @@
 
 package org.tron.common.utils;
 
+
+import static org.tron.protos.Protocol.Transaction.Contract.ContractType.ZksnarkV0TransferContract;
+
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.List;
@@ -24,8 +29,12 @@ import org.slf4j.LoggerFactory;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.ECKey.ECDSASignature;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.blake2b.Blake2b;
+import org.tron.common.crypto.eddsa.EdDSAEngine;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
+import java.security.PrivateKey;
 
 public class TransactionUtils {
 
@@ -176,6 +185,25 @@ public class TransactionUtils {
 
     transaction = transactionBuilderSigned.build();
     return transaction;
+  }
+
+  public static Transaction zkSign(Transaction transaction, PrivateKey privateKey)
+      throws InvalidKeyException, InvalidProtocolBufferException, SignatureException {
+    Transaction.Builder transactionBuilderSigned = transaction.toBuilder();
+    for (int i = 0; i < transaction.getRawData().getContractCount(); i++) {
+      Transaction.Contract contract = transaction.getRawData().getContract(i);
+      if (contract.getType() != ZksnarkV0TransferContract) {
+        continue;
+      }
+      ZksnarkV0TransferContract zkContract = contract.getParameter()
+          .unpack(ZksnarkV0TransferContract.class);
+      byte[] input = ZksnarkUtils.computeZkSignInput(zkContract);
+      EdDSAEngine engine = new EdDSAEngine();
+      engine.initSign(privateKey);
+      byte[] zkSign = engine.signOneShot(input);
+      transactionBuilderSigned.addSignatureZk(ByteString.copyFrom(zkSign));
+    }
+    return transactionBuilderSigned.build();
   }
 
   public static Transaction setTimestamp(Transaction transaction) {

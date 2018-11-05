@@ -1212,7 +1212,8 @@ public class Utils {
     return result;
   }
 
-  public static String printInternalTransactionList(List<InternalTransaction> internalTransactions){
+  public static String printInternalTransactionList(
+      List<InternalTransaction> internalTransactions) {
     StringBuilder result = new StringBuilder("");
     internalTransactions.forEach(internalTransaction -> {
           result.append("[\n");
@@ -1220,25 +1221,26 @@ public class Utils {
           result.append("  " + ByteArray.toHexString(internalTransaction.getHash().toByteArray()));
           result.append("  \n");
           result.append("  caller_address:\n");
-          result.append("  " +ByteArray.toHexString(internalTransaction.getCallerAddress().toByteArray()));
+          result.append(
+              "  " + ByteArray.toHexString(internalTransaction.getCallerAddress().toByteArray()));
           result.append("  \n");
           result.append("  transferTo_address:\n");
-          result.append("  " +ByteArray.toHexString(internalTransaction.getTransferToAddress().toByteArray()));
+          result.append(
+              "  " + ByteArray.toHexString(internalTransaction.getTransferToAddress().toByteArray()));
           result.append("  \n");
           result.append("  callValueInfo:\n");
           StringBuilder callValueInfo = new StringBuilder("");
 
           internalTransaction.getCallValueInfoList().forEach(token -> {
             callValueInfo.append("  TokenName(Default trx):\n");
-            if (null == token.getTokenName()|| token.getTokenName().size() == 0){
+            if (null == token.getTokenName() || token.getTokenName().size() == 0) {
               callValueInfo.append("  TRX(SUN)");
-            }
-            else {
-              callValueInfo.append("  " +ByteArray.toHexString(token.getTokenName().toByteArray()));
+            } else {
+              callValueInfo.append("  " + ByteArray.toHexString(token.getTokenName().toByteArray()));
             }
             callValueInfo.append("  \n");
             callValueInfo.append("  callValue:\n");
-            callValueInfo.append("  " +token.getCallValue());
+            callValueInfo.append("  " + token.getCallValue());
             callValueInfo.append("  \n");
           });
           result.append(callValueInfo);
@@ -1607,4 +1609,16 @@ public class Utils {
       System.out.println("Invalid password, please input again.");
     }
   }
+
+
+  public static byte[] hexToBytes(String s) {
+    int len = s.length();
+    byte[] data = new byte[len / 2];
+    for (int i = 0; i < len; i += 2) {
+      data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+          + Character.digit(s.charAt(i + 1), 16));
+    }
+    return data;
+  }
 }
+

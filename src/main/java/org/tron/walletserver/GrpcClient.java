@@ -36,9 +36,12 @@ import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.api.ProofServerGrpc;
 import org.tron.api.WalletExtensionGrpc;
 import org.tron.api.WalletGrpc;
 import org.tron.api.WalletSolidityGrpc;
+import org.tron.api.ZkGrpcAPI.ProofInputMsg;
+import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.common.utils.ByteArray;
 import org.tron.protos.Contract;
 import org.tron.protos.Protocol.Account;
@@ -57,9 +60,11 @@ public class GrpcClient {
   private static final Logger logger = LoggerFactory.getLogger("GrpcClient");
   private ManagedChannel channelFull = null;
   private ManagedChannel channelSolidity = null;
+  private ManagedChannel channelZksnark = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
   private WalletSolidityGrpc.WalletSolidityBlockingStub blockingStubSolidity = null;
   private WalletExtensionGrpc.WalletExtensionBlockingStub blockingStubExtension = null;
+  private ProofServerGrpc.ProofServerBlockingStub blockingStubZksnark = null;
 
 //  public GrpcClient(String host, int port) {
 //    channel = ManagedChannelBuilder.forAddress(host, port)
@@ -68,11 +73,9 @@ public class GrpcClient {
 //    blockingStub = WalletGrpc.newBlockingStub(channel);
 //  }
 
-  public GrpcClient(String fullnode, String soliditynode) {
+  public GrpcClient(String fullnode, String soliditynode, String zksnark) {
     if (!StringUtils.isEmpty(fullnode)) {
-      channelFull = ManagedChannelBuilder.forTarget(fullnode)
-          .usePlaintext(true)
-          .build();
+      channelFull = ManagedChannelBuilder.forTarget(fullnode).usePlaintext(true).build();
       blockingStubFull = WalletGrpc.newBlockingStub(channelFull);
     }
     if (!StringUtils.isEmpty(soliditynode)) {
@@ -81,6 +84,10 @@ public class GrpcClient {
           .build();
       blockingStubSolidity = WalletSolidityGrpc.newBlockingStub(channelSolidity);
       blockingStubExtension = WalletExtensionGrpc.newBlockingStub(channelSolidity);
+    }
+    if (!StringUtils.isEmpty(zksnark)) {
+      channelZksnark = ManagedChannelBuilder.forTarget(zksnark).usePlaintext(true).build();
+      blockingStubZksnark = ProofServerGrpc.newBlockingStub(channelZksnark);
     }
   }
 
@@ -91,6 +98,13 @@ public class GrpcClient {
     if (channelSolidity != null) {
       channelSolidity.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
+    if (channelZksnark != null) {
+      channelZksnark.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    }
+  }
+
+  public ProofOutputMsg proof(ProofInputMsg inputMsg) {
+    return blockingStubZksnark.proof(inputMsg);
   }
 
   public Account queryAccount(byte[] address) {
@@ -179,6 +193,10 @@ public class GrpcClient {
 
   public TransactionExtention createTransaction2(Contract.TransferContract contract) {
     return blockingStubFull.createTransaction2(contract);
+  }
+
+  public TransactionExtention zksnarkV0TransferTrx(Contract.ZksnarkV0TransferContract contract) {
+    return blockingStubFull.zksnarkV0TransferTrx(contract);
   }
 
   public Transaction createTransaction(Contract.FreezeBalanceContract contract) {
