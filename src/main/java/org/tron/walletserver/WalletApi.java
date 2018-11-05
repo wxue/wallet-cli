@@ -79,7 +79,6 @@ import org.tron.protos.Contract.BuyStorageBytesContract;
 import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
-import org.tron.protos.Contract.MerkelRoot;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
@@ -524,9 +523,7 @@ public class WalletApi {
 
     //TODO: getbestMerkel
     byte[] rt = null;
-    MerkelRoot.Builder rtB = MerkelRoot.newBuilder();
-    rtB.setRt(ByteString.copyFromUtf8("1122222"));
-    zkBuilder.setRt(rtB);
+    zkBuilder.setRt(ByteString.EMPTY);
 
     ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
 
