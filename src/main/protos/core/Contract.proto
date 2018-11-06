@@ -71,6 +71,16 @@ message zkv0proof {
   BN128G1 h = 8;
 }
 
+message AuthenticationPath {
+  repeated bool value = 1;
+}
+
+message MerklePath {
+  repeated AuthenticationPath authentication_paths = 1;
+  repeated bool index = 2;
+  bytes rt = 3;
+}
+
 message MerkelRoot {
   int64 blocknum = 1;
   bytes rt = 2;

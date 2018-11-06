@@ -80,6 +80,7 @@ import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
 import org.tron.protos.Contract.MerkelRoot;
+import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
@@ -579,7 +580,7 @@ public class WalletApi {
       System.out.printf("New note count is %d\n", outputMsg.getOutNotesCount());
       return false;
     }
-    
+
     zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
 
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
@@ -1308,7 +1309,8 @@ public class WalletApi {
     return rpcCli.getDelegatedResource(fromAddress, toAddress);
   }
 
-  public static Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(String address) {
+  public static Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(
+      String address) {
     return rpcCli.getDelegatedResourceAccountIndex(address);
   }
 
@@ -1326,6 +1328,14 @@ public class WalletApi {
 
   public static Optional<BytesMessage> getNullifier(String nfID) {
     return rpcCli.getNullifier(nfID);
+  }
+
+  public static Optional<MerklePath> getMerklePath(String rt) {
+    return rpcCli.getMerklePath(rt);
+  }
+
+  public static Optional<MerklePath> getBestMerkleRoot() {
+    return rpcCli.getBestMerkleRoot();
   }
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,

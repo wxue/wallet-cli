@@ -47,6 +47,7 @@ import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
 import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
+import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -1470,6 +1471,33 @@ public class Client {
     }
   }
 
+  private void getMerklePath(String[] parameters) {
+    String rt = "";
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("get needs 1 parameter, root hash");
+      return;
+    } else {
+      rt = parameters[0];
+    }
+    Optional<MerklePath> result = WalletApi.getMerklePath(rt);
+    if (result.isPresent()) {
+      MerklePath merklePath = result.get();
+      logger.info(merklePath.toString());
+    } else {
+      logger.info("getMerklePath " + " failed !!");
+    }
+  }
+
+  private void getBestMerkleRoot() {
+    Optional<MerklePath> result = WalletApi.getBestMerkleRoot();
+    if (result.isPresent()) {
+      MerklePath merklePath = result.get();
+      logger.info(merklePath.toString());
+    } else {
+      logger.info("getBestMerkleRoot " + " failed !!");
+    }
+  }
+
   private void updateSetting(String[] parameters)
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
@@ -1702,6 +1730,8 @@ public class Client {
     System.out.println("SetAccountId");
     System.out.println("unfreezeasset");
     System.out.println("GetNullifier");
+    System.out.println("GetMerklePath");
+    System.out.println("GetBestMerkleRoot");
     System.out.println(
         "DeployContract contractName ABI byteCode constructor params isHex fee_limit consume_user_resource_percent <value> <library:address,library:address,...>");
     System.out.println("updateSetting contract_address consume_user_resource_percent");
@@ -2085,6 +2115,14 @@ public class Client {
           }
           case "getnullifier": {
             getNullifier(parameters);
+            break;
+          }
+          case "getmerklepath": {
+            getMerklePath(parameters);
+            break;
+          }
+          case "getbestmerkleroot": {
+            getBestMerkleRoot();
             break;
           }
           case "updatesetting": {

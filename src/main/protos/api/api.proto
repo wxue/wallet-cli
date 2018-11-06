@@ -46,7 +46,7 @@ service Wallet {
   rpc CreateTransaction2 (TransferContract) returns (TransactionExtention) {
   };
 
-  rpc ZksnarkV0TransferTrx(ZksnarkV0TransferContract) returns(TransactionExtention) {
+  rpc ZksnarkV0TransferTrx (ZksnarkV0TransferContract) returns (TransactionExtention) {
   };
 
   rpc BroadcastTransaction (Transaction) returns (Return) {
@@ -603,13 +603,12 @@ service Wallet {
   }
 
   rpc GetNullifier (BytesMessage) returns (BytesMessage) {
-    option (google.api.http) = {
-      post: "/wallet/getnullifier"
-      body: "*"
-      additional_bindings {
-        get: "/wallet/getnullifier"
-      }
-    };
+  }
+
+  rpc GetMerklePath (BytesMessage) returns (MerklePath) {
+  }
+
+  rpc GetBestMerkleRoot (EmptyMessage) returns (MerklePath) {
   }
 };
 
