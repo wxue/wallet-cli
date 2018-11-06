@@ -106,6 +106,8 @@ public class CmUtils {
     public byte[] v;
     public byte[] rho;
     public byte[] r;
+    public byte[] txid;
+    public int index;
     public byte used;
 
     public CmTuple(String line) {

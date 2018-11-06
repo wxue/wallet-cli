@@ -15,6 +15,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.ProofInputMsg;
 import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
@@ -79,7 +81,6 @@ import org.tron.protos.Contract.BuyStorageBytesContract;
 import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
-import org.tron.protos.Contract.MerkelRoot;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
@@ -514,19 +515,52 @@ public class WalletApi {
     byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
     zkBuilder.setPksig(ByteString.copyFrom(pkSig));
 
-    CmTuple c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
-    CmTuple c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
+    byte[] rt = ByteArray
+        .fromHexString(
+            "2549F0F69104F687E926819CE20226226157627E3BC426C264389F5708B7B5A1");//test data
+    CmTuple c_old1 = null;
+    CmTuple c_old2 = null;
+    IncrementalWitnessMsg witnessMsg1 = ZksnarkUtils.GetEmptyWitness();
+    IncrementalWitnessMsg witnessMsg2 = ZksnarkUtils.GetEmptyWitness();
+    if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
+      //TODO: getbestMerkel rt =
+    } else {
+      //rt =
+      if (!StringUtils.isEmpty(cm1)) {
+        c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
+        if (c_old1 == null) {
+          System.out.printf("Can not find c_old by cm : %s.\n", cm1);
+          return false;
+        }
+        //witnessMsg1 =
+      }
+      if (!StringUtils.isEmpty(cm2)) {
+        c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
+        if (c_old1 == null) {
+          System.out.printf("Can not find c_old by cm : %s.\n", cm2);
+          return false;
+        }
+        //witnessMsg2 =
+      }
+      if (!StringUtils.isEmpty(cm1) && !StringUtils.isEmpty(cm1)) {
+        if (Arrays.equals(c_old1.txid, c_old2.txid)) {
+          System.out.print("Can not spend two cm from different transaction.");
+          return false;
+        }
+        //rt
+      } else if (!StringUtils.isEmpty(cm1)) {
+        //rt
+      } else {
+        //rt
+      }
+    }
 
-    //TODO: getbestMerkel
-    byte[] rt = null;
-    MerkelRoot.Builder rtB = MerkelRoot.newBuilder();
-    rtB.setRt(ByteString.copyFromUtf8("1122222"));
-    zkBuilder.setRt(rtB);
+    zkBuilder.setRt(ByteString.copyFrom(rt));
 
     ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
 
-    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1));
-    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2));
+    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1, witnessMsg1));
+    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2, witnessMsg2));
 
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
@@ -587,7 +621,12 @@ public class WalletApi {
     boolean result = processTransactionExtention(transactionExtention, keyPair.getPrivate(),
         havePubInput);
     if (result) {
-      //TODO: save outputMsg.getOutNotesCount()
+      if (!StringUtils.isEmpty(cm1)) {
+        CmUtils.useCmInfo(ByteArray.fromHexString(cm1));
+      }
+      if (!StringUtils.isEmpty(cm2)) {
+        CmUtils.useCmInfo(ByteArray.fromHexString(cm2));
+      }
     }
     return result;
   }
@@ -980,6 +1019,14 @@ public class WalletApi {
       return null;
     }
     return address;
+  }
+
+  public static byte[] decodeBase58Check(String addressBase58) {
+    if (StringUtils.isEmpty(addressBase58)) {
+      logger.warn("Warning: Address is empty !!");
+      return null;
+    }
+    return decode58Check(addressBase58);
   }
 
   public static boolean priKeyValid(byte[] priKey) {

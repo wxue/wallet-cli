@@ -30,6 +30,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tron.api.ZkGrpcAPI.IncrementalMerkleTreeMsg;
+import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.JSInputMsg;
 import org.tron.api.ZkGrpcAPI.JSOutputMsg;
 import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
@@ -97,10 +99,9 @@ public class ZksnarkUtils {
     return output.build();
   }
 
-  public static JSInputMsg CmTuple2JSInputMsg(CmTuple in) {
+  public static JSInputMsg CmTuple2JSInputMsg(CmTuple in, IncrementalWitnessMsg witnessMsg) {
     JSInputMsg.Builder input = JSInputMsg.newBuilder();
     SproutNoteMsg.Builder note = SproutNoteMsg.newBuilder();
-    //TODO witness
     byte[] ask;
     byte[] apk;
     long v;
@@ -116,12 +117,14 @@ public class ZksnarkUtils {
       new Random().nextBytes(rho);
       r = new byte[32];
       new Random().nextBytes(r);
+      input.setWitness(witnessMsg);
     } else {
       ask = in.addr_sk;
       apk = in.addr_pk;
       v = ByteArray.toLong(in.v);
       rho = in.rho;
       r = in.r;
+      input.setWitness(witnessMsg);
     }
     note.setValue(v);
     note.setAPk(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(apk)));
@@ -130,6 +133,40 @@ public class ZksnarkUtils {
     input.setKey(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(ask)));
     input.setNote(note);
     return input.build();
+  }
+
+  public static IncrementalWitnessMsg GetEmptyWitness() {
+    IncrementalWitnessMsg.Builder builder = IncrementalWitnessMsg.newBuilder();
+    IncrementalMerkleTreeMsg.Builder merkle = IncrementalMerkleTreeMsg.newBuilder();
+    byte[] temp = new byte[32];
+    new Random().nextBytes(temp);
+
+    merkle.setLeft(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
+    merkle.setRight(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
+    merkle.addEmptyroots(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
+    merkle.addParents(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
+    builder.setTree(merkle);
+    builder.setCursor(merkle);
+    builder.addFilled(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
+    builder.setCursorDepth(0);
+    return builder.build();
+//    message IncrementalMerkleTreeMsg {
+//      repeated Uint256Msg emptyroots = 1; // 静态变量，后期考虑不要了，直接去掉，不用传递TODO
+//      Uint256Msg left = 2;
+//      Uint256Msg right = 3;
+//      repeated Uint256Msg parents = 4;
+//    }
+//
+//    message IncrementalWitnessMsg {
+//      IncrementalMerkleTreeMsg tree = 1;
+//      repeated Uint256Msg filled = 2;
+//      IncrementalMerkleTreeMsg cursor = 3;
+//      uint32 cursor_depth = 4;
+//    }
+  }
+
+  public static IncrementalWitnessMsg MerkleWitness2IncrementalWitness() {
+    return null;
   }
 
   public static zkv0proof byte2Proof(byte[] in) {
