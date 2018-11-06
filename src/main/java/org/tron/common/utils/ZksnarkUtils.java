@@ -42,6 +42,7 @@ import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
 import org.tron.common.crypto.eddsa.EdDSAEngine;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
+import org.tron.common.crypto.eddsa.MathUtils;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
 import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
@@ -53,6 +54,7 @@ import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Contract.zkv0proof;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.walletserver.WalletApi;
 
 public class ZksnarkUtils {
 
@@ -167,6 +169,25 @@ public class ZksnarkUtils {
 
   public static IncrementalWitnessMsg MerkleWitness2IncrementalWitness() {
     return null;
+  }
+
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, String address, int index) {
+    byte[] privateAddress = WalletApi.decodeBase58Check(address);
+    if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
+      return false;
+    }
+    byte[] ask = Arrays.copyOfRange(privateAddress, 0, 32);
+    byte[] skEnc = Arrays.copyOfRange(privateAddress, 32, 64);
+
+    byte[] epk = contract.getEpk().toByteArray();
+    byte[] randomSeed = contract.getRandomSeed().toByteArray();
+    byte[] pkSig = contract.getPksig().toByteArray();
+    byte[] nf1 = contract.getNf1().toByteArray();
+    byte[] nf2 = contract.getNf2().toByteArray();
+
+    byte[] dh = MathUtils.scalarMultiply(epk, skEnc);
+//    byte[] K1
+    return true;
   }
 
   public static zkv0proof byte2Proof(byte[] in) {

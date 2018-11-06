@@ -64,7 +64,7 @@ public class WalletApiWrapper {
     String addPri = WalletApi.encode58Check(addPrivate);
     String addPub = WalletApi.encode58Check(addPublic);
     System.out.printf("Private address : %s\n",addPri);
-    System.out.printf("Private address : %s\n", addPub);
+    System.out.printf("Public address : %s\n", addPub);
   }
 
   public String importWallet(char[] password, byte[] priKey) throws CipherException, IOException {

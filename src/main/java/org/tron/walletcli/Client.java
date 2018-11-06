@@ -1,6 +1,7 @@
 package org.tron.walletcli;
 
 import com.beust.jcommander.JCommander;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
@@ -42,11 +43,14 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.common.utils.ZksnarkUtils;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
 import org.tron.keystore.StringUtils;
+import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.AssetIssueContract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -55,6 +59,8 @@ import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
 import org.tron.protos.Protocol.Transaction;
+import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.walletserver.WalletApi;
 
@@ -1235,19 +1241,43 @@ public class Client {
 //  }
 
   private void getTransactionById(String[] parameters) {
-    String txid = "";
     if (parameters == null || parameters.length != 1) {
       System.out.println("getTransactionById needs 1 parameter, transaction id");
       return;
-    } else {
-      txid = parameters[0];
     }
+    String txid = parameters[0];
     Optional<Transaction> result = WalletApi.getTransactionById(txid);
     if (result.isPresent()) {
       Transaction transaction = result.get();
       logger.info(Utils.printTransaction(transaction));
     } else {
-      logger.info("getTransactionById " + " failed !!");
+      logger.info("getTransactionById failed !!");
+    }
+  }
+
+  private void receiveShieldTransaction(String[] parameters) throws InvalidProtocolBufferException {
+    if (parameters == null || parameters.length != 3) {
+      System.out.println(
+          "receiveShieldTransaction needs 2 parameter, transaction index and Private address");
+      return;
+    }
+    String txid = parameters[0];
+    int index = Integer.parseInt(parameters[1]);
+    String address = parameters[2];
+    Optional<Transaction> result = WalletApi.getTransactionById(txid);
+    if (result.isPresent()) {
+      Transaction transaction = result.get();
+      System.out.println(Utils.printTransaction(transaction));
+      Contract contract = transaction.getRawData().getContract(0);
+      if (contract.getType() != ContractType.ZksnarkV0TransferContract) {
+        System.out.println("Is not shield transaction.");
+        return;
+      }
+      ZksnarkV0TransferContract zkContract = contract.getParameter()
+          .unpack(ZksnarkV0TransferContract.class);
+      ZksnarkUtils.saveShieldCoin(zkContract, address, index);
+    } else {
+      System.out.println("receiveShieldTransaction failed !!");
     }
   }
 
@@ -1684,6 +1714,7 @@ public class Client {
     //   System.out.println("GetTransactionsByTimestamp");
     //   System.out.println("GetTransactionsByTimestampCount");
     System.out.println("GetTransactionById");
+    System.out.println("ReceiveShieldTransactionById");
     System.out.println("getTransactionInfoById");
     System.out.println("GetTransactionsFromThis");
     //   System.out.println("GetTransactionsFromThisCount");
@@ -2065,6 +2096,10 @@ public class Client {
 //          }
           case "gettransactionbyid": {
             getTransactionById(parameters);
+            break;
+          }
+          case "receiveshieldtransactionbyid": {
+            receiveShieldTransaction(parameters);
             break;
           }
           case "gettransactioninfobyid": {
