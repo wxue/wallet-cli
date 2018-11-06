@@ -20,6 +20,7 @@ import static org.tron.protos.Protocol.Transaction.Contract.ContractType.Zksnark
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.sun.scenario.effect.Merge;
 import java.security.InvalidKeyException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
@@ -84,7 +85,13 @@ public class ZksnarkUtils {
     JSOutputMsg.Builder output = JSOutputMsg.newBuilder();
     if (ArrayUtils.isEmpty(to) || to.length != 64) {
       to = new byte[64];
-      new Random().nextBytes(to);
+      ShieldAddressGenerator shieldAddressGenerator = new ShieldAddressGenerator();
+      byte[] privateKey = shieldAddressGenerator.generatePrivateKey();
+      byte[] publicKey = shieldAddressGenerator.generatePublicKey(privateKey);
+
+      byte[] privateKeyEnc = shieldAddressGenerator.generatePrivateKeyEnc(privateKey);
+      byte[] publicKeyEnc = shieldAddressGenerator.generatePublicKeyEnc(privateKeyEnc);
+      to = ByteUtil.merge(publicKey, publicKeyEnc);
       v = 0;
     }
 

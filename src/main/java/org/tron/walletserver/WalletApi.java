@@ -510,6 +510,13 @@ public class WalletApi {
       zkBuilder.setToAddress(ByteString.copyFrom(toPub));
       zkBuilder.setVToPub(vToPub);
     }
+    if (StringUtils.isEmpty(cm1) && !StringUtils.isEmpty(cm2)) {
+      return false;
+    }
+    if (ArrayUtils.isEmpty(to1) && !ArrayUtils.isEmpty(to2)) {
+      return false;
+    }
+
     KeyPairGenerator generator = new KeyPairGenerator();
     KeyPair keyPair = generator.generateKeyPair();
     byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
@@ -518,49 +525,40 @@ public class WalletApi {
     byte[] rt = ByteArray
         .fromHexString(
             "2549F0F69104F687E926819CE20226226157627E3BC426C264389F5708B7B5A1");//test data
+    zkBuilder.setRt(ByteString.copyFrom(rt));
+
+    ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
+
     CmTuple c_old1 = null;
     CmTuple c_old2 = null;
     IncrementalWitnessMsg witnessMsg1 = ZksnarkUtils.GetEmptyWitness();
     IncrementalWitnessMsg witnessMsg2 = ZksnarkUtils.GetEmptyWitness();
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
-      //TODO: getbestMerkel rt =
+      //rt = WalletApi.getBestMerkleRoot().get().getRt().toByteArray();
     } else {
+
+      c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
+      if (c_old1 == null) {
+        System.out.printf("Can not find c_old by cm : %s.\n", cm1);
+        return false;
+      }
+      //witnessMsg1 =
       //rt =
-      if (!StringUtils.isEmpty(cm1)) {
-        c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
-        if (c_old1 == null) {
-          System.out.printf("Can not find c_old by cm : %s.\n", cm1);
+      builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1, witnessMsg1));
+      if (!StringUtils.isEmpty(cm2)) {
+        if (!Arrays.equals(c_old1.txid, c_old2.txid)) {
+          System.out.print("Can not spend two cm from different transaction.");
           return false;
         }
-        //witnessMsg1 =
-      }
-      if (!StringUtils.isEmpty(cm2)) {
         c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
-        if (c_old1 == null) {
+        if (c_old2 == null) {
           System.out.printf("Can not find c_old by cm : %s.\n", cm2);
           return false;
         }
         //witnessMsg2 =
-      }
-      if (!StringUtils.isEmpty(cm1) && !StringUtils.isEmpty(cm1)) {
-        if (Arrays.equals(c_old1.txid, c_old2.txid)) {
-          System.out.print("Can not spend two cm from different transaction.");
-          return false;
-        }
-        //rt
-      } else if (!StringUtils.isEmpty(cm1)) {
-        //rt
-      } else {
-        //rt
+        builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2, witnessMsg2));
       }
     }
-
-    zkBuilder.setRt(ByteString.copyFrom(rt));
-
-    ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
-
-    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1, witnessMsg1));
-    builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2, witnessMsg2));
 
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
