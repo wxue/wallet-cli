@@ -1519,10 +1519,10 @@ public class Client {
   }
 
   private void getBestMerkleRoot() {
-    Optional<MerklePath> result = WalletApi.getBestMerkleRoot();
+    Optional<BytesMessage> result = WalletApi.getBestMerkleRoot();
     if (result.isPresent()) {
-      MerklePath merklePath = result.get();
-      logger.info(merklePath.toString());
+      byte[] rt = result.get().getValue().toByteArray();
+      logger.info(ByteArray.toHexString(rt));
     } else {
       logger.info("getBestMerkleRoot " + " failed !!");
     }

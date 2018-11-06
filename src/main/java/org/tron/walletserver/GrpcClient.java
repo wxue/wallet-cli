@@ -730,10 +730,9 @@ public class GrpcClient {
     return Optional.ofNullable(merklePath);
   }
 
-  public Optional<MerklePath> getBestMerkleRoot() {
-    MerklePath merklePath;
-    merklePath = blockingStubFull.getBestMerkleRoot(EmptyMessage.newBuilder().build());
-    return Optional.ofNullable(merklePath);
+  public Optional<BytesMessage> getBestMerkleRoot() {
+    BytesMessage rt = blockingStubFull.getBestMerkleRoot(EmptyMessage.newBuilder().build());
+    return Optional.ofNullable(rt);
   }
 
   public TransactionExtention updateSetting(Contract.UpdateSettingContract request) {

@@ -71,24 +71,36 @@ message zkv0proof {
   BN128G1 h = 8;
 }
 
-message AuthenticationPath {
-  repeated bool value = 1;
+message AuthenticationPath{
+  repeated bool  value = 1;
 }
 
 message MerklePath {
-  repeated AuthenticationPath authentication_paths = 1;
+  repeated AuthenticationPath  authentication_paths= 1;
   repeated bool index = 2;
   bytes rt = 3;
 }
 
-message SHA256Compress {
-  bytes value = 1;
+message OutputPoint{
+  bytes txHash = 1;
+  bytes index = 2;
 }
 
-message MerkleTree {
-  bytes left = 1;
-  bytes right = 2;
-  repeated bytes parents = 3;
+message SHA256Compress{
+  bytes content = 1;
+}
+
+message IncrementalMerkleTree{
+  SHA256Compress left = 1;
+  SHA256Compress right = 2;
+  repeated SHA256Compress parents = 3;
+}
+
+message IncrementalMerkleWitness{
+  IncrementalMerkleTree tree = 1;
+  repeated SHA256Compress filled = 2;
+  IncrementalMerkleTree cursor = 3;
+  int64 cursor_depth = 4;
 }
 
 message ZksnarkV0TransferContract {
@@ -193,14 +205,12 @@ message FreezeBalanceContract {
   bytes owner_address = 1;
   int64 frozen_balance = 2;
   int64 frozen_duration = 3;
-
   ResourceCode resource = 10;
   bytes receiver_address = 15;
 }
 
 message UnfreezeBalanceContract {
   bytes owner_address = 1;
-
   ResourceCode resource = 10;
   bytes receiver_address = 15;
 }
