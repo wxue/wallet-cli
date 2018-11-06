@@ -1377,6 +1377,14 @@ public class WalletApi {
     return rpcCli.getNullifier(nfID);
   }
 
+  public static Optional<MerklePath> getMerklePath(String rt) {
+    return rpcCli.getMerklePath(rt);
+  }
+
+  public static Optional<MerklePath> getBestMerkleRoot() {
+    return rpcCli.getBestMerkleRoot();
+  }
+
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,
       HashMap<Long, Long> parametersMap) {
     Contract.ProposalCreateContract.Builder builder = Contract.ProposalCreateContract.newBuilder();

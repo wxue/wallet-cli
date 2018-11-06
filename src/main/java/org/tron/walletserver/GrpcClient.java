@@ -44,6 +44,7 @@ import org.tron.api.ZkGrpcAPI.ProofInputMsg;
 import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.common.utils.ByteArray;
 import org.tron.protos.Contract;
+import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -719,6 +720,20 @@ public class GrpcClient {
     BytesMessage trxId;
     trxId = blockingStubFull.getNullifier(request);
     return Optional.ofNullable(trxId);
+  }
+
+  public Optional<MerklePath> getMerklePath(String rt) {
+    ByteString bsRt = ByteString.copyFrom(ByteArray.fromHexString(rt));
+    BytesMessage request = BytesMessage.newBuilder().setValue(bsRt).build();
+    MerklePath merklePath;
+    merklePath = blockingStubFull.getMerklePath(request);
+    return Optional.ofNullable(merklePath);
+  }
+
+  public Optional<MerklePath> getBestMerkleRoot() {
+    MerklePath merklePath;
+    merklePath = blockingStubFull.getBestMerkleRoot(EmptyMessage.newBuilder().build());
+    return Optional.ofNullable(merklePath);
   }
 
   public TransactionExtention updateSetting(Contract.UpdateSettingContract request) {
