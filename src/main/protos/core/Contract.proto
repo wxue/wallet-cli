@@ -71,32 +71,32 @@ message zkv0proof {
   BN128G1 h = 8;
 }
 
-message AuthenticationPath{
-  repeated bool  value = 1;
+message AuthenticationPath {
+  repeated bool value = 1;
 }
 
 message MerklePath {
-  repeated AuthenticationPath  authentication_paths= 1;
+  repeated AuthenticationPath authentication_paths = 1;
   repeated bool index = 2;
   bytes rt = 3;
 }
 
-message OutputPoint{
+message OutputPoint {
   bytes txHash = 1;
-  bytes index = 2;
+  int32 index = 2;
 }
 
-message SHA256Compress{
+message SHA256Compress {
   bytes content = 1;
 }
 
-message IncrementalMerkleTree{
+message IncrementalMerkleTree {
   SHA256Compress left = 1;
   SHA256Compress right = 2;
   repeated SHA256Compress parents = 3;
 }
 
-message IncrementalMerkleWitness{
+message IncrementalMerkleWitness {
   IncrementalMerkleTree tree = 1;
   repeated SHA256Compress filled = 2;
   IncrementalMerkleTree cursor = 3;

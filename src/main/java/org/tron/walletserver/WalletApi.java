@@ -81,6 +81,7 @@ import org.tron.protos.Contract.BuyStorageBytesContract;
 import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
+import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
@@ -1381,6 +1382,10 @@ public class WalletApi {
 
   public static Optional<BytesMessage> getBestMerkleRoot() {
     return rpcCli.getBestMerkleRoot();
+  }
+
+  public static Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String txHash, int index) {
+    return rpcCli.getMerkleTreeWitness(txHash, index);
   }
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,

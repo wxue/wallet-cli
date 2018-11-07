@@ -44,7 +44,9 @@ import org.tron.api.ZkGrpcAPI.ProofInputMsg;
 import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.common.utils.ByteArray;
 import org.tron.protos.Contract;
+import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
+import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -733,6 +735,15 @@ public class GrpcClient {
   public Optional<BytesMessage> getBestMerkleRoot() {
     BytesMessage rt = blockingStubFull.getBestMerkleRoot(EmptyMessage.newBuilder().build());
     return Optional.ofNullable(rt);
+  }
+
+  public Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String txHash, int index) {
+    ByteString bsTxHash = ByteString.copyFrom(ByteArray.fromHexString(txHash));
+    OutputPoint request = OutputPoint.newBuilder().setTxHash(bsTxHash).setIndex(index).build();
+
+    IncrementalMerkleWitness witness = blockingStubFull
+        .getMerkleTreeWitness(request);
+    return Optional.ofNullable(witness);
   }
 
   public TransactionExtention updateSetting(Contract.UpdateSettingContract request) {
