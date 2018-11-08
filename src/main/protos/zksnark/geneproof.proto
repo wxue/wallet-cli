@@ -67,6 +67,22 @@ message ProofInputMsg {
   bool compute_proof = 7;
 }
 
+message CompressedG {
+  bool            y_lsb = 1;
+  bytes           data = 2;
+}
+
+message ProofMsg {
+  CompressedG g_A =1;
+  CompressedG g_A_prime = 2;
+  CompressedG g_B = 3;
+  CompressedG g_B_prime = 4;
+  CompressedG g_C = 5;
+  CompressedG g_C_prime = 6;
+  CompressedG g_K = 7;
+  CompressedG g_H = 8;
+}
+
 // proof函数的所有输出参数
 message ProofOutputMsg {
   repeated SproutNoteMsg out_notes = 1;

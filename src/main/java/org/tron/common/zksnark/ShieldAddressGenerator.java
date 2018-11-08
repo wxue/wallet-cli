@@ -25,7 +25,7 @@ public class ShieldAddressGenerator {
   }
 
 
-  public byte[] generatePublicKey(byte[] privateKey) {
+  public static byte[] generatePublicKey(byte[] privateKey) {
 //    if (privateKey.length != 32) {
 //      throw new RuntimeException("Wrong length，expect：256，real：" + privateKey.length);
 //    }
@@ -40,7 +40,7 @@ public class ShieldAddressGenerator {
   }
 
 
-  public byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
+  public static byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
     KeyPairGenerator generator = new KeyPairGenerator();
     generator.initializeDefault();
     byte[] A1 = generator.getPubkey(privateKeyEnc);

@@ -534,7 +534,7 @@ public class WalletApi {
     IncrementalWitnessMsg witnessMsg1 = ZksnarkUtils.GetEmptyWitness();
     IncrementalWitnessMsg witnessMsg2 = ZksnarkUtils.GetEmptyWitness();
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
-      rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
+   //   rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
     } else {
 
       c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
@@ -612,8 +612,9 @@ public class WalletApi {
       System.out.printf("New note count is %d\n", outputMsg.getOutNotesCount());
       return false;
     }
-
-    zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
+    //  zkBuilder.setProof(ZksnarkUtils.proofMsg2Proof(outputMsg.getProof()));
+     zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
+   // zkBuilder.setProof(ZksnarkUtils.byte2Proof());
 
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
     boolean result = processTransactionExtention(transactionExtention, keyPair.getPrivate(),

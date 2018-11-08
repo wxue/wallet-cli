@@ -19,6 +19,7 @@ import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.Utils;
 import org.tron.keystore.CheckStrength;
 import org.tron.core.exception.CipherException;
@@ -358,8 +359,32 @@ public class Test {
     }
   }
   public static void main(String[] args) throws Exception {
-    BigInteger i = BigInteger.valueOf(1);
-    byte[] b = i.toByteArray();
+//    BigInteger i = new BigInteger("1730005633951488561162401768080055521907218407650744548610087024095695199108", 10);
+//    BigInteger j = new BigInteger("771047998074442064485036909758863141566463422466813586519109240356492804868", 10);
+//    BigInteger k = new BigInteger("21163380042281667028194921861846440787793088615342153907557220755287297358850", 10);
+//    BigInteger l = new BigInteger("6871544782089674738629350534415876150461199976023328854117281002291781786574", 10);
+    BigInteger m = new BigInteger("771047998074442064485036909758863141566463422466813586519109240356492804865", 10);
+
+
+    BigInteger i = new BigInteger("10036831135323426362", 10);
+    BigInteger j = new BigInteger("9034339378114809009", 10);
+    BigInteger k = new BigInteger("1786369303601603044", 10);
+    BigInteger l = new BigInteger("60372943261281299", 10);
+
+
+
+
+
+    byte[] a = i.toByteArray();
+    System.out.println(ByteArray.toHexString(a));
+    byte[] b = j.toByteArray();
     System.out.println(ByteArray.toHexString(b));
+    byte[] c = k.toByteArray();
+    System.out.println(ByteArray.toHexString(c));
+    byte[] d = l.toByteArray();
+    System.out.println(ByteArray.toHexString(d));
+
+    byte[] e = m.toByteArray();
+    System.out.println(ByteArray.toHexString(e));
   }
 }

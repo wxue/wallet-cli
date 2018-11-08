@@ -407,10 +407,6 @@ public class MathUtils {
 
         return h;
     }
-    // return g*f.
-    public static byte[] scalarMultiply(byte[] g, byte[] f){
-        return null;
-    }
 
     /**
      * Calculates f1 * g1 + f2 * g2.
