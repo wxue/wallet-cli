@@ -323,6 +323,15 @@ public class ZksnarkUtils {
     return builder.build();
   }
 
+  public static void sort(byte[] bytes) {
+    int len = bytes.length / 2;
+    for (int i = 0; i < len; i++) {
+      byte b = bytes[i];
+      bytes[i] = bytes[bytes.length - i - 1];
+      bytes[bytes.length - i - 1] = b;
+    }
+  }
+
   public static zkv0proof byte2Proof(byte[] in) {
     System.out.println(ByteArray.toHexString(in));
     if (ArrayUtils.isEmpty(in) || in.length != 584) {
@@ -330,48 +339,69 @@ public class ZksnarkUtils {
     }
     zkv0proof.Builder builder = zkv0proof.newBuilder();
     int offset = 1;
-    builder.setA(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Ax = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Ax);
+    byte[] Ay = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Ay);
     offset += 64;
     offset++;
-    builder.setAP(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Apx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Apx);
+    byte[] Apy = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Apy);
     offset += 64;
     offset++;
-    builder.setB(
-        BN128G2.newBuilder().setX1(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setX2(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64)))
-            .setY1(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 64, offset + 96)))
-            .setY2(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 96, offset + 128))));
+    byte[] Bx1 = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Bx1);
+    byte[] Bx2 = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Bx2);
+    byte[] By1 = Arrays.copyOfRange(in, offset + 64, offset + 96);
+    sort(By1);
+    byte[] By2 = Arrays.copyOfRange(in, offset + 96, offset + 128);
+    sort(By2);
     offset += 128;
     offset++;
-    builder.setBP(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Bpx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Bpx);
+    byte[] Bpy = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Bpy);
     offset += 64;
     offset++;
-    builder.setC(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Cx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Cx);
+    byte[] Cy = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Cy);
     offset += 64;
     offset++;
-    builder.setCP(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Cpx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Cpx);
+    byte[] Cpy = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Cpy);
     offset += 64;
     offset++;
-    builder.setK(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
+    byte[] Kx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Kx);
+    byte[] Ky = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Ky);
     offset += 64;
     offset++;
-    builder.setH(
-        BN128G1.newBuilder().setX(ByteString.copyFrom(Arrays.copyOfRange(in, offset, offset + 32)))
-            .setY(ByteString.copyFrom(Arrays.copyOfRange(in, offset + 32, offset + 64))));
-    System.out.println(ByteArray.toHexString(builder.getH().getX().toByteArray()));
-    System.out.println(ByteArray.toHexString(builder.getH().getY().toByteArray()));
+    byte[] Hx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Hx);
+    byte[] Hy = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Hy);
+    builder.setA(BN128G1.newBuilder().setX(ByteString.copyFrom(Ax)).setY(ByteString.copyFrom(Ay)));
+    builder
+        .setAP(BN128G1.newBuilder().setX(ByteString.copyFrom(Apx)).setY(ByteString.copyFrom(Apy)));
+    builder
+        .setB(BN128G2.newBuilder().setX1(ByteString.copyFrom(Bx1)).setX2(ByteString.copyFrom(Bx2))
+            .setY1(ByteString.copyFrom(By1)).setY2(ByteString.copyFrom(By2)));
+    builder
+        .setBP(BN128G1.newBuilder().setX(ByteString.copyFrom(Bpx)).setY(ByteString.copyFrom(Bpy)));
+    builder.setC(BN128G1.newBuilder().setX(ByteString.copyFrom(Cx)).setY(ByteString.copyFrom(Cy)));
+    builder
+        .setCP(BN128G1.newBuilder().setX(ByteString.copyFrom(Cpx)).setY(ByteString.copyFrom(Cpy)));
+    builder.setK(BN128G1.newBuilder().setX(ByteString.copyFrom(Kx)).setY(ByteString.copyFrom(Ky)));
+    builder.setH(BN128G1.newBuilder().setX(ByteString.copyFrom(Hx)).setY(ByteString.copyFrom(Hy)));
     return builder.build();
   }
 }
