@@ -571,6 +571,10 @@ public class WalletApi {
     builder.setComputeProof(true);
 
     ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
+    byte[] h1 = outputMsg.getOutMacs(0).getHash().toByteArray();
+    byte[] h2 = outputMsg.getOutMacs(1).getHash().toByteArray();
+    byte[] nf1 = outputMsg.getOutNullifiers(0).getHash().toByteArray();
+    byte[] nf2 = outputMsg.getOutNullifiers(1).getHash().toByteArray();
 
     if (outputMsg.getRet().getResultCode() != 0) {
       System.out.printf("Proof code = %d, desc is %s\n", outputMsg.getRet().getResultCode(),
@@ -582,8 +586,8 @@ public class WalletApi {
       System.out.printf("Nf count is %d\n", outputMsg.getOutNullifiersCount());
       return false;
     }
-    zkBuilder.setNf1(outputMsg.getOutNullifiers(0).getHash());
-    zkBuilder.setNf2(outputMsg.getOutNullifiers(1).getHash());
+    zkBuilder.setNf1(ByteString.copyFrom(nf1));
+    zkBuilder.setNf2(ByteString.copyFrom(nf2));
 
     if (outputMsg.getOutCommitmentsCount() != 2) {
       System.out.printf("Cm count is %d\n", outputMsg.getOutCommitmentsCount());
@@ -599,8 +603,8 @@ public class WalletApi {
       System.out.printf("Macs count is %d\n", outputMsg.getOutMacsCount());
       return false;
     }
-    zkBuilder.setH1(outputMsg.getOutMacs(0).getHash());
-    zkBuilder.setH2(outputMsg.getOutMacs(1).getHash());
+    zkBuilder.setH1(ByteString.copyFrom(h1));
+    zkBuilder.setH2(ByteString.copyFrom(h2));
 
     if (outputMsg.getOutCiphertextsCount() != 2) {
       System.out.printf("Ciphertexts count is %d\n", outputMsg.getOutCiphertextsCount());

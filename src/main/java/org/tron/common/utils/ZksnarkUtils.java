@@ -48,11 +48,14 @@ import org.tron.common.crypto.chacha20.*;
 
 public class ZksnarkUtils {
 
-  public static byte[] computeHSig(ZksnarkV0TransferContract zkContract) {
+  public static byte[] computeHSig(org.tron.protos.Contract.ZksnarkV0TransferContract zkContract) {
     byte[] message = ByteUtil
         .merge(zkContract.getRandomSeed().toByteArray(), zkContract.getNf1().toByteArray(),
             zkContract.getNf2().toByteArray(), zkContract.getPksig().toByteArray());
-    return Blake2b.hash(message);
+    byte[] personal = {'Z', 'c', 'a', 's', 'h', 'C', 'o', 'm', 'p', 'u', 't', 'e', 'h', 'S', 'i',
+        'g'};
+    System.out.println(ByteArray.toHexString(message));
+    return Blake2b.blake2b_personal(message, personal);
   }
 
   public static byte[] computeZkSignInput(ZksnarkV0TransferContract zkContract) {
@@ -73,7 +76,6 @@ public class ZksnarkUtils {
   public static JSOutputMsg computeOutputMsg(byte[] to, long v, String memo) {
     JSOutputMsg.Builder output = JSOutputMsg.newBuilder();
     if (ArrayUtils.isEmpty(to) || to.length != 64) {
-      to = new byte[64];
       ShieldAddressGenerator shieldAddressGenerator = new ShieldAddressGenerator();
       byte[] privateKey = shieldAddressGenerator.generatePrivateKey();
       byte[] publicKey = shieldAddressGenerator.generatePublicKey(privateKey);
@@ -115,7 +117,7 @@ public class ZksnarkUtils {
       new Random().nextBytes(rho);
       r = new byte[32];
       new Random().nextBytes(r);
-      input.setWitness(witnessMsg);
+//      input.setWitness(witnessMsg);
     } else {
       ask = in.addr_sk;
       apk = in.addr_pk;
@@ -351,14 +353,14 @@ public class ZksnarkUtils {
     sort(Apy);
     offset += 64;
     offset++;
-    byte[] Bx1 = Arrays.copyOfRange(in, offset, offset + 32);
-    sort(Bx1);
-    byte[] Bx2 = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    byte[] Bx2 = Arrays.copyOfRange(in, offset, offset + 32);
     sort(Bx2);
-    byte[] By1 = Arrays.copyOfRange(in, offset + 64, offset + 96);
-    sort(By1);
-    byte[] By2 = Arrays.copyOfRange(in, offset + 96, offset + 128);
+    byte[] Bx1 = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Bx1);
+    byte[] By2 = Arrays.copyOfRange(in, offset + 64, offset + 96);
     sort(By2);
+    byte[] By1 = Arrays.copyOfRange(in, offset + 96, offset + 128);
+    sort(By1);
     offset += 128;
     offset++;
     byte[] Bpx = Arrays.copyOfRange(in, offset, offset + 32);
@@ -379,16 +381,16 @@ public class ZksnarkUtils {
     sort(Cpy);
     offset += 64;
     offset++;
-    byte[] Kx = Arrays.copyOfRange(in, offset, offset + 32);
-    sort(Kx);
-    byte[] Ky = Arrays.copyOfRange(in, offset + 32, offset + 64);
-    sort(Ky);
-    offset += 64;
-    offset++;
     byte[] Hx = Arrays.copyOfRange(in, offset, offset + 32);
     sort(Hx);
     byte[] Hy = Arrays.copyOfRange(in, offset + 32, offset + 64);
     sort(Hy);
+    offset += 64;
+    offset++;
+    byte[] Kx = Arrays.copyOfRange(in, offset, offset + 32);
+    sort(Kx);
+    byte[] Ky = Arrays.copyOfRange(in, offset + 32, offset + 64);
+    sort(Ky);
     builder.setA(BN128G1.newBuilder().setX(ByteString.copyFrom(Ax)).setY(ByteString.copyFrom(Ay)));
     builder
         .setAP(BN128G1.newBuilder().setX(ByteString.copyFrom(Apx)).setY(ByteString.copyFrom(Apy)));

@@ -501,4 +501,13 @@ public class Blake2b {
     digest.update(msg);
     return digest.digest();
   }
+
+  public static byte[] blake2b_personal(byte[] msg, byte[] personal) {
+    Blake2b digest = new Blake2b(null, 32, null, personal);
+    digest.update(msg, 0, msg.length);
+
+    byte[] out = new byte[32];
+    digest.digest(out, 0);
+    return out;
+  }
 }

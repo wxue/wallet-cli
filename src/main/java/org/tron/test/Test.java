@@ -319,7 +319,8 @@ public class Test {
     ECKey eCkey = ECKey.fromPrivate(ByteArray.fromHexString(priKeyHex));
     File file = new File("out");
     String fileName = WalletUtils.generateWalletFile(PASSWORD.getBytes(), eCkey, file, true);
-    Credentials credentials = WalletUtils.loadCredentials(PASSWORD.getBytes(), new File(file, fileName));
+    Credentials credentials = WalletUtils
+        .loadCredentials(PASSWORD.getBytes(), new File(file, fileName));
     String address = credentials.getAddress();
     ECKey ecKeyPair = credentials.getEcKeyPair();
     String prikey = ByteArray.toHexString(ecKeyPair.getPrivKeyBytes());
@@ -328,7 +329,7 @@ public class Test {
 
   }
 
-  public static void testPasswordStrength(){
+  public static void testPasswordStrength() {
     List<String> passwordList = new ArrayList<String>();
     passwordList.add("ZAQ!xsw2");
     passwordList.add("3EDC4rfv");
@@ -358,33 +359,35 @@ public class Test {
       System.out.println(password + " strength is " + level);
     }
   }
+
   public static void main(String[] args) throws Exception {
-//    BigInteger i = new BigInteger("1730005633951488561162401768080055521907218407650744548610087024095695199108", 10);
-//    BigInteger j = new BigInteger("771047998074442064485036909758863141566463422466813586519109240356492804868", 10);
-//    BigInteger k = new BigInteger("21163380042281667028194921861846440787793088615342153907557220755287297358850", 10);
-//    BigInteger l = new BigInteger("6871544782089674738629350534415876150461199976023328854117281002291781786574", 10);
-    BigInteger m = new BigInteger("771047998074442064485036909758863141566463422466813586519109240356492804865", 10);
 
+    BigInteger[] bigIntegers = new BigInteger[11];
+    int i = 0;
+    bigIntegers[i++] = new BigInteger(
+        "21078137158013747846585094512659176867940724152586685625201201982921396598025", 10);
+    bigIntegers[i++] = new BigInteger(
+        "7365868364590772589183177479062901844239684986482624941774870995340828390408", 10);
+    bigIntegers[i++] = new BigInteger(
+        "3151751538210196354541391212235898713096607221668886049240809121777382969463", 10);
+    bigIntegers[i++] = new BigInteger(
+        "1813072061855115227834259208249070250944230363040885286019546092360252909197", 10);
+    bigIntegers[i++] = new BigInteger(
+        "16383747575957071060170058179277938954004899965731712035985141624812574556061", 10);
+    bigIntegers[i++] = new BigInteger(
+        "14793312328770695863770510212478853674968242774370040202605906291584409950321", 10);
+    bigIntegers[i++] = new BigInteger(
+        "15479680232198867870598154160235350541092096872044495084689166481059935248676", 10);
+    bigIntegers[i++] = new BigInteger("971917104667766175693089089297324212045781599802187853835134044806632590034", 10);
+    bigIntegers[i++] = new BigInteger("20686266876326086111120538116304679675653772384220923609174865972983245764399", 10);
+    bigIntegers[i++] = new BigInteger(
+        "20286019570081470266621398023531027227972834733257466252733937920509002958484", 10);
+    bigIntegers[i++] = new BigInteger(
+        "3483801385678152040860625086238019433059061114960065112734243738819389433279", 10);
 
-    BigInteger i = new BigInteger("10036831135323426362", 10);
-    BigInteger j = new BigInteger("9034339378114809009", 10);
-    BigInteger k = new BigInteger("1786369303601603044", 10);
-    BigInteger l = new BigInteger("60372943261281299", 10);
+    for (int j = 0; j < i; j++) {
+      System.out.println(ByteArray.toHexString(bigIntegers[j].toByteArray()));
+    }
 
-
-
-
-
-    byte[] a = i.toByteArray();
-    System.out.println(ByteArray.toHexString(a));
-    byte[] b = j.toByteArray();
-    System.out.println(ByteArray.toHexString(b));
-    byte[] c = k.toByteArray();
-    System.out.println(ByteArray.toHexString(c));
-    byte[] d = l.toByteArray();
-    System.out.println(ByteArray.toHexString(d));
-
-    byte[] e = m.toByteArray();
-    System.out.println(ByteArray.toHexString(e));
   }
 }
