@@ -585,9 +585,9 @@ public class WalletApi {
     builder.setComputeProof(true);
 
     ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
-    if(outputMsg==null){
+//    if(outputMsg==null){
       outputMsg = rpcCli.proof(builder.build());
-    }
+//    }
 
     byte[] h1 = outputMsg.getOutMacs(0).getHash().toByteArray();
     byte[] h2 = outputMsg.getOutMacs(1).getHash().toByteArray();
