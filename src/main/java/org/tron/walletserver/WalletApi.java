@@ -113,6 +113,8 @@ public class WalletApi {
   private static byte addressPreFixByte = CommonConstant.ADD_PRE_FIX_BYTE_TESTNET;
   private static int rpcVersion = 0;
 
+  private static Map<String, ProofOutputMsg> proofMap = new HashMap<>();//tmp for test
+
   private static GrpcClient rpcCli = init();
 
 //  static {
@@ -260,6 +262,9 @@ public class WalletApi {
   }
 
   public byte[] getAddress() {
+    if (address == null) {
+      return decodeFromBase58Check(this.walletFile.getAddress());
+    }
     return address;
   }
 
@@ -499,6 +504,13 @@ public class WalletApi {
   public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
       String cm2, byte[] to1, long v1, byte[] to2, long v2)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
+
+
+    byte[] key =
+        ByteArray.fromString( vFromPub + ByteArray.toHexString(toPub) + vToPub + cm1 + cm2 + ByteArray.toHexString(to1) +
+            v1 + ByteArray.toHexString(to2) + v2);
+
+
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
     boolean havePubInput = false;
     if (vFromPub != 0) {
@@ -522,11 +534,11 @@ public class WalletApi {
     KeyPair keyPair = generator.generateKeyPair();
     byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
     zkBuilder.setPksig(ByteString.copyFrom(pkSig));
-
-    byte[] rt = ByteArray
-        .fromHexString(
-            "2549F0F69104F687E926819CE20226226157627E3BC426C264389F5708B7B5A1");//test data
-    zkBuilder.setRt(ByteString.copyFrom(rt));
+//
+//    byte[] rt = ByteArray
+//        .fromHexString(
+//            "2549F0F69104F687E926819CE20226226157627E3BC426C264389F5708B7B5A1");//test data
+    byte[] rt = null;
 
     ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
 
@@ -561,6 +573,8 @@ public class WalletApi {
       }
     }
 
+    zkBuilder.setRt(ByteString.copyFrom(rt));
+
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
     builder.setPubkeyhash(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(pkSig)));
@@ -570,7 +584,11 @@ public class WalletApi {
     builder.setRt(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(rt)));
     builder.setComputeProof(true);
 
-    ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
+    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
+    if(outputMsg==null){
+      outputMsg = rpcCli.proof(builder.build());
+    }
+
     byte[] h1 = outputMsg.getOutMacs(0).getHash().toByteArray();
     byte[] h2 = outputMsg.getOutMacs(1).getHash().toByteArray();
     byte[] nf1 = outputMsg.getOutNullifiers(0).getHash().toByteArray();
@@ -620,6 +638,8 @@ public class WalletApi {
     //  zkBuilder.setProof(ZksnarkUtils.proofMsg2Proof(outputMsg.getProof()));
      zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
    // zkBuilder.setProof(ZksnarkUtils.byte2Proof());
+
+    proofMap.put(ByteArray.toHexString(key) ,outputMsg);
 
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
     boolean result = processTransactionExtention(transactionExtention, keyPair.getPrivate(),
