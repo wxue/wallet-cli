@@ -289,9 +289,16 @@ public class GrpcClient {
         .setFromAddress(fromAddressBS)
         .setToAddress(toAddressBS)
         .build();
-    DelegatedResourceList delegatedResource= blockingStubFull
-        .getDelegatedResource(request);
-    return Optional.ofNullable(delegatedResource);
+
+    if (blockingStubSolidity != null) {
+      DelegatedResourceList delegatedResource = blockingStubSolidity
+          .getDelegatedResource(request);
+      return Optional.ofNullable(delegatedResource);
+    } else {
+      DelegatedResourceList delegatedResource = blockingStubFull
+          .getDelegatedResource(request);
+      return Optional.ofNullable(delegatedResource);
+    }
   }
 
   public Optional<DelegatedResourceAccountIndex> getDelegatedResourceAccountIndex(String address) {
@@ -301,9 +308,15 @@ public class GrpcClient {
 
     BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(addressBS).build();
 
-    DelegatedResourceAccountIndex accountIndex= blockingStubFull
-        .getDelegatedResourceAccountIndex(bytesMessage);
-    return Optional.ofNullable(accountIndex);
+    if (blockingStubSolidity != null) {
+      DelegatedResourceAccountIndex accountIndex = blockingStubSolidity
+          .getDelegatedResourceAccountIndex(bytesMessage);
+      return Optional.ofNullable(accountIndex);
+    } else {
+      DelegatedResourceAccountIndex accountIndex = blockingStubFull
+          .getDelegatedResourceAccountIndex(bytesMessage);
+      return Optional.ofNullable(accountIndex);
+    }
   }
 
 

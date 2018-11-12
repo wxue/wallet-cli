@@ -739,7 +739,6 @@ public class Client {
   }
 
 
-
   private void listNodes() {
     Optional<NodeList> result = walletApiWrapper.listNodes();
     if (result.isPresent()) {
@@ -932,8 +931,6 @@ public class Client {
   }
 
 
-
-
   private void unfreezeAsset() throws IOException, CipherException, CancelException {
     boolean result = walletApiWrapper.unfreezeAsset();
     if (result) {
@@ -1028,10 +1025,9 @@ public class Client {
     }
   }
 
-
   private void getDelegatedResource(String[] parameters)
       throws IOException, CipherException, CancelException {
-    if (parameters == null ||parameters.length != 2) {
+    if (parameters == null || parameters.length != 2) {
       System.out.println("Use getDelegatedResource command with below syntax: ");
       System.out.println("getDelegatedResource fromAddress toAddress");
       return;
@@ -1049,13 +1045,14 @@ public class Client {
 
   private void getDelegatedResourceAccountIndex(String[] parameters)
       throws IOException, CipherException, CancelException {
-    if (parameters == null ||parameters.length != 1) {
+    if (parameters == null || parameters.length != 1) {
       System.out.println("Use getDelegatedResourceAccountIndex command with below syntax: ");
       System.out.println("getDelegatedResourceAccountIndex address ");
       return;
     }
     String address = parameters[0];
-    Optional<DelegatedResourceAccountIndex> result = WalletApi.getDelegatedResourceAccountIndex(address);
+    Optional<DelegatedResourceAccountIndex> result = WalletApi
+        .getDelegatedResourceAccountIndex(address);
     if (result.isPresent()) {
       DelegatedResourceAccountIndex delegatedResourceAccountIndex = result.get();
       logger.info(Utils.printDelegatedResourceAccountIndex(delegatedResourceAccountIndex));
@@ -1063,9 +1060,6 @@ public class Client {
       logger.info("getDelegatedResourceAccountIndex " + " failed !!");
     }
   }
-
-
-
 
 
   private void exchangeCreate(String[] parameters)
