@@ -177,11 +177,22 @@ public class ZksnarkUtils {
     return MathUtils.scalarMultiplyGroupElement(G, F).toByteArray();
   }
 
-  public static byte[] encrypt_decrypt(byte[] plain, byte[] key, byte[] nonce, int counter) {
+  public static byte[] encrypt(byte[] plain, byte[] key, byte[] nonce, int counter) {
     byte[] result = new byte[plain.length];
     try {
-      ChaCha20 cipher = new ChaCha20(key, nonce, counter);
-      cipher.encrypt(result, plain, plain.length);
+      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
+      chaCha20.encrypt(result, plain, plain.length);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
+    return result;
+  }
+
+  public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
+    byte[] result = new byte[cipher.length];
+    try {
+      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
+      chaCha20.decrypt(result, cipher, cipher.length);
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
@@ -217,7 +228,7 @@ public class ZksnarkUtils {
     byte[] K1 = KDF(dh, epk, pkEnc, hSig, i);
     byte[] none = new byte[12];
     byte[] cipher = index == 1 ? contract.getC1().toByteArray() : contract.getC2().toByteArray();
-    byte[] plain = encrypt_decrypt(cipher, K1, none, 1);
+    byte[] plain = decrypt(cipher, K1, none, 1);
     byte[] cm = index == 1 ? contract.getCm1().toByteArray() : contract.getCm2().toByteArray();
     byte[] v = Arrays.copyOfRange(plain, 0, 8);
     byte[] rho = Arrays.copyOfRange(plain, 8, 16);
@@ -407,23 +418,34 @@ public class ZksnarkUtils {
     return builder.build();
   }
 
-  public static void main(String[] args){
-    byte[] dh = ByteArray.fromHexString("3d1e7bb5c7596e55feae26e77a8625d0559903b4fdc2058f4a176db98de23f22");
-    byte[] pkEnc = ByteArray.fromHexString("66b42bbaac6949b9687dd562724635d5a5b20dc063ebd346b76050f7877d1501");
-    byte[] hSig = ByteArray.fromHexString("7e846617e1bfa16144e784008515e56d8ea84da0e2f721e701c839bc9085c91b");
-    byte[] epk = ByteArray.fromHexString("5bf807a31c3d414f603c96a9c046030b8181f289e9016503d58ff1da3b9a5e7b");
-    byte[] K = KDF(dh, epk, pkEnc, hSig, (byte)0x30);
-    System.out.println(ByteArray.toHexString(K));
-    K = KDF(dh, epk, pkEnc, hSig, (byte)0x31);
-    System.out.println(ByteArray.toHexString(K));
-    K = KDF(dh, epk, pkEnc, hSig, (byte)0x32);
-    System.out.println(ByteArray.toHexString(K));
+  public static void main(String[] args) {
+//    byte[] dh = ByteArray
+//        .fromHexString("3d1e7bb5c7596e55feae26e77a8625d0559903b4fdc2058f4a176db98de23f22");
+//    byte[] pkEnc = ByteArray
+//        .fromHexString("66b42bbaac6949b9687dd562724635d5a5b20dc063ebd346b76050f7877d1501");
+//    byte[] hSig = ByteArray
+//        .fromHexString("7e846617e1bfa16144e784008515e56d8ea84da0e2f721e701c839bc9085c91b");
+//    byte[] epk = ByteArray
+//        .fromHexString("5bf807a31c3d414f603c96a9c046030b8181f289e9016503d58ff1da3b9a5e7b");
+//
+//    sort(dh);
+//    sort(epk);
+//    sort(pkEnc);
+//    sort(hSig);
+//    byte[] K = KDF(dh, epk, pkEnc, hSig, (byte) 1);
+//    System.out.println(ByteArray.toHexString(K));
+    byte[] K = ByteArray.fromHexString("2605F56488A8F0102B02185F9DD83BA33BC0E86D3D5FD1A3C966976B3C49567A");
 
-    K = KDF(dh, epk, pkEnc, hSig, (byte)0);
-    System.out.println(ByteArray.toHexString(K));
-    K = KDF(dh, epk, pkEnc, hSig, (byte)1);
-    System.out.println(ByteArray.toHexString(K));
-    K = KDF(dh, epk, pkEnc, hSig, (byte)2);
-    System.out.println(ByteArray.toHexString(K));
+  //  sort(K);
+    byte[] cipher = ByteArray.fromHexString(
+        "DE9DC4DF75758B3E7355D290828EA86CA9E52F838300F8C68FF2253D4F9395EFCA060EC3E47114E7A102835720CEF8EADDB8869A5E84D8AB8D45931E9015A8DAB3D9EDE0B9589D56A5F65F45F6D71CFEB763B83DA4B0C9B14455F612129E12EABEE9565095420AC80A6F58E93810D78A1A4D51BB961A7CF32CBA09CC77D597446BD139D58E9208A07132B16B1779A0280FAC322BBB9E5DC52FA68DB1297AF4819C9A2119FC3DED5D790F529CEF1AEE08347666368883CCE3001D5BA2B9FEB56AD58D48208A2AB9F120BD97FA9550DC5E10502C29A4B0F17505ABCA687F4E9EAACC437F067FF38862F2519B0EC1D3B94CE65F62F584CD44E2F96BE654D885806BE1F54D5FCC5675B7A75BBE4B2DF80FA8BB74308BD1649FD5E94CFB8057B30A10CCCCECD36FB73197587FE53AA7A9B7AA116179ACF6CD7B144C265DBFEBAEEB2CCA2620937CF3655FCA4E4421E8A763E3BDD8A6362B00FCB33CBA538CA08103928D40A7017608C1801751BDC94A4F97D80E8C6EAC5DA438692919557685CDF2BE07E8AE90F47F9DCF49952458F6A2FA7C945669D9FDC4D5DB4C3A161A64C9603296846E713EAA4D276CBC5BC13864DFFBDE995A9452CB77C7CFEBFEFB3E5B43E2504CF20726B7744D0D8CD1D242BF5459711DCC6B46445A7B6A9AE4235A52CF21DF3AFCFD8D4AEFC370DEB8A4FF14D10A0BF88333B4BA3DB1647644231AF1C3AB99E39AA367AB7A8AF704C3354C634C956DEA97F08092E03542A5B80A78DBBC5C160D1371A9345C76A981A298FA4DF556F4DCA80C4AD7C3046685547D0D907F0BC06244154984E3D5A5F39AFB9E6FFFA08EFFE143D85C20FDD6");
+    byte[] plain = ByteArray.fromHexString(
+        "0000E1F50500000000DD8332767E1DC920C43266EC984DE2DC87ADD757A2850FFACF6A4D3D1DC6FEE025E37D61EFC6E15D65C691AD6C8AF6AA200BCCEE33839B968C5EA7A2F33D2E8B4F75742031000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    byte[] none = new byte[12];
+    byte[] text;
+    text = decrypt(cipher, K, none, 1);
+    System.out.println(ByteArray.toHexString(text));
+    text = encrypt(plain, K, none, 1);
+    System.out.println(ByteArray.toHexString(text));
   }
 }
