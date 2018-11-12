@@ -412,7 +412,7 @@ public class GrpcClient {
       response = blockingStubFull.broadcastTransaction(signaturedTransaction);
       logger.info("repeate times = " + (11 - i));
       try {
-        Thread.sleep(300);
+        Thread.sleep(3000);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }

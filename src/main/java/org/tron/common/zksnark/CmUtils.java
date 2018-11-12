@@ -84,6 +84,10 @@ public class CmUtils {
     cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
   }
 
+  public static void saveCm(CmTuple cm){
+    cmInfoMap.put(cm.getKeyString(), cm);
+  }
+
   public static void useCmInfo(byte[] cm) {
     CmTuple cmTuple = cmInfoMap.get(ByteArray.toHexString(cm));
     cmTuple.used = 0x01;

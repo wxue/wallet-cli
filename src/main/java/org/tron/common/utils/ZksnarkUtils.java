@@ -37,6 +37,7 @@ import org.tron.common.crypto.eddsa.math.GroupElement;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
 import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
+import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.protos.Contract.BN128G1;
@@ -176,10 +177,6 @@ public class ZksnarkUtils {
     return MathUtils.scalarMultiplyGroupElement(G, F).toByteArray();
   }
 
-  public static byte[] KDF() {
-    return null;
-  }
-
   public static byte[] encrypt_decrypt(byte[] plain, byte[] key, byte[] nonce, int counter) {
     byte[] result = new byte[plain.length];
     try {
@@ -191,6 +188,13 @@ public class ZksnarkUtils {
     return result;
   }
 
+
+  public static byte[] KDF(byte[] dh, byte[] epk, byte[] pkEnc, byte[] hSig, byte nonce) {
+    byte[] personal = new byte[]{'Z', 'c', 'a', 's', 'h', 'K', 'D', 'F', nonce, 0, 0, 0, 0,
+        0, 0, 0};
+    byte[] input = ByteUtil.merge(hSig, dh, epk, pkEnc);
+    return Blake2b.blake2b_personal(input, personal);
+  }
 
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, String address,
       int index) {
@@ -206,15 +210,11 @@ public class ZksnarkUtils {
 
     byte[] nf = index == 1 ? contract.getNf1().toByteArray() : contract.getNf2().toByteArray();
     //TODO: check nf
-    byte[] prefix = "ZcashKDF".getBytes();
-    byte[] i = new byte[1];
-    i[0] = (byte) (index - 1);
-    byte[] zero = new byte[7];
+    byte i = (byte) (index - 1);
     byte[] hSig = computeHSig(contract);
     byte[] epk = contract.getEpk().toByteArray();
     byte[] dh = scalarMultiply(epk, skEnc);
-    byte[] input = ByteUtil.merge(prefix, i, zero, hSig, dh, epk, pkEnc);
-    byte[] K1 = Blake2b.hash(input);
+    byte[] K1 = KDF(dh, epk, pkEnc, hSig, i);
     byte[] none = new byte[12];
     byte[] cipher = index == 1 ? contract.getC1().toByteArray() : contract.getC2().toByteArray();
     byte[] plain = encrypt_decrypt(cipher, K1, none, 1);
@@ -223,7 +223,7 @@ public class ZksnarkUtils {
     byte[] rho = Arrays.copyOfRange(plain, 8, 16);
     byte[] r = Arrays.copyOfRange(plain, 16, 24);
     CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r);
-    //TODO: save cmTuple
+    CmUtils.saveCm(cmTuple);
     return true;
   }
 
@@ -405,5 +405,25 @@ public class ZksnarkUtils {
     builder.setK(BN128G1.newBuilder().setX(ByteString.copyFrom(Kx)).setY(ByteString.copyFrom(Ky)));
     builder.setH(BN128G1.newBuilder().setX(ByteString.copyFrom(Hx)).setY(ByteString.copyFrom(Hy)));
     return builder.build();
+  }
+
+  public static void main(String[] args){
+    byte[] dh = ByteArray.fromHexString("3d1e7bb5c7596e55feae26e77a8625d0559903b4fdc2058f4a176db98de23f22");
+    byte[] pkEnc = ByteArray.fromHexString("66b42bbaac6949b9687dd562724635d5a5b20dc063ebd346b76050f7877d1501");
+    byte[] hSig = ByteArray.fromHexString("7e846617e1bfa16144e784008515e56d8ea84da0e2f721e701c839bc9085c91b");
+    byte[] epk = ByteArray.fromHexString("5bf807a31c3d414f603c96a9c046030b8181f289e9016503d58ff1da3b9a5e7b");
+    byte[] K = KDF(dh, epk, pkEnc, hSig, (byte)0x30);
+    System.out.println(ByteArray.toHexString(K));
+    K = KDF(dh, epk, pkEnc, hSig, (byte)0x31);
+    System.out.println(ByteArray.toHexString(K));
+    K = KDF(dh, epk, pkEnc, hSig, (byte)0x32);
+    System.out.println(ByteArray.toHexString(K));
+
+    K = KDF(dh, epk, pkEnc, hSig, (byte)0);
+    System.out.println(ByteArray.toHexString(K));
+    K = KDF(dh, epk, pkEnc, hSig, (byte)1);
+    System.out.println(ByteArray.toHexString(K));
+    K = KDF(dh, epk, pkEnc, hSig, (byte)2);
+    System.out.println(ByteArray.toHexString(K));
   }
 }

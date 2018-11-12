@@ -535,7 +535,7 @@ public class WalletApi {
     IncrementalWitnessMsg witnessMsg1 = ZksnarkUtils.GetEmptyWitness();
     IncrementalWitnessMsg witnessMsg2 = ZksnarkUtils.GetEmptyWitness();
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
-   //   rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
+      rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
     } else {
 
       c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
