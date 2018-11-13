@@ -1529,18 +1529,18 @@ public class Client {
   }
 
   private void getMerkleTreeWitness(String[] parameters) {
-    String txHash = "";
+    String hash = "";
     int index = 0;
     if (parameters == null || parameters.length != 2) {
       System.out
-          .println("getMerkleTreeWitness needs 2 parameters, txHash and index");
+          .println("getMerkleTreeWitness needs 2 parameters, hash and index");
       return;
     } else {
-      txHash = parameters[0];
+      hash = parameters[0];
       index = Integer.parseInt(parameters[1]);
     }
 
-    Optional<IncrementalMerkleWitness> result = WalletApi.getMerkleTreeWitness(txHash, index);
+    Optional<IncrementalMerkleWitness> result = WalletApi.getMerkleTreeWitness(hash, index);
     if (result.isPresent()) {
       IncrementalMerkleWitness witness = result.get();
       logger.info(witness.toString());

@@ -62,7 +62,7 @@ public class ShieldAddressGenerator {
     byte[] publicKey = shieldAddressGenerator.generatePublicKey(privateKey);
 
     byte[] privateKeyEnc = shieldAddressGenerator.generatePrivateKeyEnc(privateKey);
-    byte[] publicKeyEnc = shieldAddressGenerator.generatePublicKeyEnc(privateKey);
+    byte[] publicKeyEnc = shieldAddressGenerator.generatePublicKeyEnc(privateKeyEnc);
 
     String privateKeyString = ByteArray.toHexString(privateKey);
     String publicKeyString = ByteArray.toHexString(publicKey);

@@ -737,9 +737,9 @@ public class GrpcClient {
     return Optional.ofNullable(rt);
   }
 
-  public Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String txHash, int index) {
-    ByteString bsTxHash = ByteString.copyFrom(ByteArray.fromHexString(txHash));
-    OutputPoint request = OutputPoint.newBuilder().setTxHash(bsTxHash).setIndex(index).build();
+  public Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String hash, int index) {
+    ByteString bsTxHash = ByteString.copyFrom(ByteArray.fromHexString(hash));
+    OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(index).build();
 
     IncrementalMerkleWitness witness = blockingStubFull
         .getMerkleTreeWitness(request);
