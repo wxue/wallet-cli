@@ -110,6 +110,10 @@ public final class KeyPairGenerator extends KeyPairGeneratorSpi {
     return A.toByteArray();
   }
 
+  public byte[] getBase(){
+    return edParams.getB().toByteArray();
+  }
+
   /**
    * Create an EdDSANamedCurveSpec from the provided curve name. The current
    * implementation fetches the pre-created curve spec from a table.

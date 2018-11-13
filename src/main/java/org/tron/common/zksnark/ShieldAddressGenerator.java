@@ -1,8 +1,10 @@
 package org.tron.common.zksnark;
 
 import java.util.Random;
+import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.ZksnarkUtils;
 
 public class ShieldAddressGenerator {
 
@@ -41,10 +43,16 @@ public class ShieldAddressGenerator {
 
 
   public static byte[] generatePublicKeyEnc(byte[] privateKeyEnc) {
-    KeyPairGenerator generator = new KeyPairGenerator();
-    generator.initializeDefault();
-    byte[] A1 = generator.getPubkey(privateKeyEnc);
-    return A1;
+    byte[] base = new byte[]{
+        9, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0
+    };
+    byte[] output = new byte[32];
+    MontgomeryOperations.scalarmult(output, 0, privateKeyEnc, 0, base, 0);
+    return output;
+    //  return ZksnarkUtils.scalarMultiply(B,privateKeyEnc);
   }
 
   public static void main(String[] args) {

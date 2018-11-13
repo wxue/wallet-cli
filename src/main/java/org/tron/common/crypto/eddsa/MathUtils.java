@@ -21,6 +21,7 @@ import org.tron.common.crypto.eddsa.math.ed25519.Ed25519FieldElement;
 import org.tron.common.crypto.eddsa.math.ed25519.Ed25519LittleEndianEncoding;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
+import org.tron.common.crypto.eddsa.spec.EdDSAPrivateKeySpec;
 
 /**
  * Utility class to help with calculations.
