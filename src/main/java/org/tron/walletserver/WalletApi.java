@@ -1421,8 +1421,8 @@ public class WalletApi {
     return rpcCli.getBestMerkleRoot();
   }
 
-  public static Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String txHash, int index) {
-    return rpcCli.getMerkleTreeWitness(txHash, index);
+  public static Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String hash, int index) {
+    return rpcCli.getMerkleTreeWitness(hash, index);
   }
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,
