@@ -29,6 +29,7 @@ import org.tron.api.ZkGrpcAPI.JSOutputMsg;
 import org.tron.api.ZkGrpcAPI.ProofMsg;
 import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
+import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
 import org.tron.common.crypto.blake2b.security.Blake2b256Digest;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
@@ -44,6 +45,9 @@ import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.protos.Contract.BN128G1;
 import org.tron.protos.Contract.BN128G2;
+import org.tron.protos.Contract.IncrementalMerkleTree;
+import org.tron.protos.Contract.IncrementalMerkleWitness;
+import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Contract.zkv0proof;
 import org.tron.walletserver.WalletApi;
@@ -168,8 +172,34 @@ public class ZksnarkUtils {
 //    }
   }
 
-  public static IncrementalWitnessMsg MerkleWitness2IncrementalWitness() {
-    return null;
+  public static Uint256Msg SHA256Compress2Uint256Msg(SHA256Compress c) {
+    ByteString fb = c.getContent();
+    Uint256Msg.Builder msg = Uint256Msg.newBuilder();
+    msg.setHash(fb);
+    return msg.build();
+  }
+
+  public static IncrementalMerkleTreeMsg transferTree(IncrementalMerkleTree tree) {
+    IncrementalMerkleTreeMsg.Builder builder = IncrementalMerkleTreeMsg.newBuilder();
+    builder.setRight(SHA256Compress2Uint256Msg(tree.getRight()));
+    builder.setLeft(SHA256Compress2Uint256Msg(tree.getLeft()));
+    for (int i = 0; i < tree.getParentsCount(); i++) {
+      builder.addParents(SHA256Compress2Uint256Msg(tree.getParents(i)));
+    }
+    return builder.build();
+  }
+
+  public static IncrementalWitnessMsg MerkleWitness2IncrementalWitness(
+      IncrementalMerkleWitness witnessMsg) {
+    IncrementalWitnessMsg.Builder builder = IncrementalWitnessMsg.newBuilder();
+    builder.setTree(transferTree(witnessMsg.getTree()));
+    for (int i = 0; i < witnessMsg.getFilledCount(); i++) {
+      SHA256Compress f = witnessMsg.getFilled(i);
+      builder.addFilled(SHA256Compress2Uint256Msg(f));
+    }
+    builder.setCursor(transferTree(witnessMsg.getCursor()));
+    builder.setCursorDepth((int) witnessMsg.getCursorDepth());
+    return builder.build();
   }
 
   // return g*f.
@@ -209,7 +239,12 @@ public class ZksnarkUtils {
     return Blake2b.blake2b_personal(input, personal);
   }
 
-  public static boolean saveShieldCoin(String txid, ZksnarkV0TransferContract contract, String address,
+  private static byte[] getContractId(ZksnarkV0TransferContract contract) {
+    return Sha256Hash.of(contract.toByteArray()).getBytes();
+  }
+
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract,
+      String address,
       int index) {
     byte[] privateAddress = WalletApi.decodeBase58Check(address);
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
@@ -235,12 +270,12 @@ public class ZksnarkUtils {
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
     sort(v);
     BigInteger value = new BigInteger(v);
-    System.out.println("You recive " + value + " sun.");
+    System.out.println("You recive " + value + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r);
     cmTuple.index = index;
-    cmTuple.txid = ByteArray.fromHexString(txid);
+    cmTuple.contractId = getContractId(contract);
     CmUtils.saveCm(cmTuple);
     return true;
   }
@@ -442,7 +477,6 @@ public class ZksnarkUtils {
 //    byte[] K = KDF(dh, epk, pkEnc, hSig, (byte) 1);
 //    System.out.println(ByteArray.toHexString(K));
 
-
 //    byte[] K = ByteArray.fromHexString("2605F56488A8F0102B02185F9DD83BA33BC0E86D3D5FD1A3C966976B3C49567A");
 //
 //  //  sort(K);
@@ -460,21 +494,23 @@ public class ZksnarkUtils {
         .fromHexString("90030e70ffb713aee6364a4ba7055efdb88dba0b3f793d1466f55d74375439ff");
     byte[] PK = ShieldAddressGenerator.generatePublicKeyEnc(sk);
     System.out.println(ByteArray.toHexString(PK));
-     sort(sk);
+    sort(sk);
 
-     PK = ShieldAddressGenerator.generatePublicKeyEnc(sk);
+    PK = ShieldAddressGenerator.generatePublicKeyEnc(sk);
     System.out.println(ByteArray.toHexString(PK));
 
     PK = ShieldAddressGenerator.generatePublicKeyEnc(sk);
     System.out.println(ByteArray.toHexString(PK));
 //
-    byte[] epk = ByteArray.fromHexString("361847b08ff84a2ec6f34d9afb91c3f408b495576814cc79812e884b6ce1082c");
-    byte[] skEnc = ByteArray.fromHexString("5C919EE7C8356B534846626C8D97876BF3B736232BB85664172C7EB677E76CEE");
+    byte[] epk = ByteArray
+        .fromHexString("361847b08ff84a2ec6f34d9afb91c3f408b495576814cc79812e884b6ce1082c");
+    byte[] skEnc = ByteArray
+        .fromHexString("5C919EE7C8356B534846626C8D97876BF3B736232BB85664172C7EB677E76CEE");
     sort(epk);
     byte[] pk_enc = ByteArray
         .fromHexString("66b42bbaac6949b9687dd562724635d5a5b20dc063ebd346b76050f7877d1501");
     sort(pk_enc);
-    byte[] dh = scalarMultiply(pk_enc,sk);
+    byte[] dh = scalarMultiply(pk_enc, sk);
     System.out.println(ByteArray.toHexString(dh));
 
 

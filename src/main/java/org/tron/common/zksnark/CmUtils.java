@@ -110,7 +110,7 @@ public class CmUtils {
     public byte[] v;
     public byte[] rho;
     public byte[] r;
-    public byte[] txid;
+    public byte[] contractId;
     public int index;
     public byte used;
 
