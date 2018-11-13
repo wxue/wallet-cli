@@ -505,11 +505,11 @@ public class WalletApi {
       String cm2, byte[] to1, long v1, byte[] to2, long v2)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
 
-
     byte[] key =
-        ByteArray.fromString( vFromPub + ByteArray.toHexString(toPub) + vToPub + cm1 + cm2 + ByteArray.toHexString(to1) +
-            v1 + ByteArray.toHexString(to2) + v2);
-
+        ByteArray.fromString(
+            vFromPub + ByteArray.toHexString(toPub) + vToPub + cm1 + cm2 + ByteArray
+                .toHexString(to1) +
+                v1 + ByteArray.toHexString(to2) + v2);
 
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
     boolean havePubInput = false;
@@ -544,8 +544,6 @@ public class WalletApi {
 
     CmTuple c_old1 = null;
     CmTuple c_old2 = null;
-    IncrementalWitnessMsg witnessMsg1 = ZksnarkUtils.GetEmptyWitness();
-    IncrementalWitnessMsg witnessMsg2 = ZksnarkUtils.GetEmptyWitness();
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
       rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
     } else {
@@ -555,11 +553,18 @@ public class WalletApi {
         System.out.printf("Can not find c_old by cm : %s.\n", cm1);
         return false;
       }
-      //witnessMsg1 =
       //rt =
-      builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old1, witnessMsg1));
+      Optional<IncrementalMerkleWitness> ret1 = WalletApi
+          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.contractId), c_old1.index);
+      if (!ret1.isPresent()) {
+        System.out.println("Can not get merkle path by " + cm1);
+        return false;
+      }
+      IncrementalMerkleWitness witnessMsg1 = ret1.get();
+      builder.addInputs(ZksnarkUtils
+          .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
       if (!StringUtils.isEmpty(cm2)) {
-        if (!Arrays.equals(c_old1.txid, c_old2.txid)) {
+        if (!Arrays.equals(c_old1.contractId, c_old2.contractId)) {
           System.out.print("Can not spend two cm from different transaction.");
           return false;
         }
@@ -568,8 +573,15 @@ public class WalletApi {
           System.out.printf("Can not find c_old by cm : %s.\n", cm2);
           return false;
         }
-        //witnessMsg2 =
-        builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2, witnessMsg2));
+        Optional<IncrementalMerkleWitness> ret2 = WalletApi
+            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.contractId), c_old2.index);
+        if (!ret2.isPresent()) {
+          System.out.println("Can not get merkle path by " + cm2);
+          return false;
+        }
+        IncrementalMerkleWitness witnessMsg2 = ret2.get();
+        builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2,
+            ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg2)));
       }
     }
 
@@ -586,7 +598,7 @@ public class WalletApi {
 
     ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
 //    if(outputMsg==null){
-      outputMsg = rpcCli.proof(builder.build());
+    outputMsg = rpcCli.proof(builder.build());
 //    }
 
     byte[] h1 = outputMsg.getOutMacs(0).getHash().toByteArray();
@@ -636,10 +648,10 @@ public class WalletApi {
       return false;
     }
     //  zkBuilder.setProof(ZksnarkUtils.proofMsg2Proof(outputMsg.getProof()));
-     zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
-   // zkBuilder.setProof(ZksnarkUtils.byte2Proof());
+    zkBuilder.setProof(ZksnarkUtils.byte2Proof(outputMsg.getProof().toByteArray()));
+    // zkBuilder.setProof(ZksnarkUtils.byte2Proof());
 
-    proofMap.put(ByteArray.toHexString(key) ,outputMsg);
+    proofMap.put(ByteArray.toHexString(key), outputMsg);
 
     TransactionExtention transactionExtention = rpcCli.zksnarkV0TransferTrx(zkBuilder.build());
     boolean result = processTransactionExtention(transactionExtention, keyPair.getPrivate(),
@@ -671,7 +683,8 @@ public class WalletApi {
   public boolean updateAccount(byte[] accountNameBytes)
       throws CipherException, IOException, CancelException {
     byte[] owner = getAddress();
-    Contract.AccountUpdateContract contract = createAccountUpdateContract(accountNameBytes, owner);
+    Contract.AccountUpdateContract contract = createAccountUpdateContract(accountNameBytes,
+        owner);
     if (rpcVersion == 2) {
       TransactionExtention transactionExtention = rpcCli.createTransaction2(contract);
       return processTransactionExtention(transactionExtention);
@@ -695,7 +708,6 @@ public class WalletApi {
     return rpcCli.broadcastTransaction(transaction);
   }
 
-
   public boolean updateAsset(byte[] description, byte[] url, long newLimit,
       long newPublicLimit)
       throws CipherException, IOException, CancelException {
@@ -717,7 +729,8 @@ public class WalletApi {
     Contract.TransferAssetContract contract = createTransferAssetContract(to, assertName, owner,
         amount);
     if (rpcVersion == 2) {
-      TransactionExtention transactionExtention = rpcCli.createTransferAssetTransaction2(contract);
+      TransactionExtention transactionExtention = rpcCli
+          .createTransferAssetTransaction2(contract);
       return processTransactionExtention(transactionExtention);
     } else {
       Transaction transaction = rpcCli.createTransferAssetTransaction(contract);
@@ -728,7 +741,8 @@ public class WalletApi {
   public boolean participateAssetIssue(byte[] to, byte[] assertName, long amount)
       throws CipherException, IOException, CancelException {
     byte[] owner = getAddress();
-    Contract.ParticipateAssetIssueContract contract = participateAssetIssueContract(to, assertName,
+    Contract.ParticipateAssetIssueContract contract = participateAssetIssueContract(to,
+        assertName,
         owner, amount);
     if (rpcVersion == 2) {
       TransactionExtention transactionExtention = rpcCli
@@ -891,7 +905,6 @@ public class WalletApi {
     return builder.build();
   }
 
-
   public static Contract.UpdateAssetContract createUpdateAssetContract(
       byte[] address,
       byte[] description,
@@ -977,7 +990,8 @@ public class WalletApi {
           "The password should not contain more than 3 duplicate numbers or letters; For example: 1111.");
       System.out.println(
           "The password should not contain more than 3 consecutive Numbers or letters; For example: 1234.");
-      System.out.println("The password should not contain weak password combination; For example:");
+      System.out
+          .println("The password should not contain weak password combination; For example:");
       System.out.println("ababab, abcabc, password, passw0rd, p@ssw0rd, admin1234, etc.");
       return false;
     }
@@ -1129,7 +1143,6 @@ public class WalletApi {
   public static Optional<ExchangeList> getExchangeListPaginated(long offset, long limit) {
     return rpcCli.getExchangeListPaginated(offset, limit);
   }
-
 
   public static Optional<NodeList> listNodes() {
     return rpcCli.listNodes();
@@ -1287,7 +1300,6 @@ public class WalletApi {
     }
   }
 
-
   private UnfreezeBalanceContract createUnfreezeBalanceContract(int resourceCode) {
     byte[] address = getAddress();
     Contract.UnfreezeBalanceContract.Builder builder = Contract.UnfreezeBalanceContract
@@ -1415,7 +1427,8 @@ public class WalletApi {
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,
       HashMap<Long, Long> parametersMap) {
-    Contract.ProposalCreateContract.Builder builder = Contract.ProposalCreateContract.newBuilder();
+    Contract.ProposalCreateContract.Builder builder = Contract.ProposalCreateContract
+        .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(owner));
     builder.putAllParameters(parametersMap);
     return builder.build();
@@ -1450,7 +1463,8 @@ public class WalletApi {
 
   public static Contract.ProposalDeleteContract createProposalDeleteContract(byte[] owner,
       long id) {
-    Contract.ProposalDeleteContract.Builder builder = Contract.ProposalDeleteContract.newBuilder();
+    Contract.ProposalDeleteContract.Builder builder = Contract.ProposalDeleteContract
+        .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(owner));
     builder.setProposalId(id);
     return builder.build();
@@ -1469,7 +1483,8 @@ public class WalletApi {
   public static Contract.ExchangeCreateContract createExchangeCreateContract(byte[] owner,
       byte[] firstTokenId, long firstTokenBalance,
       byte[] secondTokenId, long secondTokenBalance) {
-    Contract.ExchangeCreateContract.Builder builder = Contract.ExchangeCreateContract.newBuilder();
+    Contract.ExchangeCreateContract.Builder builder = Contract.ExchangeCreateContract
+        .newBuilder();
     builder
         .setOwnerAddress(ByteString.copyFrom(owner))
         .setFirstTokenId(ByteString.copyFrom(firstTokenId))
@@ -1490,7 +1505,8 @@ public class WalletApi {
 
   public static Contract.ExchangeInjectContract createExchangeInjectContract(byte[] owner,
       long exchangeId, byte[] tokenId, long quant) {
-    Contract.ExchangeInjectContract.Builder builder = Contract.ExchangeInjectContract.newBuilder();
+    Contract.ExchangeInjectContract.Builder builder = Contract.ExchangeInjectContract
+        .newBuilder();
     builder
         .setOwnerAddress(ByteString.copyFrom(owner))
         .setExchangeId(exchangeId)
@@ -1529,7 +1545,8 @@ public class WalletApi {
     return processTransactionExtention(transactionExtention);
   }
 
-  public static Contract.ExchangeTransactionContract createExchangeTransactionContract(byte[] owner,
+  public static Contract.ExchangeTransactionContract createExchangeTransactionContract(
+      byte[] owner,
       long exchangeId, byte[] tokenId, long quant, long expected) {
     Contract.ExchangeTransactionContract.Builder builder = Contract.ExchangeTransactionContract
         .newBuilder();
@@ -1541,7 +1558,6 @@ public class WalletApi {
         .setExpected(expected);
     return builder.build();
   }
-
 
   public static SmartContract.ABI.Entry.EntryType getEntryType(String type) {
     switch (type) {
@@ -1834,7 +1850,8 @@ public class WalletApi {
 
   }
 
-  public boolean triggerContract(byte[] contractAddress, long callValue, byte[] data, long feeLimit)
+  public boolean triggerContract(byte[] contractAddress, long callValue, byte[] data,
+      long feeLimit)
       throws IOException, CipherException, CancelException {
     byte[] owner = getAddress();
     Contract.TriggerSmartContract triggerContract = triggerCallContract(owner, contractAddress,

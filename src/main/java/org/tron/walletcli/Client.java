@@ -1276,7 +1276,7 @@ public class Client {
       }
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      ZksnarkUtils.saveShieldCoin(txid, zkContract, address, index);
+      ZksnarkUtils.saveShieldCoin(zkContract, address, index);
     } else {
       System.out.println("receiveShieldTransaction failed !!");
     }
