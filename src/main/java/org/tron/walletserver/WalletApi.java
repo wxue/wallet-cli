@@ -130,7 +130,7 @@ public class WalletApi {
 //  }
 
   public static GrpcClient init() {
-    Config config = Configuration.getByPath("config.conf");
+    Config config = Configuration.getByPath("src/main/resources/config.conf");
 
     String fullNode = "";
     String solidityNode = "";
