@@ -16,6 +16,7 @@
 package org.tron.common.utils;
 
 import com.google.protobuf.ByteString;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
 import org.apache.commons.lang3.ArrayUtils;
@@ -208,7 +209,7 @@ public class ZksnarkUtils {
     return Blake2b.blake2b_personal(input, personal);
   }
 
-  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, String address,
+  public static boolean saveShieldCoin(String txid, ZksnarkV0TransferContract contract, String address,
       int index) {
     byte[] privateAddress = WalletApi.decodeBase58Check(address);
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
@@ -232,9 +233,14 @@ public class ZksnarkUtils {
     byte[] plain = decrypt(cipher, K1, none, 1);
     byte[] cm = index == 1 ? contract.getCm1().toByteArray() : contract.getCm2().toByteArray();
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
+    sort(v);
+    BigInteger value = new BigInteger(v);
+    System.out.println("You recive " + value + " sun.");
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r);
+    cmTuple.index = index;
+    cmTuple.txid = ByteArray.fromHexString(txid);
     CmUtils.saveCm(cmTuple);
     return true;
   }
