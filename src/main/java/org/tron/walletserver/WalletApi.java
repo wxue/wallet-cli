@@ -552,7 +552,7 @@ public class WalletApi {
       }
 
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.contractId), c_old1.index);
+          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.contractId), c_old1.index-1);
       if (!ret1.isPresent()) {
         System.out.println("Can not get merkle path by " + cm1);
         return false;
@@ -572,7 +572,7 @@ public class WalletApi {
           return false;
         }
         Optional<IncrementalMerkleWitness> ret2 = WalletApi
-            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.contractId), c_old2.index);
+            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.contractId), c_old2.index-1);
         if (!ret2.isPresent()) {
           System.out.println("Can not get merkle path by " + cm2);
           return false;
