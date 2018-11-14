@@ -534,18 +534,15 @@ public class WalletApi {
     KeyPair keyPair = generator.generateKeyPair();
     byte[] pkSig = ((EdDSAPublicKey) (keyPair.getPublic())).getAbyte();
     zkBuilder.setPksig(ByteString.copyFrom(pkSig));
-//
-//    byte[] rt = ByteArray
-//        .fromHexString(
-//            "2549F0F69104F687E926819CE20226226157627E3BC426C264389F5708B7B5A1");//test data
-    byte[] rt = null;
+
+    ByteString rt;
 
     ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
 
     CmTuple c_old1 = null;
     CmTuple c_old2 = null;
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
-      rt = WalletApi.getBestMerkleRoot().get().getValue().toByteArray();
+      rt = WalletApi.getBestMerkleRoot().get().getValue();
     } else {
 
       c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1));
@@ -553,7 +550,7 @@ public class WalletApi {
         System.out.printf("Can not find c_old by cm : %s.\n", cm1);
         return false;
       }
-      //rt =
+
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
           .getMerkleTreeWitness(ByteArray.toHexString(c_old1.contractId), c_old1.index);
       if (!ret1.isPresent()) {
@@ -561,6 +558,7 @@ public class WalletApi {
         return false;
       }
       IncrementalMerkleWitness witnessMsg1 = ret1.get();
+      rt = witnessMsg1.getRt();
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
       if (!StringUtils.isEmpty(cm2)) {
@@ -580,12 +578,16 @@ public class WalletApi {
           return false;
         }
         IncrementalMerkleWitness witnessMsg2 = ret2.get();
+        if (!rt.equals(witnessMsg2.getRt())) {
+          System.out.println("Rt is not same between " + cm1 + " and " + cm2);
+          return false;
+        }
         builder.addInputs(ZksnarkUtils.CmTuple2JSInputMsg(c_old2,
             ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg2)));
       }
     }
 
-    zkBuilder.setRt(ByteString.copyFrom(rt));
+    zkBuilder.setRt(rt);
 
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
@@ -593,13 +595,15 @@ public class WalletApi {
     //TODO: vToPub + Fee();
     builder.setVpubOld(vFromPub);
     builder.setVpubNew(vToPub);
-    builder.setRt(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(rt)));
+    builder.setRt(Uint256Msg.newBuilder().setHash(rt));
     builder.setComputeProof(true);
 
-    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
-//    if(outputMsg==null){
-    outputMsg = rpcCli.proof(builder.build());
-//    }
+//    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
+    ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
+    if (outputMsg.getRet().getResultCode()!=0){
+      System.out.println("Rroof faild return " + outputMsg.getRet().getResultDesc());
+      return false;
+    }
 
     byte[] h1 = outputMsg.getOutMacs(0).getHash().toByteArray();
     byte[] h2 = outputMsg.getOutMacs(1).getHash().toByteArray();

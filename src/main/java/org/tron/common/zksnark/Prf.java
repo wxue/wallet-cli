@@ -2,6 +2,7 @@ package org.tron.common.zksnark;
 
 import org.apache.commons.lang.CharUtils;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.crypto.Sha256Update;
 import org.tron.common.utils.ByteArray;
 
 public class Prf {
@@ -29,7 +30,7 @@ public class Prf {
     blob[0] &= 0x0F;
     blob[0] |= (a ? 1 << 7 : 0) | (b ? 1 << 6 : 0) | (c ? 1 << 5 : 0) | (d ? 1 << 4 : 0);
 
-    res = Sha256Hash.hash(blob);
+    res = Sha256Update.Sha256OneBlock(blob);
 
     return res;
   }
@@ -39,7 +40,6 @@ public class Prf {
     y[0] = t;
     return prf(true, true, false, false, a_sk, y);
   }
-
 
 
 }

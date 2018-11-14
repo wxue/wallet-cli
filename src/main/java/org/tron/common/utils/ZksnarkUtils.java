@@ -21,22 +21,16 @@ import java.util.Arrays;
 import java.util.Random;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.tron.api.ZkGrpcAPI.CompressedG;
 import org.tron.api.ZkGrpcAPI.IncrementalMerkleTreeMsg;
 import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.JSInputMsg;
 import org.tron.api.ZkGrpcAPI.JSOutputMsg;
-import org.tron.api.ZkGrpcAPI.ProofMsg;
 import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
-import org.tron.common.crypto.blake2b.security.Blake2b256Digest;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
-import org.tron.common.crypto.eddsa.MathUtils;
-import org.tron.common.crypto.eddsa.math.FieldElement;
-import org.tron.common.crypto.eddsa.math.GroupElement;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
 import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
@@ -126,8 +120,8 @@ public class ZksnarkUtils {
       new Random().nextBytes(r);
 //      input.setWitness(witnessMsg);
     } else {
-      ask = in.addr_sk;
-      apk = in.addr_pk;
+      ask = Arrays.copyOfRange(in.addr_sk, 0, 32);
+      apk = Arrays.copyOfRange(in.addr_pk, 0, 32);
       v = ByteArray.toLong(in.v);
       rho = in.rho;
       r = in.r;
@@ -140,36 +134,6 @@ public class ZksnarkUtils {
     input.setKey(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(ask)));
     input.setNote(note);
     return input.build();
-  }
-
-  public static IncrementalWitnessMsg GetEmptyWitness() {
-    IncrementalWitnessMsg.Builder builder = IncrementalWitnessMsg.newBuilder();
-    IncrementalMerkleTreeMsg.Builder merkle = IncrementalMerkleTreeMsg.newBuilder();
-    byte[] temp = new byte[32];
-    new Random().nextBytes(temp);
-
-    merkle.setLeft(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
-    merkle.setRight(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
-    merkle.addEmptyroots(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
-    merkle.addParents(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
-    builder.setTree(merkle);
-    builder.setCursor(merkle);
-    builder.addFilled(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(temp)));
-    builder.setCursorDepth(0);
-    return builder.build();
-//    message IncrementalMerkleTreeMsg {
-//      repeated Uint256Msg emptyroots = 1; // 静态变量，后期考虑不要了，直接去掉，不用传递TODO
-//      Uint256Msg left = 2;
-//      Uint256Msg right = 3;
-//      repeated Uint256Msg parents = 4;
-//    }
-//
-//    message IncrementalWitnessMsg {
-//      IncrementalMerkleTreeMsg tree = 1;
-//      repeated Uint256Msg filled = 2;
-//      IncrementalMerkleTreeMsg cursor = 3;
-//      uint32 cursor_depth = 4;
-//    }
   }
 
   public static Uint256Msg SHA256Compress2Uint256Msg(SHA256Compress c) {
@@ -278,39 +242,6 @@ public class ZksnarkUtils {
     cmTuple.contractId = getContractId(contract);
     CmUtils.saveCm(cmTuple);
     return true;
-  }
-
-  public static BN128G1 compressedG2BN128G1(CompressedG c) {
-    BN128G1.Builder b = BN128G1.newBuilder();
-    byte[] d = c.getData().toByteArray();
-    b.setX(ByteString.copyFrom(Arrays.copyOfRange(d, 0, 32)));
-    b.setY(ByteString.copyFrom(Arrays.copyOfRange(d, 32, 64)));
-    return b.build();
-  }
-
-  public static BN128G2 compressedG2BN128G2(CompressedG c) {
-    BN128G2.Builder b = BN128G2.newBuilder();
-    byte[] d = c.getData().toByteArray();
-    b.setX1(ByteString.copyFrom(Arrays.copyOfRange(d, 0, 32)));
-    b.setX2(ByteString.copyFrom(Arrays.copyOfRange(d, 32, 64)));
-    b.setY1(ByteString.copyFrom(Arrays.copyOfRange(d, 64, 96)));
-    b.setY2(ByteString.copyFrom(Arrays.copyOfRange(d, 96, 128)));
-    return b.build();
-  }
-
-  public static zkv0proof proofMsg2Proof(ProofMsg in) {
-    zkv0proof.Builder builder = zkv0proof.newBuilder();
-
-    builder.setA(compressedG2BN128G1(in.getGA()));
-    builder.setAP(compressedG2BN128G1(in.getGAPrime()));
-    builder.setB(compressedG2BN128G2(in.getGB()));
-    builder.setBP(compressedG2BN128G1(in.getGBPrime()));
-    builder.setC(compressedG2BN128G1(in.getGC()));
-    builder.setCP(compressedG2BN128G1(in.getGCPrime()));
-    builder.setH(compressedG2BN128G1(in.getGH()));
-    builder.setK(compressedG2BN128G1(in.getGK()));
-
-    return builder.build();
   }
 
   public static BN128G1 byte2BN128G1(byte[] x, byte[] y) {
