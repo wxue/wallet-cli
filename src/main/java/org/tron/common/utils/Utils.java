@@ -199,24 +199,26 @@ public class Utils {
     }
     if (account.getAssetCount() > 0) {
       for (String name : account.getAssetMap().keySet()) {
-        result += "asset";
-        result += "\n";
-        result += "{";
-        result += "\n";
-        result += "  name: ";
-        result += name;
-        result += "\n";
-        result += "  balance: ";
-        result += account.getAssetMap().get(name);
-        result += "\n";
-        result += "  latest_asset_operation_time: ";
-        result += account.getLatestAssetOperationTimeMap().get(name);
-        result += "\n";
-        result += "  free_asset_net_usage: ";
-        result += account.getFreeAssetNetUsageMap().get(name);
-        result += "\n";
-        result += "}";
-        result += "\n";
+        if (account.getAssetMap().get(name) > 0){
+          result += "asset";
+          result += "\n";
+          result += "{";
+          result += "\n";
+          result += "  name: ";
+          result += name;
+          result += "\n";
+          result += "  balance: ";
+          result += account.getAssetMap().get(name);
+          result += "\n";
+          result += "  latest_asset_operation_time: ";
+          result += account.getLatestAssetOperationTimeMap().get(name);
+          result += "\n";
+          result += "  free_asset_net_usage: ";
+          result += account.getFreeAssetNetUsageMap().get(name);
+          result += "\n";
+          result += "}";
+          result += "\n";
+        }
       }
     }
     if (account.getFrozenSupplyCount() > 0) {
