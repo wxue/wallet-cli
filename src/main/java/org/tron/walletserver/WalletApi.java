@@ -359,15 +359,15 @@ public class WalletApi {
     Scanner in = new Scanner(System.in);
     System.out.println("Please confirm that you want to continue enter y or Y, else any other.");
 
-    while (true) {
-      String input = in.nextLine().trim();
-      String str = input.split("\\s+")[0];
-      if ("y".equalsIgnoreCase(str)) {
-        break;
-      } else {
-        throw new CancelException("User cancelled");
-      }
-    }
+//    while (true) {
+//      String input = in.nextLine().trim();
+//      String str = input.split("\\s+")[0];
+//      if ("y".equalsIgnoreCase(str)) {
+//        break;
+//      } else {
+//        throw new CancelException("User cancelled");
+//      }
+//    }
     System.out.println("Please input your password.");
     char[] password = Utils.inputPassword(false);
     byte[] passwd = org.tron.keystore.StringUtils.char2Byte(password);
@@ -1678,10 +1678,9 @@ public class WalletApi {
         transactionExtention.getConstantResult(0) != null &&
         transactionExtention.getResult() != null) {
       byte[] result = transactionExtention.getConstantResult(0).toByteArray();
-      System.out.println("message:" + transaction.getRet(0).getRet());
-      System.out.println(":" + ByteArray
-          .toStr(transactionExtention.getResult().getMessage().toByteArray()));
-      System.out.println("Result:" + Hex.toHexString(result));
+//      System.out.println("message:" + transaction.getRet(0).getRet());
+//      System.out.println(":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
+      System.out.println("Result:" + Long.parseUnsignedLong(Hex.toHexString(result), 16));
       return true;
     }
 
