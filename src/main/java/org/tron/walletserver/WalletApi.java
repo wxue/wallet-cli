@@ -601,7 +601,7 @@ public class WalletApi {
 //    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
     ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
     if (outputMsg.getRet().getResultCode()!=0){
-      System.out.println("Rroof faild return " + outputMsg.getRet().getResultDesc());
+      System.out.println("Proof faild return " + outputMsg.getRet().getResultDesc());
       return false;
     }
 

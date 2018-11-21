@@ -18,9 +18,11 @@ package org.tron.common.utils;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.ZkGrpcAPI.IncrementalMerkleTreeMsg;
 import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.JSInputMsg;
@@ -221,7 +223,13 @@ public class ZksnarkUtils {
     byte[] addressPub = ByteUtil.merge(apk, pkEnc);
 
     byte[] nf = index == 1 ? contract.getNf1().toByteArray() : contract.getNf2().toByteArray();
-    //TODO: check nf
+    Optional<BytesMessage> result = WalletApi.getNullifier(ByteArray.toHexString(nf));
+    if (result.isPresent()) {
+      System.out.printf("Nf %s is exit in txid %s\n", ByteArray.toHexString(nf),
+          ByteArray.toHexString(result.get().toByteArray()));
+      return false;
+    }
+
     byte i = (byte) (index - 1);
     byte[] hSig = computeHSig(contract);
     byte[] epk = contract.getEpk().toByteArray();
