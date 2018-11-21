@@ -222,14 +222,6 @@ public class ZksnarkUtils {
     byte[] pkEnc = ShieldAddressGenerator.generatePublicKeyEnc(skEnc);
     byte[] addressPub = ByteUtil.merge(apk, pkEnc);
 
-    byte[] nf = index == 1 ? contract.getNf1().toByteArray() : contract.getNf2().toByteArray();
-    Optional<BytesMessage> result = WalletApi.getNullifier(ByteArray.toHexString(nf));
-    if (result.isPresent()) {
-      System.out.printf("Nf %s is exit in txid %s\n", ByteArray.toHexString(nf),
-          ByteArray.toHexString(result.get().toByteArray()));
-      return false;
-    }
-
     byte i = (byte) (index - 1);
     byte[] hSig = computeHSig(contract);
     byte[] epk = contract.getEpk().toByteArray();
@@ -249,6 +241,7 @@ public class ZksnarkUtils {
     cmTuple.index = index;
     cmTuple.contractId = getContractId(contract);
     CmUtils.saveCm(cmTuple);
+    //TODO: compute nf
     return true;
   }
 
