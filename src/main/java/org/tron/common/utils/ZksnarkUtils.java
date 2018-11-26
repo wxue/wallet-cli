@@ -122,11 +122,11 @@ public class ZksnarkUtils {
       new Random().nextBytes(r);
 //      input.setWitness(witnessMsg);
     } else {
-      ask = Arrays.copyOfRange(in.addr_sk, 0, 32);
-      apk = Arrays.copyOfRange(in.addr_pk, 0, 32);
-      v = ByteArray.toLong(in.v);
-      rho = in.rho;
-      r = in.r;
+      ask = Arrays.copyOfRange(in.getAddr_sk(), 0, 32);
+      apk = Arrays.copyOfRange(in.getAddr_pk(), 0, 32);
+      v = ByteArray.toLong(in.getV());
+      rho = in.getRho();
+      r = in.getR();
       input.setWitness(witnessMsg);
     }
     note.setValue(v);
@@ -237,9 +237,8 @@ public class ZksnarkUtils {
     System.out.println("You recive " + value + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
-    CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r);
-    cmTuple.index = index;
-    cmTuple.contractId = getContractId(contract);
+    CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r, index,
+        getContractId(contract));
     CmUtils.saveCm(cmTuple);
     //TODO: compute nf
     return true;

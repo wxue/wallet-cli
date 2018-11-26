@@ -552,7 +552,8 @@ public class WalletApi {
       }
 
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.contractId), c_old1.index-1);
+          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
+              c_old1.getIndex() - 1);
       if (!ret1.isPresent()) {
         System.out.println("Can not get merkle path by " + cm1);
         return false;
@@ -562,17 +563,14 @@ public class WalletApi {
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
       if (!StringUtils.isEmpty(cm2)) {
-        if (!Arrays.equals(c_old1.contractId, c_old2.contractId)) {
-          System.out.print("Can not spend two cm from different transaction.");
-          return false;
-        }
         c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2));
         if (c_old2 == null) {
           System.out.printf("Can not find c_old by cm : %s.\n", cm2);
           return false;
         }
         Optional<IncrementalMerkleWitness> ret2 = WalletApi
-            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.contractId), c_old2.index-1);
+            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.getContractId()),
+                c_old2.getIndex() - 1);
         if (!ret2.isPresent()) {
           System.out.println("Can not get merkle path by " + cm2);
           return false;
@@ -600,7 +598,7 @@ public class WalletApi {
 
 //    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
     ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
-    if (outputMsg.getRet().getResultCode()!=0){
+    if (outputMsg.getRet().getResultCode() != 0) {
       System.out.println("Proof faild return " + outputMsg.getRet().getResultDesc());
       return false;
     }
