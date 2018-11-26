@@ -19,8 +19,12 @@
 package org.tron.common.utils;
 
 import com.google.protobuf.ByteString;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Console;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -199,7 +203,7 @@ public class Utils {
     }
     if (account.getAssetCount() > 0) {
       for (String name : account.getAssetMap().keySet()) {
-        if (account.getAssetMap().get(name) > 0){
+        if (account.getAssetMap().get(name) > 0) {
           result += "asset";
           result += "\n";
           result += "{";
@@ -1622,5 +1626,42 @@ public class Utils {
     }
     return data;
   }
+
+  public static Object ByteToObject(byte[] bytes) {
+    Object obj = null;
+    try {
+      // bytearray to object
+      ByteArrayInputStream bi = new ByteArrayInputStream(bytes);
+      ObjectInputStream oi = new ObjectInputStream(bi);
+
+      obj = oi.readObject();
+      bi.close();
+      oi.close();
+    } catch (Exception e) {
+      System.out.println("translation" + e.getMessage());
+      e.printStackTrace();
+    }
+    return obj;
+  }
+
+  public static byte[] ObjectToByte(java.lang.Object obj) {
+    byte[] bytes = null;
+    try {
+      // object to bytearray
+      ByteArrayOutputStream bo = new ByteArrayOutputStream();
+      ObjectOutputStream oo = new ObjectOutputStream(bo);
+      oo.writeObject(obj);
+
+      bytes = bo.toByteArray();
+
+      bo.close();
+      oo.close();
+    } catch (Exception e) {
+      System.out.println("translation" + e.getMessage());
+      e.printStackTrace();
+    }
+    return bytes;
+  }
+
 }
 

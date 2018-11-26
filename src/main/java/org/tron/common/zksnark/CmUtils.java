@@ -1,14 +1,18 @@
 package org.tron.common.zksnark;
 
+import com.google.protobuf.ByteString;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.HashMap;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.core.exception.CipherException;
+import org.tron.keystore.Wallet;
 
 public class CmUtils {
 
@@ -114,7 +118,7 @@ public class CmUtils {
   }
 
 
-  public static class CmTuple {
+  public static class CmTuple implements Serializable {
 
     private static int numCases;
     private int caseNum;
@@ -182,6 +186,15 @@ public class CmUtils {
       return line.toString();
     }
 
+    public byte[] toByteArray() {
+      return Utils.ObjectToByte(this);
+    }
+
+    public static CmTuple parseFromBytes(byte[] bytes) {
+      Object object = Utils.ByteToObject(bytes);
+      return (CmTuple) (object);
+    }
+
     public int getCaseNum() {
       return caseNum;
     }
@@ -223,7 +236,7 @@ public class CmUtils {
     }
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws CipherException {
     //add
     byte[] cm = {0x0001};
     byte[] addr_pk = {0x02};
@@ -232,7 +245,7 @@ public class CmUtils {
     byte[] rho = {0x05};
     byte[] r = {0x06};
     byte used = 0x00;
-    byte[] contractId = {0x01,0x02};
+    byte[] contractId = {0x01, 0x02};
     int index = 11;
     CmUtils.addCmInfo(cm, addr_pk, addr_sk, v, rho, r, 11, contractId);
     //save
@@ -243,6 +256,11 @@ public class CmUtils {
     CmTuple cm1 = CmUtils.getCm(cm);
     //use
     CmUtils.useCmInfo(cm);
+
+    byte[] bytes = cm1.toByteArray();
+    byte[] cipher = Wallet.commonEnc("123456".getBytes(), bytes);
+    bytes = Wallet.commonDec("123456".getBytes(),cipher);
+    CmTuple cm2 = CmTuple.parseFromBytes(bytes);
 
   }
 

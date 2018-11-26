@@ -12,6 +12,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.bouncycastle.crypto.generators.SCrypt;
@@ -19,6 +20,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.crypto.Hash;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.ByteUtil;
 import org.tron.core.exception.CipherException;
 import org.tron.walletserver.WalletApi;
 
@@ -57,6 +59,49 @@ public class Wallet {
   private static final String CIPHER = "aes-128-ctr";
   static final String AES_128_CTR = "pbkdf2";
   static final String SCRYPT = "scrypt";
+
+  public static byte[] commonEnc(byte[] password, byte[] plain) throws CipherException {
+    if (ArrayUtils.isEmpty(password)) {
+      throw new CipherException("Password is Empty!");
+    }
+    if (ArrayUtils.isEmpty(plain)) {
+      throw new CipherException("Plain is Empty!");
+    }
+    byte[] salt = generateRandomBytes(32);
+    byte[] derivedKey = generateDerivedScryptKey(password, salt, N_STANDARD, R, P_STANDARD, DKLEN);
+    byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
+    byte[] iv = generateRandomBytes(16);
+    byte[] cipherText = performCipherOperation(Cipher.ENCRYPT_MODE, iv, encryptKey, plain);
+    byte[] mac = generateMac(derivedKey, cipherText);
+    byte[] result = ByteUtil.merge(salt, iv, mac, cipherText);
+    return result;
+  }
+
+  public static byte[] commonDec(byte[] password, byte[] cipherText) throws CipherException {
+    if (ArrayUtils.isEmpty(password)) {
+      throw new CipherException("Password is Empty!");
+    }
+    if (ArrayUtils.isEmpty(cipherText)) {
+      throw new CipherException("CipherText is Empty!");
+    }
+    if (cipherText.length <= 80) {
+      throw new CipherException("CipherText length need more than 80!");
+    }
+
+    byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
+    byte[] iv = Arrays.copyOfRange(cipherText, 32, 48);
+    byte[] mac = Arrays.copyOfRange(cipherText, 48, 80);
+    cipherText = Arrays.copyOfRange(cipherText, 80, cipherText.length);
+
+    byte[] derivedKey = generateDerivedScryptKey(password, salt, N_STANDARD, R, P_STANDARD, DKLEN);
+    byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
+    byte[] plain = performCipherOperation(Cipher.DECRYPT_MODE, iv, encryptKey, cipherText);
+    byte[] mac1 = generateMac(derivedKey, cipherText);
+    if (!Arrays.equals(mac, mac1)) {
+      throw new CipherException("Mac check error!");
+    }
+    return plain;
+  }
 
   public static WalletFile create(byte[] password, ECKey ecKeyPair, int n, int p)
       throws CipherException {
@@ -216,7 +261,7 @@ public class Wallet {
     return privateKey;
   }
 
-  public static boolean validPassword (byte[] password, WalletFile walletFile)
+  public static boolean validPassword(byte[] password, WalletFile walletFile)
       throws CipherException {
 
     validate(walletFile);
