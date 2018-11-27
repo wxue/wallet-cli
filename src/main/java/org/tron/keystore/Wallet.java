@@ -103,6 +103,23 @@ public class Wallet {
     return plain;
   }
 
+  public static WalletFile createSheildWallet(byte[] password, byte[] addPublic, byte[] addPrivate)
+      throws CipherException {
+
+    byte[] salt = generateRandomBytes(32);
+
+    byte[] derivedKey = generateDerivedScryptKey(password, salt, N_STANDARD, R, P_STANDARD, DKLEN);
+
+    byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
+    byte[] iv = generateRandomBytes(16);
+
+    byte[] cipherText = performCipherOperation(Cipher.ENCRYPT_MODE, iv, encryptKey, addPrivate);
+
+    byte[] mac = generateMac(derivedKey, cipherText);
+
+    return createWalletFile(addPublic, cipherText, iv, salt, mac, N_STANDARD, P_STANDARD);
+  }
+
   public static WalletFile create(byte[] password, ECKey ecKeyPair, int n, int p)
       throws CipherException {
 
@@ -120,7 +137,7 @@ public class Wallet {
 
     byte[] mac = generateMac(derivedKey, cipherText);
 
-    return createWalletFile(ecKeyPair, cipherText, iv, salt, mac, n, p);
+    return createWalletFile(ecKeyPair.getAddress(), cipherText, iv, salt, mac, n, p);
   }
 
   public static WalletFile createStandard(byte[] password, ECKey ecKeyPair)
@@ -134,11 +151,11 @@ public class Wallet {
   }
 
   private static WalletFile createWalletFile(
-      ECKey ecKeyPair, byte[] cipherText, byte[] iv, byte[] salt, byte[] mac,
+      byte[] address, byte[] cipherText, byte[] iv, byte[] salt, byte[] mac,
       int n, int p) {
 
     WalletFile walletFile = new WalletFile();
-    walletFile.setAddress(WalletApi.encode58Check(ecKeyPair.getAddress()));
+    walletFile.setAddress(WalletApi.encode58Check(address));
 
     WalletFile.Crypto crypto = new WalletFile.Crypto();
     crypto.setCipher(CIPHER);

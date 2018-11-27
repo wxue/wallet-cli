@@ -39,6 +39,7 @@ import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
 import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.common.zksnark.ShieldAddressGenerator;
+import org.tron.core.exception.CipherException;
 import org.tron.protos.Contract.BN128G1;
 import org.tron.protos.Contract.BN128G2;
 import org.tron.protos.Contract.IncrementalMerkleTree;
@@ -209,9 +210,9 @@ public class ZksnarkUtils {
     return Sha256Hash.of(contract.toByteArray()).getBytes();
   }
 
-  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract,
-      String address,
-      int index) {
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, String address,
+      int index, byte[] password)
+      throws CipherException {
     byte[] privateAddress = WalletApi.decodeBase58Check(address);
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
       return false;
@@ -239,7 +240,7 @@ public class ZksnarkUtils {
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r, index,
         getContractId(contract));
-    CmUtils.saveCm(cmTuple);
+    CmUtils.saveCm(cmTuple, password);
     //TODO: compute nf
     return true;
   }

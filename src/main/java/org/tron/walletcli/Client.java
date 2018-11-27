@@ -141,8 +141,15 @@ public class Client {
     logger.info("Register a wallet successful, keystore file name is " + fileName);
   }
 
-  private void generateShieldAddress() {
-    walletApiWrapper.generateShieldAddress();
+  private void generateShieldAddress() throws IOException, CipherException {
+    char[] password = inputPassword2Twice();
+    String fileName =  walletApiWrapper.generateShieldAddress(password);
+    StringUtils.clear(password);
+    if (null == fileName) {
+      logger.info("GenerateShieldAddress failed !!");
+      return;
+    }
+    logger.info("GenerateShieldAddress successful, file name is " + fileName);
   }
 
   private void importWallet() throws CipherException, IOException {
@@ -204,6 +211,20 @@ public class Client {
     }
   }
 
+  private void loadShiledWallet() throws IOException, CipherException {
+    System.out.println("Please input your password.");
+    char[] password = Utils.inputPassword(false);
+
+    boolean result = walletApiWrapper.loadShiledWallet(password);
+    StringUtils.clear(password);
+
+    if (result) {
+      System.out.println("loadShiledWallet successful !!!");
+    } else {
+      System.out.println("loadShiledWallet failed !!!");
+    }
+  }
+
   private void logout() {
     walletApiWrapper.logout();
     System.out.println("Logout successful !!!");
@@ -253,7 +274,13 @@ public class Client {
       logger.info("address = " + address);
     }
   }
-
+  private void getShiledAddress() {
+    String address = walletApiWrapper.getShiledAddress();
+    if (address != null) {
+      logger.info("GetAddress successful !!");
+      logger.info("address = " + address);
+    }
+  }
   private void getBalance() {
     Account account = walletApiWrapper.queryAccount();
     if (account == null) {
@@ -486,9 +513,11 @@ public class Client {
     String toAddress2 = parameters[7].equalsIgnoreCase("null") ? null : parameters[7];
     String amout2 = parameters[8];
     long v2 = new Long(amout2);
+    byte[] password = null;
 
     boolean result = walletApiWrapper
-        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2);
+        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2,
+            password);
     if (result) {
       System.out.println("SendCoinShield successful !!");
     } else {
@@ -1256,7 +1285,8 @@ public class Client {
     }
   }
 
-  private void receiveShieldTransaction(String[] parameters) throws InvalidProtocolBufferException {
+  private void receiveShieldTransaction(String[] parameters)
+      throws InvalidProtocolBufferException, CipherException {
     if (parameters == null || parameters.length != 3) {
       System.out.println(
           "receiveShieldTransaction needs 2 parameter, transaction index and Private address");
@@ -1276,7 +1306,8 @@ public class Client {
       }
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      ZksnarkUtils.saveShieldCoin(zkContract, address, index);
+      byte[] password = null;
+      ZksnarkUtils.saveShieldCoin(zkContract, address, index, password);
     } else {
       System.out.println("receiveShieldTransaction failed !!");
     }
@@ -1731,11 +1762,13 @@ public class Client {
     System.out.println("ImportWalletByBase64");
     System.out.println("ChangePassword");
     System.out.println("Login");
+    System.out.println("LoadShiledWallet");
     System.out.println("Logout");
     System.out.println("BackupWallet");
     System.out.println("BackupWallet2Base64");
     System.out.println("GenerateAddress");
     System.out.println("GetAddress");
+    System.out.println("GetShiledAddress");
     System.out.println("GetBalance");
     System.out.println("GetAccount");
     System.out.println("GetAssetIssueByAccount");
@@ -1902,6 +1935,10 @@ public class Client {
             login();
             break;
           }
+          case "loadshiledwallet": {
+            loadShiledWallet();
+            break;
+          }
           case "logout": {
             logout();
             break;
@@ -1916,6 +1953,10 @@ public class Client {
           }
           case "getaddress": {
             getAddress();
+            break;
+          }
+          case "getshiledaddress": {
+            getShiledAddress();
             break;
           }
           case "getbalance": {

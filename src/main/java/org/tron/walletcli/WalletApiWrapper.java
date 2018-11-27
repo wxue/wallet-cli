@@ -21,6 +21,8 @@ import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
+import org.tron.keystore.Wallet;
+import org.tron.keystore.WalletFile;
 import org.tron.protos.Contract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -49,7 +51,13 @@ public class WalletApiWrapper {
     return keystoreName;
   }
 
-  public void generateShieldAddress(){
+  public String generateShieldAddress(char[] password) throws CipherException, IOException {
+    if (!WalletApi.passwordValid(password)) {
+      return null;
+    }
+
+    byte[] passwd = StringUtils.char2Byte(password);
+
     ShieldAddressGenerator shieldAddressGenerator = new ShieldAddressGenerator();
 
     byte[] privateKey = shieldAddressGenerator.generatePrivateKey();
@@ -61,10 +69,9 @@ public class WalletApiWrapper {
     byte[] addPrivate = ByteUtil.merge(privateKey, privateKeyEnc);
     byte[] addPublic = ByteUtil.merge(publicKey, publicKeyEnc);
 
-    String addPri = WalletApi.encode58Check(addPrivate);
-    String addPub = WalletApi.encode58Check(addPublic);
-    System.out.printf("Private address : %s\n",addPri);
-    System.out.printf("Public address : %s\n", addPub);
+    WalletFile walletFile = org.tron.keystore.Wallet
+        .createSheildWallet(passwd, addPublic, addPrivate);
+    return WalletApi.storeShiledWallet(walletFile);
   }
 
   public String importWallet(char[] password, byte[] priKey) throws CipherException, IOException {
@@ -104,18 +111,32 @@ public class WalletApiWrapper {
   }
 
   public boolean login(char[] password) throws IOException, CipherException {
-    logout();
+    WalletFile shiled = null;
+    if (wallet != null) {
+      shiled = wallet.getWalletFile_Shiled();
+    }
     wallet = WalletApi.loadWalletFromKeystore();
 
     byte[] passwd = StringUtils.char2Byte(password);
-    wallet.checkPassword(passwd);
+    wallet.checkPassword(wallet.getWalletFile(), passwd);
+    StringUtils.clear(passwd);
+    wallet.setLogin();
+    wallet.setWalletFile_Shiled(shiled);
+    return true;
+  }
+
+  public boolean loadShiledWallet(char[] password) throws IOException, CipherException {
+    if (wallet == null) {
+      wallet = WalletApi.loadShiledWallet();
+    } else {
+      WalletFile walletFile = WalletApi.loadShiledWalletFile();
+      wallet.setWalletFile_Shiled(walletFile);
+    }
+
+    byte[] passwd = StringUtils.char2Byte(password);
+    wallet.checkPassword(wallet.getWalletFile_Shiled(), passwd);
     StringUtils.clear(passwd);
 
-    if (wallet == null) {
-      System.out.println("Warning: Login failed, Please registerWallet or importWallet first !!");
-      return false;
-    }
-    wallet.setLogin();
     return true;
   }
 
@@ -149,11 +170,20 @@ public class WalletApiWrapper {
 
   public String getAddress() {
     if (wallet == null || !wallet.isLoginState()) {
-      logger.warn("Warning: GetAddress failed,  Please login first !!");
+      System.out.println("Warning: GetAddress failed,  Please login first !!");
       return null;
     }
 
     return WalletApi.encode58Check(wallet.getAddress());
+  }
+
+  public String getShiledAddress() {
+    if (wallet == null || wallet.getWalletFile_Shiled() == null) {
+      System.out.println("Warning: GetShiledAddress failed,  Please LoadShiledWallet first !!");
+      return null;
+    }
+
+    return wallet.getWalletFile_Shiled().getAddress();
   }
 
   public Account queryAccount() {
@@ -167,7 +197,7 @@ public class WalletApiWrapper {
 
 
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
-      String cm2, String toAddress1, long v1, String toAddress2, long v2)
+      String cm2, String toAddress1, long v1, String toAddress2, long v2, byte[] password)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
     if ((vFromPub != 0 && (wallet == null || !wallet.isLoginState()))) {
       System.out.println("Warning: sendCoinShield failed,  Please login first !!");
@@ -210,7 +240,7 @@ public class WalletApiWrapper {
         return false;
       }
     }
-    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2);
+    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2, password);
   }
 
   public boolean sendCoin(String toAddress, long amount)
@@ -478,7 +508,7 @@ public class WalletApiWrapper {
       return false;
     }
 
-    return wallet.freezeBalance(frozen_balance, frozen_duration, resourceCode , receiverAddress);
+    return wallet.freezeBalance(frozen_balance, frozen_duration, resourceCode, receiverAddress);
   }
 
   public boolean buyStorage(long quantity)
@@ -521,7 +551,6 @@ public class WalletApiWrapper {
 
     return wallet.unfreezeBalance(resourceCode);
   }
-
 
 
   public boolean unfreezeAsset() throws CipherException, IOException, CancelException {

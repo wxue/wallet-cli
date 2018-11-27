@@ -19,11 +19,12 @@ public class CmUtils {
   static private String CM_FILE_NAME = "./Wallet/cmInfoFile.data";
   static private HashMap<String, CmTuple> cmInfoMap = null;
 
-  public static void loadCmFile() {
-    cmInfoMap = loadCmFile(CM_FILE_NAME);
+  public static void loadCmFile(byte[] password) throws CipherException {
+    cmInfoMap = loadCmFile(CM_FILE_NAME, password);
   }
 
-  private static HashMap<String, CmTuple> loadCmFile(String fileName) {
+  private static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] password)
+      throws CipherException {
 
     HashMap<String, CmTuple> cmInfoMap = new HashMap<>();
     BufferedReader file = null;
@@ -35,7 +36,9 @@ public class CmUtils {
       file = new BufferedReader(fileReader);
       String line;
       while ((line = file.readLine()) != null) {
-        CmTuple cmTuple = new CmTuple(line);
+        byte[] cipher = ByteArray.fromHexString(line);
+        byte[] plain = Wallet.commonDec(password, cipher);
+        CmTuple cmTuple = CmTuple.parseFromBytes(plain);
         cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
       }
     } catch (IOException e) {
@@ -51,23 +54,25 @@ public class CmUtils {
     return cmInfoMap;
   }
 
-  private static void saveCmFile() {
-    saveCmFile(CM_FILE_NAME);
+  private static void saveCmFile(byte[] password) throws CipherException {
+    saveCmFile(CM_FILE_NAME, password);
   }
 
-  private static void saveCmFile(String fileName) {
+  private static void saveCmFile(String fileName, byte[] password) throws CipherException {
     BufferedWriter bufWriter = null;
     try {
       bufWriter = new BufferedWriter(new FileWriter(fileName));
 
       for (CmTuple cmTuple : cmInfoMap.values()) {
         try {
-          bufWriter.write(cmTuple.toLine());
+          byte[] plain = cmTuple.toByteArray();
+          byte[] cipher = Wallet.commonEnc(null, plain);
+          bufWriter.write(ByteArray.toHexString(cipher));
+          bufWriter.write("\n");
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
-
     } catch (
         IOException e) {
       e.printStackTrace();
@@ -79,30 +84,28 @@ public class CmUtils {
         }
       }
     }
-
-
   }
 
   public static void addCmInfo(byte[] cm, byte[] addr_pk, byte[] addr_sk, byte[] v, byte[] rho,
-      byte[] r, int index, byte[] contractId) {
+      byte[] r, int index, byte[] contractId, byte[] password) throws CipherException {
     if (cmInfoMap == null) {
-      loadCmFile();
+      loadCmFile(password);
     }
     CmTuple cmTuple = new CmTuple(cm, addr_pk, addr_sk, v, rho, r, index, contractId);
     cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
   }
 
-  public static void saveCm(CmTuple cm) {
+  public static void saveCm(CmTuple cm, byte[] password) throws CipherException {
     if (cmInfoMap == null) {
-      loadCmFile();
+      loadCmFile(password);
     }
     cmInfoMap.put(cm.getKeyString(), cm);
-    saveCmFile();
+    saveCmFile(password);
   }
 
-  public static void useCmInfo(byte[] cm) {
+  public static void useCmInfo(byte[] cm, byte[] password) throws CipherException {
     if (cmInfoMap == null) {
-      loadCmFile();
+      loadCmFile(password);
     }
     CmTuple cmTuple = cmInfoMap.get(ByteArray.toHexString(cm));
     cmTuple.used = 0x01;
@@ -110,9 +113,9 @@ public class CmUtils {
   }
 
 
-  public static CmTuple getCm(byte[] cm) {
+  public static CmTuple getCm(byte[] cm, byte[] password) throws CipherException {
     if (cmInfoMap == null) {
-      loadCmFile();
+      loadCmFile(password);
     }
     return cmInfoMap.get(ByteArray.toHexString(cm));
   }
@@ -247,19 +250,19 @@ public class CmUtils {
     byte used = 0x00;
     byte[] contractId = {0x01, 0x02};
     int index = 11;
-    CmUtils.addCmInfo(cm, addr_pk, addr_sk, v, rho, r, 11, contractId);
+    CmUtils.addCmInfo(cm, addr_pk, addr_sk, v, rho, r, 11, contractId, "123456".getBytes());
     //save
-    CmUtils.saveCmFile();
+    CmUtils.saveCmFile("123456".getBytes());
     //load
-    CmUtils.loadCmFile();
+    CmUtils.loadCmFile("123456".getBytes());
     //get
-    CmTuple cm1 = CmUtils.getCm(cm);
+    CmTuple cm1 = CmUtils.getCm(cm, "123456".getBytes());
     //use
-    CmUtils.useCmInfo(cm);
+    CmUtils.useCmInfo(cm, "123456".getBytes());
 
     byte[] bytes = cm1.toByteArray();
     byte[] cipher = Wallet.commonEnc("123456".getBytes(), bytes);
-    bytes = Wallet.commonDec("123456".getBytes(),cipher);
+    bytes = Wallet.commonDec("123456".getBytes(), cipher);
     CmTuple cm2 = CmTuple.parseFromBytes(bytes);
 
   }

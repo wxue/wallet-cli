@@ -131,7 +131,7 @@ public class WalletUtils {
   }
 
   public static WalletFile loadWalletFile(File source) throws IOException {
-   return objectMapper.readValue(source, WalletFile.class);
+    return objectMapper.readValue(source, WalletFile.class);
   }
 //
 //    public static Credentials loadBip39Credentials(String password, String mnemonic) {
@@ -140,11 +140,11 @@ public class WalletUtils {
 //    }
 
   private static String getWalletFileName(WalletFile walletFile) {
-    DateTimeFormatter format = DateTimeFormatter.ofPattern(
-        "'UTC--'yyyy-MM-dd'T'HH-mm-ss.nVV'--'");
-    ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+//    DateTimeFormatter format = DateTimeFormatter.ofPattern(
+//        "'UTC--'yyyy-MM-dd'T'HH-mm-ss.nVV'--'");
+//    ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
-    return now.format(format) + walletFile.getAddress() + ".json";
+    return /*now.format(format) + */walletFile.getAddress() + ".json";
   }
 
   public static String getDefaultKeyDirectory() {
