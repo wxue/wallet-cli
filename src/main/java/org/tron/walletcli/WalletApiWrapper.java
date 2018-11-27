@@ -277,12 +277,16 @@ public class WalletApiWrapper {
       return false;
     }
     if (wallet.getWalletFile_Shiled() != null) {
-      ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled());
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled())) {
+        return true;
+      }
     }
     if (wallet.getWalletFile_Shiled_1() != null) {
-      ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1());
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1())) {
+        return true;
+      }
     }
-    return true;
+    return false;
   }
 
   public boolean transferAsset(String toAddress, String assertName, long amount)

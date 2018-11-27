@@ -232,12 +232,12 @@ public class ZksnarkUtils {
       return false;
     }
     byte[] publicAddress = shiled.getPublicAddress();
-    if (ArrayUtils.isEmpty(publicAddress) || publicAddress.length != 96) {
+    if (ArrayUtils.isEmpty(publicAddress) || publicAddress.length != 64) {
       return false;
     }
 
     byte[] skEnc = Arrays.copyOfRange(privateAddress, 32, 64);
-    byte[] pkEnc = Arrays.copyOfRange(publicAddress, 32, 96);
+    byte[] pkEnc = Arrays.copyOfRange(publicAddress, 32, 64);
 
     byte[] hSig = computeHSig(contract);
     byte[] epk = contract.getEpk().toByteArray();

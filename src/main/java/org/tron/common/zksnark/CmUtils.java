@@ -3,6 +3,7 @@ package org.tron.common.zksnark;
 import com.google.protobuf.ByteString;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,14 +18,15 @@ import org.tron.keystore.Wallet;
 public class CmUtils {
 
   public static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] password)
-      throws CipherException {
+      throws CipherException, IOException {
 
     HashMap<String, CmTuple> cmInfoMap = new HashMap<>();
     BufferedReader file = null;
     try {
       FileReader fileReader = new FileReader(fileName);
       if (fileReader == null) {
-        throw new IOException("Resource not found: " + fileName);
+        System.out.printf("%s is not exits!\n", fileName);
+        return cmInfoMap;
       }
       file = new BufferedReader(fileReader);
       String line;
@@ -34,14 +36,14 @@ public class CmUtils {
         CmTuple cmTuple = CmTuple.parseFromBytes(plain);
         cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
       }
+    } catch (FileNotFoundException e) {
+      System.out.printf("%s is not exits!\n", fileName);
+      return cmInfoMap;
     } catch (IOException e) {
-      e.printStackTrace();
+      throw e;
     } finally {
       if (file != null) {
-        try {
-          file.close();
-        } catch (IOException e) {
-        }
+        file.close();
       }
     }
     return cmInfoMap;

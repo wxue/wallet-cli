@@ -329,12 +329,6 @@ public class Wallet {
     return ecKey;
   }
 
-  public static byte[] decrypt2Byte(byte[] password, WalletFile walletFile)
-      throws CipherException {
-    byte[] privateKey = decrypt2PrivateBytes(password, walletFile);
-    return privateKey;
-  }
-
   static void validate(WalletFile walletFile) throws CipherException {
     WalletFile.Crypto crypto = walletFile.getCrypto();
 

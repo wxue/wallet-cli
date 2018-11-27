@@ -1,5 +1,6 @@
 package org.tron.walletserver;
 
+import java.io.IOException;
 import java.util.HashMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.tron.common.crypto.Sha256Hash;
@@ -11,18 +12,19 @@ import org.tron.keystore.Wallet;
 import org.tron.keystore.WalletFile;
 
 public class ShiledWalletFile {
-
+  private static final String FilePath_Shiled = "./WalletShiled/";
   private WalletFile walletFile;
   private byte[] password;
   private HashMap<String, CmTuple> cmInfoMap;
 
-  public ShiledWalletFile(WalletFile walletFile, byte[] password) throws CipherException {
+  public ShiledWalletFile(WalletFile walletFile, byte[] password)
+      throws CipherException, IOException {
     this.walletFile = walletFile;
     if (!ArrayUtils.isEmpty(password)) {
       String fileName = walletFile.getAddress() + ".cm";
-      cmInfoMap = CmUtils.loadCmFile(fileName, password);
+      cmInfoMap = CmUtils.loadCmFile(FilePath_Shiled+fileName, password);
     }
-    this.password = Sha256Hash.hash(password);
+    this.password = ArrayUtils.clone(password);
   }
 
   public WalletFile getWalletFile() {
@@ -36,7 +38,7 @@ public class ShiledWalletFile {
   public void saveCm(CmTuple cmTuple) throws CipherException {
     cmInfoMap.put(ByteArray.toHexString(cmTuple.getCm()), cmTuple);
     String fileName = walletFile.getAddress() + ".cm";
-    CmUtils.saveCmFile(fileName, password, cmInfoMap);
+    CmUtils.saveCmFile(FilePath_Shiled+fileName, password, cmInfoMap);
   }
 
   public boolean useCmInfo(String cm) throws CipherException {
@@ -45,7 +47,7 @@ public class ShiledWalletFile {
       cmTuple.setUsed();
       cmInfoMap.put(cm, cmTuple);
       String fileName = walletFile.getAddress() + ".cm";
-      CmUtils.saveCmFile(fileName, password, cmInfoMap);
+      CmUtils.saveCmFile(FilePath_Shiled+fileName, password, cmInfoMap);
       return true;
     }
     return false;
@@ -56,6 +58,6 @@ public class ShiledWalletFile {
   }
 
   public byte[] getPublicAddress() {
-    return WalletApi.decodeFromBase58Check(walletFile.getAddress());
+    return WalletApi.decodeBase58Check(walletFile.getAddress());
   }
 }
