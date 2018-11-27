@@ -143,7 +143,7 @@ public class Client {
 
   private void generateShieldAddress() throws IOException, CipherException {
     char[] password = inputPassword2Twice();
-    String fileName =  walletApiWrapper.generateShieldAddress(password);
+    String fileName = walletApiWrapper.generateShieldAddress(password);
     StringUtils.clear(password);
     if (null == fileName) {
       logger.info("GenerateShieldAddress failed !!");
@@ -274,6 +274,7 @@ public class Client {
       logger.info("address = " + address);
     }
   }
+
   private void getShiledAddress() {
     String address = walletApiWrapper.getShiledAddress();
     if (address != null) {
@@ -281,6 +282,7 @@ public class Client {
       logger.info("address = " + address);
     }
   }
+
   private void getBalance() {
     Account account = walletApiWrapper.queryAccount();
     if (account == null) {
@@ -513,11 +515,9 @@ public class Client {
     String toAddress2 = parameters[7].equalsIgnoreCase("null") ? null : parameters[7];
     String amout2 = parameters[8];
     long v2 = new Long(amout2);
-    byte[] password = null;
 
     boolean result = walletApiWrapper
-        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2,
-            password);
+        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2);
     if (result) {
       System.out.println("SendCoinShield successful !!");
     } else {
@@ -1204,72 +1204,6 @@ public class Client {
     logger.info("Next maintenance time is : " + date);
   }
 
-//  private void getAssetIssueListByTimestamp(String[] parameters) {
-//    long timeStamp = -1;
-//    if (parameters == null || parameters.length == 0) {
-//      System.out.println("no time input, use current time");
-//      timeStamp = System.currentTimeMillis();
-//    } else {
-//      if (parameters.length != 2) {
-//        System.out.println("You can GetAssetIssueListByTimestamp like:");
-//        System.out.println("GetAssetIssueListByTimestamp yyyy-mm-dd hh:mm:ss");
-//        return;
-//      } else {
-//        timeStamp = Timestamp.valueOf(parameters[0] + " " + parameters[1]).getTime();
-//      }
-//    }
-//    Optional<AssetIssueList> result = WalletApi.getAssetIssueListByTimestamp(timeStamp);
-//    if (result.isPresent()) {
-//      AssetIssueList assetIssueList = result.get();
-//      logger.info(Utils.printAssetIssueList(assetIssueList));
-//    } else {
-//      logger.info("GetAssetIssueListByTimestamp " + " failed !!");
-//    }
-//  }
-
-//  private void getTransactionsByTimestamp(String[] parameters) {
-//    String start = "";
-//    String end = "";
-//    if (parameters == null || parameters.length != 6) {
-//      System.out.println(
-//          "getTransactionsByTimestamp needs 4 parameters, start_time and end_time, time format is yyyy-mm-dd hh:mm:ss, offset and limit");
-//      return;
-//    } else {
-//      start = parameters[0] + " " + parameters[1];
-//      end = parameters[2] + " " + parameters[3];
-//    }
-//    long startTime = Timestamp.valueOf(start).getTime();
-//    long endTime = Timestamp.valueOf(end).getTime();
-//    int offset = Integer.parseInt(parameters[4]);
-//    int limit = Integer.parseInt(parameters[5]);
-//    Optional<TransactionList> result = WalletApi
-//        .getTransactionsByTimestamp(startTime, endTime, offset, limit);
-//    if (result.isPresent()) {
-//      TransactionList transactionList = result.get();
-//      logger.info(Utils.printTransactionList(transactionList));
-//    } else {
-//      logger.info("getTransactionsByTimestamp " + " failed !!");
-//    }
-//  }
-
-//  private void getTransactionsByTimestampCount(String[] parameters) {
-//    String start = "";
-//    String end = "";
-//    if (parameters == null || parameters.length != 4) {
-//      System.out.println(
-//          "getTransactionsByTimestampCount needs 2 parameters, start_time and end_time, time format is yyyy-mm-dd hh:mm:ss");
-//      return;
-//    } else {
-//      start = parameters[0] + " " + parameters[1];
-//      end = parameters[2] + " " + parameters[3];
-//    }
-//    long startTime = Timestamp.valueOf(start).getTime();
-//    long endTime = Timestamp.valueOf(end).getTime();
-//
-//    NumberMessage result = WalletApi.getTransactionsByTimestampCount(startTime, endTime);
-//    logger.info("the number of Transactions from " + start + " to " + end + " is " + result);
-//  }
-
   private void getTransactionById(String[] parameters) {
     if (parameters == null || parameters.length != 1) {
       System.out.println("getTransactionById needs 1 parameter, transaction id");
@@ -1287,14 +1221,11 @@ public class Client {
 
   private void receiveShieldTransaction(String[] parameters)
       throws InvalidProtocolBufferException, CipherException {
-    if (parameters == null || parameters.length != 3) {
-      System.out.println(
-          "receiveShieldTransaction needs 2 parameter, transaction index and Private address");
+    if (parameters == null || parameters.length != 1) {
+      System.out.println("receiveShieldTransaction needs 1 parameter, transactionId");
       return;
     }
     String txid = parameters[0];
-    int index = Integer.parseInt(parameters[1]);
-    String address = parameters[2];
     Optional<Transaction> result = WalletApi.getTransactionById(txid);
     if (result.isPresent()) {
       Transaction transaction = result.get();
@@ -1306,8 +1237,13 @@ public class Client {
       }
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      byte[] password = null;
-      ZksnarkUtils.saveShieldCoin(zkContract, address, index, password);
+     boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
+     if (ret){
+       System.out.println("receiveShieldTransaction successful !!");
+     }
+     else {
+       System.out.println("receiveShieldTransaction failed !!");
+     }
     } else {
       System.out.println("receiveShieldTransaction failed !!");
     }

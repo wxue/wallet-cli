@@ -17,6 +17,7 @@ import org.tron.api.GrpcAPI.NodeList;
 import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.utils.ByteUtil;
+import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
@@ -24,11 +25,13 @@ import org.tron.keystore.StringUtils;
 import org.tron.keystore.Wallet;
 import org.tron.keystore.WalletFile;
 import org.tron.protos.Contract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
+import org.tron.walletserver.ShiledWalletFile;
 import org.tron.walletserver.WalletApi;
 
 public class WalletApiWrapper {
@@ -111,7 +114,7 @@ public class WalletApiWrapper {
   }
 
   public boolean login(char[] password) throws IOException, CipherException {
-    WalletFile shiled = null;
+    ShiledWalletFile shiled = null;
     if (wallet != null) {
       shiled = wallet.getWalletFile_Shiled();
     }
@@ -126,15 +129,16 @@ public class WalletApiWrapper {
   }
 
   public boolean loadShiledWallet(char[] password) throws IOException, CipherException {
+    byte[] passwd = StringUtils.char2Byte(password);
     if (wallet == null) {
-      wallet = WalletApi.loadShiledWallet();
+      wallet = WalletApi.loadShiledWallet(passwd);
     } else {
       WalletFile walletFile = WalletApi.loadShiledWalletFile();
-      wallet.setWalletFile_Shiled(walletFile);
+      ShiledWalletFile shiled = new ShiledWalletFile(walletFile, passwd);
+      wallet.setWalletFile_Shiled(shiled);
     }
 
-    byte[] passwd = StringUtils.char2Byte(password);
-    wallet.checkPassword(wallet.getWalletFile_Shiled(), passwd);
+    wallet.checkPassword(wallet.getWalletFile_Shiled().getWalletFile(), passwd);
     StringUtils.clear(passwd);
 
     return true;
@@ -183,7 +187,7 @@ public class WalletApiWrapper {
       return null;
     }
 
-    return wallet.getWalletFile_Shiled().getAddress();
+    return wallet.getWalletFile_Shiled().getWalletFile().getAddress();
   }
 
   public Account queryAccount() {
@@ -197,14 +201,23 @@ public class WalletApiWrapper {
 
 
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
-      String cm2, String toAddress1, long v1, String toAddress2, long v2, byte[] password)
+      String cm2, String toAddress1, long v1, String toAddress2, long v2)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
-    if ((vFromPub != 0 && (wallet == null || !wallet.isLoginState()))) {
+    if (wallet == null) {
+      System.out
+          .println("Warning: sendCoinShield failed,  Please login or loadShiledWallet first !!");
+      return false;
+    }
+    if ((vFromPub != 0 && !wallet.isLoginState())) {
       System.out.println("Warning: sendCoinShield failed,  Please login first !!");
       return false;
     }
-    if (wallet == null) {
-      wallet = new WalletApi();
+    if (cm1 != null || cm2 != null) {
+      if (wallet.getWalletFile_Shiled() == null && wallet.getWalletFile_Shiled_1() == null) {
+        System.out
+            .println("Warning: sendCoinShield failed,  Please loadShiledWallet first !!");
+        return false;
+      }
     }
     if ((toPubAddress == null) ^ (vToPub == 0)) {
       System.out.println("Warning: need both toPubAddress is null and vToPub is zero or both not");
@@ -240,7 +253,7 @@ public class WalletApiWrapper {
         return false;
       }
     }
-    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2, password);
+    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2);
   }
 
   public boolean sendCoin(String toAddress, long amount)
@@ -255,6 +268,21 @@ public class WalletApiWrapper {
     }
 
     return wallet.sendCoin(to, amount);
+  }
+
+  public boolean saveShieldCoin(ZksnarkV0TransferContract contract) throws CipherException {
+    if (wallet == null || (wallet.getWalletFile_Shiled() == null
+        && wallet.getWalletFile_Shiled_1() == null)) {
+      System.out.println("Warning: saveShieldCoin failed, Please loadShiledWallet first !!");
+      return false;
+    }
+    if (wallet.getWalletFile_Shiled() != null) {
+      ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled());
+    }
+    if (wallet.getWalletFile_Shiled_1() != null) {
+      ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1());
+    }
+    return true;
   }
 
   public boolean transferAsset(String toAddress, String assertName, long amount)

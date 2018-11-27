@@ -109,8 +109,8 @@ public class WalletApi {
   private static final String FilePath = "Wallet";
   private static final String FilePath_Shiled = "WalletShiled";
   private WalletFile walletFile = null;
-  private WalletFile walletFile_Shiled = null;
-  private WalletFile walletFile_Shiled_1 = null;  //Two address
+  private ShiledWalletFile walletFile_Shiled = null;
+  private ShiledWalletFile walletFile_Shiled_1 = null;  //Two address
 
   private boolean loginState = false;
   private byte[] address = null;
@@ -240,7 +240,7 @@ public class WalletApi {
     this.walletFile = walletFile;
   }
 
-  public void setWalletFile_Shiled(WalletFile walletFile_Shiled) {
+  public void setWalletFile_Shiled(ShiledWalletFile walletFile_Shiled) {
     this.walletFile_Shiled = walletFile_Shiled;
   }
 
@@ -248,8 +248,12 @@ public class WalletApi {
     return walletFile;
   }
 
-  public WalletFile getWalletFile_Shiled() {
+  public ShiledWalletFile getWalletFile_Shiled() {
     return walletFile_Shiled;
+  }
+
+  public ShiledWalletFile getWalletFile_Shiled_1() {
+    return walletFile_Shiled_1;
   }
 
   public boolean checkPassword(WalletFile walletFile, byte[] passwd) throws CipherException {
@@ -259,7 +263,7 @@ public class WalletApi {
   /**
    * Creates a Wallet with an existing ECKey.
    */
-  public WalletApi(WalletFile walletFile, WalletFile shiled) {
+  public WalletApi(WalletFile walletFile, ShiledWalletFile shiled) {
     this.walletFile = walletFile;
     this.walletFile_Shiled = shiled;
     if (walletFile != null) {
@@ -334,19 +338,20 @@ public class WalletApi {
     }
 
     List<File> walletList = new ArrayList<>();
-    for (File wallet:wallets){
-      if (wallet.getName().endsWith(".json")){
+    for (File wallet : wallets) {
+      if (wallet.getName().endsWith(".json")) {
         walletList.add(wallet);
       }
     }
-    if(walletList.size() == 0){
+    if (walletList.size() == 0) {
       return null;
     }
 
     File wallet;
     if (walletList.size() > 1) {
       for (int i = 0; i < walletList.size(); i++) {
-        System.out.println("The " + (i + 1) + "the keystore file name is " + walletList.get(i).getName());
+        System.out
+            .println("The " + (i + 1) + "the keystore file name is " + walletList.get(i).getName());
       }
       System.out.println("Please choose between 1 and " + walletList.size());
       Scanner in = new Scanner(System.in);
@@ -365,7 +370,7 @@ public class WalletApi {
           System.out.println("Please choose again between 1 and " + walletList.size());
           continue;
         }
-        wallet = walletList.get(n-1);
+        wallet = walletList.get(n - 1);
         break;
       }
     } else {
@@ -410,10 +415,11 @@ public class WalletApi {
   /**
    * load a Wallet from keystore
    */
-  public static WalletApi loadShiledWallet()
-      throws IOException {
+  public static WalletApi loadShiledWallet(byte[] password)
+      throws IOException, CipherException {
     WalletFile walletFile = loadWalletFile(FilePath_Shiled);
-    WalletApi walletApi = new WalletApi(null, walletFile);
+    ShiledWalletFile shiled = new ShiledWalletFile(walletFile, password);
+    WalletApi walletApi = new WalletApi(null, shiled);
     return walletApi;
   }
 
@@ -555,15 +561,31 @@ public class WalletApi {
     return rpcCli.easyTransferByPrivate(privateKey, toAddress, amount);
   }
 
-  public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
-      String cm2, byte[] to1, long v1, byte[] to2, long v2, byte[] password)
-      throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
+  public CmTuple getCm(String cm) {
+    CmTuple cmTuple = null;
+    if (walletFile_Shiled != null) {
+      cmTuple = walletFile_Shiled.getCm(cm);
+    }
+    if (cmTuple == null && walletFile_Shiled_1 != null) {
+      cmTuple = walletFile_Shiled_1.getCm(cm);
+    }
+    return cmTuple;
+  }
 
-    byte[] key =
-        ByteArray.fromString(
-            vFromPub + ByteArray.toHexString(toPub) + vToPub + cm1 + cm2 + ByteArray
-                .toHexString(to1) +
-                v1 + ByteArray.toHexString(to2) + v2);
+  public void useCm(String cm) throws CipherException {
+    if (walletFile_Shiled != null) {
+      if (walletFile_Shiled.useCmInfo(cm)) {
+        return;
+      }
+    }
+    if (walletFile_Shiled_1 != null) {
+      walletFile_Shiled_1.useCmInfo(cm);
+    }
+  }
+
+  public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
+      String cm2, byte[] to1, long v1, byte[] to2, long v2)
+      throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
 
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
     boolean havePubInput = false;
@@ -599,7 +621,8 @@ public class WalletApi {
       rt = WalletApi.getBestMerkleRoot().get().getValue();
     } else {
 
-      c_old1 = CmUtils.getCm(ByteArray.fromHexString(cm1), password);
+      c_old1 = getCm(cm1);
+
       if (c_old1 == null) {
         System.out.printf("Can not find c_old by cm : %s.\n", cm1);
         return false;
@@ -617,7 +640,7 @@ public class WalletApi {
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
       if (!StringUtils.isEmpty(cm2)) {
-        c_old2 = CmUtils.getCm(ByteArray.fromHexString(cm2), password);
+        c_old2 = getCm(cm2);
         if (c_old2 == null) {
           System.out.printf("Can not find c_old by cm : %s.\n", cm2);
           return false;
@@ -711,10 +734,10 @@ public class WalletApi {
         havePubInput);
     if (result) {
       if (!StringUtils.isEmpty(cm1)) {
-        CmUtils.useCmInfo(ByteArray.fromHexString(cm1), password);
+        useCm(cm1);
       }
       if (!StringUtils.isEmpty(cm2)) {
-        CmUtils.useCmInfo(ByteArray.fromHexString(cm2), password);
+        useCm(cm2);
       }
     }
     return result;

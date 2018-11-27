@@ -179,8 +179,7 @@ public class TransactionUtils {
     for (int i = 0; i < listContract.size(); i++) {
       ECDSASignature signature = myKey.sign(hash);
       ByteString bsSign = ByteString.copyFrom(signature.toByteArray());
-      transactionBuilderSigned.addSignature(
-          bsSign);//Each contract may be signed with a different private key in the future.
+      transactionBuilderSigned.addSignature(bsSign);
     }
 
     transaction = transactionBuilderSigned.build();

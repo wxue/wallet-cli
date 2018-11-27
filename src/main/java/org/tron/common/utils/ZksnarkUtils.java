@@ -47,6 +47,7 @@ import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Contract.zkv0proof;
+import org.tron.walletserver.ShiledWalletFile;
 import org.tron.walletserver.WalletApi;
 import org.tron.common.crypto.chacha20.*;
 
@@ -210,37 +211,54 @@ public class ZksnarkUtils {
     return Sha256Hash.of(contract.toByteArray()).getBytes();
   }
 
-  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, String address,
-      int index, byte[] password)
-      throws CipherException {
-    byte[] privateAddress = WalletApi.decodeBase58Check(address);
-    if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
-      return false;
-    }
-    byte[] ask = Arrays.copyOfRange(privateAddress, 0, 32);
-    byte[] skEnc = Arrays.copyOfRange(privateAddress, 32, 64);
-    byte[] apk = ShieldAddressGenerator.generatePublicKey(ask);
-    byte[] pkEnc = ShieldAddressGenerator.generatePublicKeyEnc(skEnc);
-    byte[] addressPub = ByteUtil.merge(apk, pkEnc);
-
-    byte i = (byte) (index - 1);
-    byte[] hSig = computeHSig(contract);
-    byte[] epk = contract.getEpk().toByteArray();
-    byte[] dh = scalarMultiply(epk, skEnc);
-    byte[] K1 = KDF(dh, epk, pkEnc, hSig, i);
+  private static CmTuple decrypC(int index, byte[] contractId, byte[] K, byte[] cipher, byte[] cm,
+      byte[] publicAddress, byte[] privateAddress) {
     byte[] none = new byte[12];
-    byte[] cipher = index == 1 ? contract.getC1().toByteArray() : contract.getC2().toByteArray();
-    byte[] plain = decrypt(cipher, K1, none, 1);
-    byte[] cm = index == 1 ? contract.getCm1().toByteArray() : contract.getCm2().toByteArray();
+    byte[] plain = decrypt(cipher, K, none, 1);
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
     sort(v);
     BigInteger value = new BigInteger(v);
     System.out.println("You recive " + value + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
-    CmTuple cmTuple = new CmTuple(cm, addressPub, privateAddress, v, rho, r, index,
-        getContractId(contract));
-    CmUtils.saveCm(cmTuple, password);
+    CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index, contractId);
+    return cmTuple;
+  }
+
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile shiled)
+      throws CipherException {
+    byte[] privateAddress = shiled.getPrivateAddress();
+    if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
+      return false;
+    }
+    byte[] publicAddress = shiled.getPublicAddress();
+    if (ArrayUtils.isEmpty(publicAddress) || publicAddress.length != 96) {
+      return false;
+    }
+
+    byte[] skEnc = Arrays.copyOfRange(privateAddress, 32, 64);
+    byte[] pkEnc = Arrays.copyOfRange(publicAddress, 32, 96);
+
+    byte[] hSig = computeHSig(contract);
+    byte[] epk = contract.getEpk().toByteArray();
+    byte[] dh = scalarMultiply(epk, skEnc);
+    byte[] contractId = getContractId(contract);
+
+    byte[] K = KDF(dh, epk, pkEnc, hSig, (byte) (0));
+    byte[] cipher = contract.getC1().toByteArray();
+    byte[] cm = contract.getCm1().toByteArray();
+
+    CmTuple cmTuple = decrypC(1, contractId, K, cipher, cm, publicAddress, privateAddress);
+    if (cmTuple == null) {
+      K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
+      cipher = contract.getC2().toByteArray();
+      cm = contract.getCm2().toByteArray();
+      cmTuple = decrypC(2, contractId, K, cipher, cm, publicAddress, privateAddress);
+    }
+    if (cmTuple == null) {
+      return false;
+    }
+    shiled.saveCm(cmTuple);
     //TODO: compute nf
     return true;
   }

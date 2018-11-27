@@ -16,14 +16,7 @@ import org.tron.keystore.Wallet;
 
 public class CmUtils {
 
-  static private String CM_FILE_NAME = "./Wallet/cmInfoFile.data";
-  static private HashMap<String, CmTuple> cmInfoMap = null;
-
-  public static void loadCmFile(byte[] password) throws CipherException {
-    cmInfoMap = loadCmFile(CM_FILE_NAME, password);
-  }
-
-  private static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] password)
+  public static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] password)
       throws CipherException {
 
     HashMap<String, CmTuple> cmInfoMap = new HashMap<>();
@@ -54,11 +47,8 @@ public class CmUtils {
     return cmInfoMap;
   }
 
-  private static void saveCmFile(byte[] password) throws CipherException {
-    saveCmFile(CM_FILE_NAME, password);
-  }
-
-  private static void saveCmFile(String fileName, byte[] password) throws CipherException {
+  public static void saveCmFile(String fileName, byte[] password,
+      HashMap<String, CmTuple> cmInfoMap) throws CipherException {
     BufferedWriter bufWriter = null;
     try {
       bufWriter = new BufferedWriter(new FileWriter(fileName));
@@ -66,7 +56,7 @@ public class CmUtils {
       for (CmTuple cmTuple : cmInfoMap.values()) {
         try {
           byte[] plain = cmTuple.toByteArray();
-          byte[] cipher = Wallet.commonEnc(null, plain);
+          byte[] cipher = Wallet.commonEnc(password, plain);
           bufWriter.write(ByteArray.toHexString(cipher));
           bufWriter.write("\n");
         } catch (IOException e) {
@@ -85,41 +75,6 @@ public class CmUtils {
       }
     }
   }
-
-  public static void addCmInfo(byte[] cm, byte[] addr_pk, byte[] addr_sk, byte[] v, byte[] rho,
-      byte[] r, int index, byte[] contractId, byte[] password) throws CipherException {
-    if (cmInfoMap == null) {
-      loadCmFile(password);
-    }
-    CmTuple cmTuple = new CmTuple(cm, addr_pk, addr_sk, v, rho, r, index, contractId);
-    cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
-  }
-
-  public static void saveCm(CmTuple cm, byte[] password) throws CipherException {
-    if (cmInfoMap == null) {
-      loadCmFile(password);
-    }
-    cmInfoMap.put(cm.getKeyString(), cm);
-    saveCmFile(password);
-  }
-
-  public static void useCmInfo(byte[] cm, byte[] password) throws CipherException {
-    if (cmInfoMap == null) {
-      loadCmFile(password);
-    }
-    CmTuple cmTuple = cmInfoMap.get(ByteArray.toHexString(cm));
-    cmTuple.used = 0x01;
-    cmInfoMap.put(ByteArray.toHexString(cm), cmTuple);
-  }
-
-
-  public static CmTuple getCm(byte[] cm, byte[] password) throws CipherException {
-    if (cmInfoMap == null) {
-      loadCmFile(password);
-    }
-    return cmInfoMap.get(ByteArray.toHexString(cm));
-  }
-
 
   public static class CmTuple implements Serializable {
 
@@ -237,35 +192,9 @@ public class CmUtils {
     public byte getUsed() {
       return used;
     }
+
+    public void setUsed() {
+      this.used = 0x01;
+    }
   }
-
-  public static void main(String[] args) throws CipherException {
-    //add
-    byte[] cm = {0x0001};
-    byte[] addr_pk = {0x02};
-    byte[] addr_sk = {0x03};
-    byte[] v = {0x04};
-    byte[] rho = {0x05};
-    byte[] r = {0x06};
-    byte used = 0x00;
-    byte[] contractId = {0x01, 0x02};
-    int index = 11;
-    CmUtils.addCmInfo(cm, addr_pk, addr_sk, v, rho, r, 11, contractId, "123456".getBytes());
-    //save
-    CmUtils.saveCmFile("123456".getBytes());
-    //load
-    CmUtils.loadCmFile("123456".getBytes());
-    //get
-    CmTuple cm1 = CmUtils.getCm(cm, "123456".getBytes());
-    //use
-    CmUtils.useCmInfo(cm, "123456".getBytes());
-
-    byte[] bytes = cm1.toByteArray();
-    byte[] cipher = Wallet.commonEnc("123456".getBytes(), bytes);
-    bytes = Wallet.commonDec("123456".getBytes(), cipher);
-    CmTuple cm2 = CmTuple.parseFromBytes(bytes);
-
-  }
-
-
 }
