@@ -93,6 +93,7 @@ import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
+import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -1282,6 +1283,10 @@ public class WalletApi {
 
   public static Optional<TransactionInfo> getTransactionInfoById(String txID) {
     return rpcCli.getTransactionInfoById(txID);
+  }
+
+  public static Optional<DynamicProperties> getDynamicProperties() {
+    return rpcCli.getDynamicProperties();
   }
 
   public boolean freezeBalance(long frozen_balance, long frozen_duration, int resourceCode,

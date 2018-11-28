@@ -52,6 +52,7 @@ import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
+import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -128,6 +129,11 @@ public class GrpcClient {
     }
   }
 
+  public Optional<DynamicProperties> getDynamicProperties() {
+    DynamicProperties dynamicProperties = blockingStubDatabase
+        .getDynamicProperties(EmptyMessage.newBuilder().build());
+    return Optional.ofNullable(dynamicProperties);
+  }
 
   public Account queryAccountById(String accountId) {
     ByteString bsAccountId = ByteString.copyFromUtf8(accountId);
