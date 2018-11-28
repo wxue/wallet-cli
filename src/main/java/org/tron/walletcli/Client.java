@@ -525,6 +525,10 @@ public class Client {
     }
   }
 
+  private void listCoin() {
+    walletApiWrapper.listCoin();
+  }
+
   private void transferAsset(String[] parameters)
       throws IOException, CipherException, CancelException {
     if (parameters == null || parameters.length != 3) {
@@ -1237,13 +1241,12 @@ public class Client {
       }
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-     boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
-     if (ret){
-       System.out.println("receiveShieldTransaction successful !!");
-     }
-     else {
-       System.out.println("receiveShieldTransaction failed !!");
-     }
+      boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
+      if (ret) {
+        System.out.println("receiveShieldTransaction successful !!");
+      } else {
+        System.out.println("receiveShieldTransaction failed !!");
+      }
     } else {
       System.out.println("receiveShieldTransaction failed !!");
     }
@@ -1705,6 +1708,7 @@ public class Client {
     System.out.println("GenerateAddress");
     System.out.println("GetAddress");
     System.out.println("GetShiledAddress");
+    System.out.println("ListCoin");
     System.out.println("GetBalance");
     System.out.println("GetAccount");
     System.out.println("GetAssetIssueByAccount");
@@ -1893,6 +1897,10 @@ public class Client {
           }
           case "getshiledaddress": {
             getShiledAddress();
+            break;
+          }
+          case "listcoin": {
+            listCoin();
             break;
           }
           case "getbalance": {

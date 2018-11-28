@@ -256,6 +256,26 @@ public class WalletApiWrapper {
     return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2);
   }
 
+  public void listCoin() {
+    if (wallet == null || (wallet.getWalletFile_Shiled() == null
+        && wallet.getWalletFile_Shiled_1() == null)) {
+      System.out
+          .println("Warning: listCoin failed,  Please loadShiledWallet first !!");
+      return;
+    }
+    if (wallet.getWalletFile_Shiled() != null) {
+      WalletFile walletFile = wallet.getWalletFile_Shiled().getWalletFile();
+      System.out.printf("Address is %s :\n", walletFile.getAddress());
+      wallet.getWalletFile_Shiled().listCoin();
+    }
+    if (wallet.getWalletFile_Shiled_1() != null) {
+      WalletFile walletFile = wallet.getWalletFile_Shiled_1().getWalletFile();
+      System.out.printf("Address is %s :\n", walletFile.getAddress());
+      wallet.getWalletFile_Shiled_1().listCoin();
+    }
+  }
+
+
   public boolean sendCoin(String toAddress, long amount)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {

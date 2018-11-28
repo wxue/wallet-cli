@@ -3,7 +3,6 @@ package org.tron.walletserver;
 import java.io.IOException;
 import java.util.HashMap;
 import org.apache.commons.lang3.ArrayUtils;
-import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
@@ -12,6 +11,7 @@ import org.tron.keystore.Wallet;
 import org.tron.keystore.WalletFile;
 
 public class ShiledWalletFile {
+
   private static final String FilePath_Shiled = "./WalletShiled/";
   private WalletFile walletFile;
   private byte[] password;
@@ -22,7 +22,7 @@ public class ShiledWalletFile {
     this.walletFile = walletFile;
     if (!ArrayUtils.isEmpty(password)) {
       String fileName = walletFile.getAddress() + ".cm";
-      cmInfoMap = CmUtils.loadCmFile(FilePath_Shiled+fileName, password);
+      cmInfoMap = CmUtils.loadCmFile(FilePath_Shiled + fileName, password);
     }
     this.password = ArrayUtils.clone(password);
   }
@@ -35,10 +35,18 @@ public class ShiledWalletFile {
     return cmInfoMap.get(cm);
   }
 
+  public void listCoin() {
+    for (String cm : cmInfoMap.keySet()) {
+      CmTuple cmTuple = cmInfoMap.get(cm);
+      System.out.printf("CM : %s , balance : %d, %s\n", cm, ByteArray.toLong(cmTuple.getV()),
+          cmTuple.getUsed() == 0x01 ? "is used" : "is not used");
+    }
+  }
+
   public void saveCm(CmTuple cmTuple) throws CipherException {
     cmInfoMap.put(ByteArray.toHexString(cmTuple.getCm()), cmTuple);
     String fileName = walletFile.getAddress() + ".cm";
-    CmUtils.saveCmFile(FilePath_Shiled+fileName, password, cmInfoMap);
+    CmUtils.saveCmFile(FilePath_Shiled + fileName, password, cmInfoMap);
   }
 
   public boolean useCmInfo(String cm) throws CipherException {
@@ -47,7 +55,7 @@ public class ShiledWalletFile {
       cmTuple.setUsed();
       cmInfoMap.put(cm, cmTuple);
       String fileName = walletFile.getAddress() + ".cm";
-      CmUtils.saveCmFile(FilePath_Shiled+fileName, password, cmInfoMap);
+      CmUtils.saveCmFile(FilePath_Shiled + fileName, password, cmInfoMap);
       return true;
     }
     return false;
