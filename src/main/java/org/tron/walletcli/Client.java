@@ -56,6 +56,7 @@ import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
+import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -1239,8 +1240,49 @@ public class Client {
         System.out.println("Is not shield transaction.");
         return;
       }
+
+      Optional<TransactionInfo> transactionInfoById = WalletApi.getTransactionInfoById(txid);
+      if (!transactionInfoById.isPresent()) {
+        System.out.println("TransactionInfo not exists !!");
+        return;
+      }
+      TransactionInfo transactionInfo = transactionInfoById.get();
+      long currentBlockNumber = transactionInfo.getBlockNumber();
+      Optional<DynamicProperties> dynamicPropertiesOptional = WalletApi.getDynamicProperties();
+      if (!dynamicPropertiesOptional.isPresent()) {
+        System.out.println("DynamicProperties not exists !!");
+        return;
+      }
+      DynamicProperties dynamicProperties = dynamicPropertiesOptional.get();
+      long lastSolidityBlockNum = dynamicProperties.getLastSolidityBlockNum();
+      if (currentBlockNumber < lastSolidityBlockNum) {
+        System.out.println("block is not solidify yet!!");
+        return;
+      }
+      long localBlockNum = 0L;//获取当前块高度，需要存储
+      Optional<BlockList> blocksOption = WalletApi
+          .getBlockByLimitNext(localBlockNum + 1, currentBlockNumber);
+      //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
+      if (!blocksOption.isPresent()) {
+        System.out.println("getBlock error !!");
+        return;
+      }
+      BlockList blockList = blocksOption.get();
+      blockList.getBlockList().forEach(block -> {
+        block.getTransactionsList().forEach(transaction1 -> {
+          Contract contract1 = transaction1.getRawData().getContract(0);
+          if (contract1.getType() == ContractType.ZksnarkV0TransferContract) {
+            //todo：
+            //getAllWitness，并存入cm
+            //getTree()，并写入cm
+            //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
+          }
+        });
+      });
+
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
+      //todo，待删除
       boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
       if (ret) {
         System.out.println("receiveShieldTransaction successful !!");
