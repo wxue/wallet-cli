@@ -64,6 +64,7 @@ import org.tron.protos.Contract.ParticipateAssetIssueContract;
 import org.tron.protos.Contract.ProposalApproveContract;
 import org.tron.protos.Contract.ProposalCreateContract;
 import org.tron.protos.Contract.ProposalDeleteContract;
+import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.TransferAssetContract;
 import org.tron.protos.Contract.TransferContract;
 import org.tron.protos.Contract.TriggerSmartContract;
@@ -1581,6 +1582,18 @@ public class Utils {
       }
     }
 
+    return result;
+  }
+
+
+  public static String printShieldAddress(ShieldAddress shieldAddress) {
+    String result = "";
+    result += "private_address: ";
+    result += WalletApi.encode58Check(shieldAddress.getPrivateAddress().toByteArray());
+    result += "\n";
+    result += "public_address: ";
+    result += WalletApi.encode58Check(shieldAddress.getPublicAddress().toByteArray());
+    result += "\n";
     return result;
   }
 

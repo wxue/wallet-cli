@@ -15,7 +15,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +49,6 @@ import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
-import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.ProofInputMsg;
 import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
@@ -64,7 +62,6 @@ import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.common.utils.ZksnarkUtils;
-import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
@@ -84,6 +81,7 @@ import org.tron.protos.Contract.FreezeBalanceContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.SellStorageContract;
+import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
 import org.tron.protos.Contract.UpdateSettingContract;
@@ -1499,6 +1497,10 @@ public class WalletApi {
 
   public static Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String hash, int index) {
     return rpcCli.getMerkleTreeWitness(hash, index);
+  }
+
+  public static Optional<ShieldAddress> generateShieldAddress() {
+    return rpcCli.generateShieldAddress();
   }
 
   public static Contract.ProposalCreateContract createProposalCreateContract(byte[] owner,
