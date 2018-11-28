@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tron.api.DatabaseGrpc;
 import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AccountPaginated;
@@ -64,10 +65,12 @@ public class GrpcClient {
   private ManagedChannel channelFull = null;
   private ManagedChannel channelSolidity = null;
   private ManagedChannel channelZksnark = null;
+  private ManagedChannel channelDatabase = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
   private WalletSolidityGrpc.WalletSolidityBlockingStub blockingStubSolidity = null;
   private WalletExtensionGrpc.WalletExtensionBlockingStub blockingStubExtension = null;
   private ProofServerGrpc.ProofServerBlockingStub blockingStubZksnark = null;
+  private DatabaseGrpc.DatabaseBlockingStub blockingStubDatabase = null;
 
 //  public GrpcClient(String host, int port) {
 //    channel = ManagedChannelBuilder.forAddress(host, port)
@@ -91,6 +94,11 @@ public class GrpcClient {
     if (!StringUtils.isEmpty(zksnark)) {
       channelZksnark = ManagedChannelBuilder.forTarget(zksnark).usePlaintext(true).build();
       blockingStubZksnark = ProofServerGrpc.newBlockingStub(channelZksnark);
+    }
+
+    {
+      channelDatabase = ManagedChannelBuilder.forTarget("database").usePlaintext(true).build();
+      blockingStubDatabase = DatabaseGrpc.newBlockingStub(channelDatabase);
     }
   }
 
@@ -119,6 +127,7 @@ public class GrpcClient {
       return blockingStubFull.getAccount(request);
     }
   }
+
 
   public Account queryAccountById(String accountId) {
     ByteString bsAccountId = ByteString.copyFromUtf8(accountId);
