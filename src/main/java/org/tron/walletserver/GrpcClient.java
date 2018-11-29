@@ -47,6 +47,7 @@ import org.tron.protos.Contract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.OutputPoint;
+import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
@@ -744,6 +745,12 @@ public class GrpcClient {
     IncrementalMerkleWitness witness = blockingStubFull
         .getMerkleTreeWitness(request);
     return Optional.ofNullable(witness);
+  }
+
+  public Optional<ShieldAddress> generateShieldAddress() {
+    ShieldAddress shieldAddress = blockingStubFull
+        .generateShieldAddress(EmptyMessage.newBuilder().build());
+    return Optional.ofNullable(shieldAddress);
   }
 
   public TransactionExtention updateSetting(Contract.UpdateSettingContract request) {

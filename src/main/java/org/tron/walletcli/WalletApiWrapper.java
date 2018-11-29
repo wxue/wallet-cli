@@ -22,7 +22,6 @@ import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
-import org.tron.keystore.Wallet;
 import org.tron.keystore.WalletFile;
 import org.tron.protos.Contract;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
@@ -293,7 +292,7 @@ public class WalletApiWrapper {
   public boolean saveShieldCoin(ZksnarkV0TransferContract contract) throws CipherException {
     if (wallet == null || (wallet.getWalletFile_Shiled() == null
         && wallet.getWalletFile_Shiled_1() == null)) {
-      System.out.println("Warning: saveShieldCoin failed, Please loadShiledWallet first !!");
+      System.out.println("Warning: saveShieldCoin failed, Please load Shiled Wallet first !!");
       return false;
     }
     if (wallet.getWalletFile_Shiled() != null) {
