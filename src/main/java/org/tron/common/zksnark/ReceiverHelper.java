@@ -1,5 +1,6 @@
 package org.tron.common.zksnark;
 
+import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.api.GrpcAPI.BlockList;
+import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
 import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
@@ -24,8 +26,8 @@ import org.tron.walletserver.WalletApi;
 
 @Slf4j
 public class ReceiverHelper {
- 
-  public static boolean syncBlocksAndUpdateWitness(Manager dbManager,String txid) {
+
+  public static boolean syncBlocksAndUpdateWitness(Manager dbManager, String txid) {
 
     Optional<TransactionInfo> transactionInfoById = WalletApi.getTransactionInfoById(txid);
     if (!transactionInfoById.isPresent()) {
@@ -106,10 +108,14 @@ public class ReceiverHelper {
               tree.append(cm1);
               //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
               //todo，如果cm时需要记录的
-              if (false) {
+              ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
+              ByteString byteString = getTransactionId(transaction1).getByteString();
+
+              //found
+              if (byteString.toString().equals(txid)) {
                 found = true;
                 IncrementalMerkleWitnessContainer witness = tree.toWitness();
-                witness.getWitnessCapsule().setOutputPoint();
+                witness.getWitnessCapsule().setOutputPoint(contractId, 0);
                 dbManager
                     .getMerkleWitnessStore()
                     .put(witness.getMerkleWitnessKey(), witness.getWitnessCapsule());
@@ -117,10 +123,10 @@ public class ReceiverHelper {
 
               tree.append(cm2);
               //todo，如果cm时需要记录的
-              if (false) {
+              if (byteString.toString().equals(txid)) {
                 found = true;
                 IncrementalMerkleWitnessContainer witness = tree.toWitness();
-                witness.getWitnessCapsule().setOutputPoint();
+                witness.getWitnessCapsule().setOutputPoint(contractId, 1);
                 dbManager
                     .getMerkleWitnessStore()
                     .put(witness.getMerkleWitnessKey(), witness.getWitnessCapsule());
@@ -193,17 +199,21 @@ public class ReceiverHelper {
                 wit.append(cm1);
               });
 
+              ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
+              ByteString byteString = getTransactionId(transaction1).getByteString();
               //todo 判断cm1
-              if (false) {
+              if (byteString.toString().equals(txid)) {
                 found = true;
                 IncrementalMerkleWitnessContainer witness = tree.toWitness();
+                witness.getWitnessCapsule().setOutputPoint(contractId, 0);
                 newWitness.add(witness);
               }
 
               tree.append(cm2);
-              if (false) {
+              if (byteString.toString().equals(txid)) {
                 found = true;
                 IncrementalMerkleWitnessContainer witness = tree.toWitness();
+                witness.getWitnessCapsule().setOutputPoint(contractId, 1);
                 newWitness.add(witness);
               }
 
@@ -218,10 +228,6 @@ public class ReceiverHelper {
           log.warn("not found valid cm");
           return false;
         }
-        newWitness.forEach(wit -> {
-          wit.getWitnessCapsule().setOutputPoint();
-        });
-
 
         if (localBlockNum == currentBlockNumber) {
           newWitness.forEach(wit -> {
@@ -265,7 +271,7 @@ public class ReceiverHelper {
 
                 newWitness.forEach(wit -> {
                   wit.append(cm1);
-                  wit.append(cm1);
+                  wit.append(cm2);
                 });
               } catch (Exception ex) {
                 log.error("", ex);
@@ -290,4 +296,11 @@ public class ReceiverHelper {
     return true;
   }
 
+  private static byte[] getContractId(ZksnarkV0TransferContract contract) {
+    return Sha256Hash.of(contract.toByteArray()).getBytes();
+  }
+
+  private static Sha256Hash getTransactionId(Transaction transaction) {
+    return Sha256Hash.of(transaction.getRawData().toByteArray());
+  }
 }

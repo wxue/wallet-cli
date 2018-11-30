@@ -1260,9 +1260,9 @@ public class Client {
 
       boolean r = ReceiverHelper.syncBlocksAndUpdateWitness(dbManager,txid);
 
+      //todo，待删除
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      //todo，待删除
       boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
       if (ret) {
         System.out.println("receiveShieldTransaction successful !!");
