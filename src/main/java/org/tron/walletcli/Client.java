@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -48,7 +47,7 @@ import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
-import org.tron.common.zksnark.ReceiverHelper;
+import org.tron.common.zksnark.ReceiverZkHelper;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
@@ -59,13 +58,11 @@ import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
-import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
-import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -74,10 +71,6 @@ import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.walletserver.WalletApi;
-import org.tron.core.capsule.SHA256CompressCapsule;
-import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
-import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
-import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
 
 public class Client {
 
@@ -1259,9 +1252,11 @@ public class Client {
         return;
       }
 
-      boolean r = ReceiverHelper.syncBlocksAndUpdateWitness(dbManager,txid);
+      boolean r = ReceiverZkHelper.syncAndUpdateWitness(dbManager,txid);
+      if(!r){
+        return;
+      }
 
-      //todo，待删除
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
       boolean ret = walletApiWrapper.saveShieldCoin(zkContract);

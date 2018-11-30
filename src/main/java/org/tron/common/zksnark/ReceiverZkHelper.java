@@ -28,10 +28,10 @@ import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.walletserver.WalletApi;
 
 @Slf4j
-public class ReceiverHelper {
+public class ReceiverZkHelper {
 
 
-  public static boolean syncBlocksAndUpdateWitness(Manager dbManager, String txid)
+  public static boolean syncAndUpdateWitness(Manager dbManager, String txid)
       throws InvalidProtocolBufferException, ItemNotFoundException {
 
     long currentTxBlockNumber = getCurrentTxBlockNumber(txid);

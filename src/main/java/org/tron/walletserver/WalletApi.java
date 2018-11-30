@@ -629,6 +629,7 @@ public class WalletApi {
         return false;
       }
 
+      //todo ,从wallet本地获取witness
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
           .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
               c_old1.getIndex() - 1);
