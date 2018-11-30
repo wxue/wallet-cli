@@ -1,14 +1,16 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.ByteArray;
+import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
+import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.db.Manager;
 import org.tron.protos.Contract.SHA256Compress;
-import org.tron.zksnark.SHA256CompressCapsule;
-import org.tron.zksnark.merkle.IncrementalMerkleWitnessContainer.OutputPointUtil;
+import org.tron.core.capsule.SHA256CompressCapsule;
+import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer.OutputPointUtil;
 
 @Slf4j
 public class MerkleContainer {

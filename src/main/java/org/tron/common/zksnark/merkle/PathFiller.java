@@ -1,4 +1,4 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import java.util.Deque;
 import org.tron.protos.Contract.SHA256Compress;

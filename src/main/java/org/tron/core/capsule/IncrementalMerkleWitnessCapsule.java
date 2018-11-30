@@ -1,13 +1,13 @@
-package org.tron.zksnark.merkle;
+package org.tron.core.capsule;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.tron.core.capsule.ProtoCapsule;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Contract.SHA256Compress;
+import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
 
 @Slf4j
 public class IncrementalMerkleWitnessCapsule implements ProtoCapsule<IncrementalMerkleWitness> {

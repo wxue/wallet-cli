@@ -1,4 +1,4 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import java.util.ArrayList;
 import java.util.List;

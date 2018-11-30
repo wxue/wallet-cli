@@ -1,9 +1,9 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.tron.protos.Contract.SHA256Compress;
-import org.tron.zksnark.SHA256CompressCapsule;
+import org.tron.core.capsule.SHA256CompressCapsule;
 
 public class EmptyMerkleRoots {
 

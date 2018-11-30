@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -23,6 +24,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.GrpcAPI.AddressPrKeyPairMessage;
@@ -40,10 +42,15 @@ import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
-import org.tron.common.utils.ZksnarkUtils;
+import org.tron.common.zksnark.ReceiverHelper;
+import org.tron.core.config.DefaultConfig;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
@@ -51,6 +58,7 @@ import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
+import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -65,11 +73,20 @@ import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.Protocol.TransactionInfo;
 import org.tron.walletserver.WalletApi;
+import org.tron.core.capsule.SHA256CompressCapsule;
+import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
+import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
+import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
 
 public class Client {
 
   private static final Logger logger = LoggerFactory.getLogger("Client");
   private WalletApiWrapper walletApiWrapper = new WalletApiWrapper();
+  private Manager dbManager;
+
+  public Client(Manager manager) {
+    this.dbManager = manager;
+  }
 
   private char[] inputPassword2Twice() throws IOException {
     char[] password0;
@@ -1241,44 +1258,7 @@ public class Client {
         return;
       }
 
-      Optional<TransactionInfo> transactionInfoById = WalletApi.getTransactionInfoById(txid);
-      if (!transactionInfoById.isPresent()) {
-        System.out.println("TransactionInfo not exists !!");
-        return;
-      }
-      TransactionInfo transactionInfo = transactionInfoById.get();
-      long currentBlockNumber = transactionInfo.getBlockNumber();
-      Optional<DynamicProperties> dynamicPropertiesOptional = WalletApi.getDynamicProperties();
-      if (!dynamicPropertiesOptional.isPresent()) {
-        System.out.println("DynamicProperties not exists !!");
-        return;
-      }
-      DynamicProperties dynamicProperties = dynamicPropertiesOptional.get();
-      long lastSolidityBlockNum = dynamicProperties.getLastSolidityBlockNum();
-      if (currentBlockNumber < lastSolidityBlockNum) {
-        System.out.println("block is not solidify yet!!");
-        return;
-      }
-      long localBlockNum = 0L;//获取当前块高度，需要存储
-      Optional<BlockList> blocksOption = WalletApi
-          .getBlockByLimitNext(localBlockNum + 1, currentBlockNumber);
-      //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
-      if (!blocksOption.isPresent()) {
-        System.out.println("getBlock error !!");
-        return;
-      }
-      BlockList blockList = blocksOption.get();
-      blockList.getBlockList().forEach(block -> {
-        block.getTransactionsList().forEach(transaction1 -> {
-          Contract contract1 = transaction1.getRawData().getContract(0);
-          if (contract1.getType() == ContractType.ZksnarkV0TransferContract) {
-            //todo：
-            //getAllWitness，并存入cm
-            //getTree()，并写入cm
-            //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
-          }
-        });
-      });
+      boolean r = ReceiverHelper.syncBlocksAndUpdateWitness(dbManager,txid);
 
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
@@ -2271,7 +2251,18 @@ public class Client {
   }
 
   public static void main(String[] args) {
-    Client cli = new Client();
+
+    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+    beanFactory.setAllowCircularReferences(false);
+    TronApplicationContext context =
+        new TronApplicationContext(beanFactory);
+    context.register(DefaultConfig.class);
+
+    context.refresh();
+    Application appT = ApplicationFactory.create(context);
+    shutdown(appT);
+
+    Client cli = new Client(appT.getDbManager());
 
     JCommander.newBuilder()
         .addObject(cli)
@@ -2279,5 +2270,10 @@ public class Client {
         .parse(args);
 
     cli.run();
+  }
+
+  public static void shutdown(final Application app) {
+    logger.info("********register application shutdown hook********");
+    Runtime.getRuntime().addShutdownHook(new Thread(app::shutdown));
   }
 }

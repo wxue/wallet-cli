@@ -1,4 +1,4 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 
 import com.google.common.collect.Lists;
@@ -7,9 +7,10 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.tron.common.utils.ByteArray; 
+import org.tron.common.utils.ByteArray;
+import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.protos.Contract.SHA256Compress;
-import org.tron.zksnark.SHA256CompressCapsule;
+import org.tron.core.capsule.SHA256CompressCapsule;
 
 @Slf4j
 public class IncrementalMerkleTreeContainer {

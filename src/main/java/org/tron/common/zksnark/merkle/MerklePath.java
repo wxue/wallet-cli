@@ -1,4 +1,4 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import java.util.List;
 import lombok.Getter;

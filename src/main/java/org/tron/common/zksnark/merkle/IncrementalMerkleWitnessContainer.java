@@ -1,8 +1,10 @@
-package org.tron.zksnark.merkle;
+package org.tron.common.zksnark.merkle;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.tron.common.utils.ByteArray;
+import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
+import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Contract.SHA256Compress;
 

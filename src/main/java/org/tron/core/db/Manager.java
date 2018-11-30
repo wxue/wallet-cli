@@ -6,9 +6,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.tron.zksnark.merkle.IncrementalMerkleTreeStore;
-import org.tron.zksnark.merkle.IncrementalMerkleWitnessStore;
-import org.tron.zksnark.merkle.MerkleContainer;
+import org.tron.core.db.impl.DynamicPropertiesStore;
+import org.tron.core.db.impl.IncrementalMerkleTreeStore;
+import org.tron.core.db.impl.IncrementalMerkleWitnessStore;
+import org.tron.core.db.impl.TreeBlockIndexStore;
+import org.tron.common.zksnark.merkle.MerkleContainer;
 
 @Slf4j
 @Component
@@ -20,6 +22,15 @@ public class Manager {
   @Autowired
   @Getter
   private IncrementalMerkleWitnessStore merkleWitnessStore;
+
+  @Autowired
+  @Getter
+  private DynamicPropertiesStore dynamicPropertiesStore;
+
+  @Autowired
+  @Getter
+  private TreeBlockIndexStore treeBlockIndexStore;
+
 
   @Getter
   @Setter
@@ -35,6 +46,8 @@ public class Manager {
     log.info("******** begin to close db ********"); 
     closeOneStore(merkleTreeStore);
     closeOneStore(merkleWitnessStore);
+    closeOneStore(dynamicPropertiesStore);
+    closeOneStore(treeBlockIndexStore);
     log.info("******** end to close db ********");
   }
 

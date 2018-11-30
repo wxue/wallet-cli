@@ -1,12 +1,10 @@
-package org.tron.zksnark;
+package org.tron.core.capsule;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.tron.common.crypto.zksnark.ZksnarkUtils;
+import org.tron.common.crypto.Sha256Update;
 import org.tron.common.utils.ByteArray;
-import org.tron.common.utils.Sha256Update;
-import org.tron.core.capsule.ProtoCapsule;
 import org.tron.protos.Contract.SHA256Compress;
 
 @Slf4j
@@ -26,7 +24,7 @@ public class SHA256CompressCapsule implements ProtoCapsule<SHA256Compress> {
     try {
       this.sha256Compress = SHA256Compress.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      log.debug(e.getMessage(), e);
     }
   }
 
@@ -66,16 +64,6 @@ public class SHA256CompressCapsule implements ProtoCapsule<SHA256Compress> {
     SHA256CompressCapsule sha256CompressCapsule = new SHA256CompressCapsule();
     sha256CompressCapsule.setContent(ByteString.copyFrom(res));
 
-    byte[] temp = a.getContent().toByteArray();
-    ZksnarkUtils.sort(temp);
-    System.out.print(ByteArray.toHexString(temp));
-    System.out.print(" : ");
-    temp = b.getContent().toByteArray();
-    ZksnarkUtils.sort(temp);
-    System.out.print(ByteArray.toHexString(temp));
-    System.out.print(" : ");
-    ZksnarkUtils.sort(res);
-    System.out.println(ByteArray.toHexString(res));
     return sha256CompressCapsule;
   }
 
@@ -91,14 +79,4 @@ public class SHA256CompressCapsule implements ProtoCapsule<SHA256Compress> {
     return !sha256Compress.getContent().isEmpty();
   }
 
-  public static void main(String[] args){
-    byte[] a = ByteArray.fromHexString("c9b350fc5221e4b4db929307a628ec6ca751f309d0653608d90e41ad5a2dc1d4");
-    ZksnarkUtils.sort(a);
-    byte[] b = ByteArray.fromHexString("d8a93718eaf9feba4362d2c091d4e58ccabe9f779957336269b4b917be9856da");
-    ZksnarkUtils.sort(b);
-    SHA256Compress sa = SHA256Compress.newBuilder().setContent(ByteString.copyFrom(a)).build();
-    SHA256Compress sb = SHA256Compress.newBuilder().setContent(ByteString.copyFrom(b)).build();
-    combine(sa, sb, 0);
-
-  }
 }
