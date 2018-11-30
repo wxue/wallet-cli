@@ -75,11 +75,12 @@ import org.tron.walletserver.WalletApi;
 public class Client {
 
   private static final Logger logger = LoggerFactory.getLogger("Client");
-  private WalletApiWrapper walletApiWrapper = new WalletApiWrapper();
+  private WalletApiWrapper walletApiWrapper ;
   private Manager dbManager;
 
   public Client(Manager manager) {
     this.dbManager = manager;
+    walletApiWrapper = new WalletApiWrapper(manager);
   }
 
   private char[] inputPassword2Twice() throws IOException {

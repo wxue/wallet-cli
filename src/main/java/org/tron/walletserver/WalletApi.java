@@ -66,8 +66,10 @@ import org.tron.common.utils.Utils;
 import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
+import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.CheckStrength;
@@ -83,6 +85,7 @@ import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
+import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.UnfreezeAssetContract;
 import org.tron.protos.Contract.UnfreezeBalanceContract;
@@ -117,6 +120,8 @@ public class WalletApi {
   private byte[] address = null;
   private static byte addressPreFixByte = CommonConstant.ADD_PRE_FIX_BYTE_TESTNET;
   private static int rpcVersion = 0;
+  private Manager dbManager;
+
 
   private static GrpcClient rpcCli = init();
 
@@ -204,7 +209,8 @@ public class WalletApi {
     return rpcVersion;
   }
 
-  public WalletApi() {
+  public void setDbManager(Manager dbManager) {
+    this.dbManager = dbManager;
   }
 
   /**
@@ -629,15 +635,21 @@ public class WalletApi {
         return false;
       }
 
-      //todo ,从wallet本地获取witness
-      Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
-              c_old1.getIndex() - 1);
-      if (!ret1.isPresent()) {
+      ByteString bsTxHash = ByteString.copyFrom(c_old1.getContractId());
+      OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
+
+      IncrementalMerkleWitnessCapsule ret1 = dbManager
+          .getMerkleWitnessStore().get(request.toByteArray());
+
+//      Optional<IncrementalMerkleWitness> ret1 = WalletApi
+//          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
+//              c_old1.getIndex() - 1);
+//      if (!ret1.isPresent()) {
+      if (ret1 == null) {
         System.out.println("Can not get merkle path by " + cm1);
         return false;
       }
-      IncrementalMerkleWitness witnessMsg1 = ret1.get();
+      IncrementalMerkleWitness witnessMsg1 = ret1.getInstance();
       rt = witnessMsg1.getRt();
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));

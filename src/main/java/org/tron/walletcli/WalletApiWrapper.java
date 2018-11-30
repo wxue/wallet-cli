@@ -19,6 +19,7 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.ShieldAddressGenerator;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
@@ -39,6 +40,13 @@ public class WalletApiWrapper {
   private static final Logger logger = LoggerFactory.getLogger("WalletApiWrapper");
   private WalletApi wallet;
 
+  private Manager dbManager;
+
+  public WalletApiWrapper(Manager dbManager){
+    this.dbManager = dbManager;
+
+  }
+
   public String registerWallet(char[] password) throws CipherException, IOException {
     if (!WalletApi.passwordValid(password)) {
       return null;
@@ -47,6 +55,8 @@ public class WalletApiWrapper {
     byte[] passwd = StringUtils.char2Byte(password);
 
     wallet = new WalletApi(passwd);
+    wallet.setDbManager(dbManager);
+
     StringUtils.clear(passwd);
 
     String keystoreName = wallet.store2Keystore();
