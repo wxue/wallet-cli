@@ -54,6 +54,7 @@ import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
+import org.tron.core.exception.ItemNotFoundException;
 import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
@@ -1242,7 +1243,7 @@ public class Client {
   }
 
   private void receiveShieldTransaction(String[] parameters)
-      throws InvalidProtocolBufferException, CipherException {
+      throws InvalidProtocolBufferException, CipherException, ItemNotFoundException {
     if (parameters == null || parameters.length != 1) {
       System.out.println("receiveShieldTransaction needs 1 parameter, transactionId");
       return;
