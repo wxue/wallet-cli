@@ -189,10 +189,10 @@ public class ZksnarkUtils {
   }
 
   public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
-    byte[] result = new byte[cipher.length];
+    byte[] result = new byte[cipher.length-16];
     try {
       ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
-      chaCha20.decrypt(result, cipher, cipher.length);
+      chaCha20.decrypt(result, cipher, cipher.length-16);
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
