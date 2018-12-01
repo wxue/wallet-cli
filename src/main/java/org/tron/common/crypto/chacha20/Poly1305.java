@@ -117,8 +117,7 @@ public class Poly1305 {
     }
   }
 
-  public void update(byte[] m) {
-    int bytes = m == null ? 0 : m.length;
+  public void update(byte[] m, int bytes) {
     int want, i, mpos = 0;
     if (this.leftover > 0) {
       want = 16 - this.leftover;
@@ -233,9 +232,9 @@ public class Poly1305 {
     return mac;
   }
 
-  public static byte[] poly1305_auth(byte[] m, byte[] key) {
+  public static byte[] poly1305_auth(byte[] m, int len ,byte[] key) {
     Poly1305 ctx = new Poly1305(key);
-    ctx.update(m);
+    ctx.update(m, len);
     return ctx.finish();
   }
 }

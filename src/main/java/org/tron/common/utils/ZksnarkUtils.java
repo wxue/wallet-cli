@@ -31,6 +31,8 @@ import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
+import org.tron.common.crypto.chacha20.ChaCha20.WrongKeySizeException;
+import org.tron.common.crypto.chacha20.ChaCha20.WrongNonceSizeException;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
@@ -189,12 +191,19 @@ public class ZksnarkUtils {
   }
 
   public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
-    byte[] result = new byte[cipher.length-16];
+    byte[] result = new byte[cipher.length - 16];
+//    try {
+//      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
+//      chaCha20.decrypt(result, cipher, cipher.length-16);
+//    } catch (Exception e) {
+//      System.out.println(e.getMessage());
+//    }
     try {
-      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
-      chaCha20.decrypt(result, cipher, cipher.length-16);
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
+      aead.chacha20poly1305_crypt(null, key, nonce, result, cipher, 0);
+    } catch (WrongKeySizeException e) {
+      e.printStackTrace();
+    } catch (WrongNonceSizeException e) {
+      e.printStackTrace();
     }
     return result;
   }
