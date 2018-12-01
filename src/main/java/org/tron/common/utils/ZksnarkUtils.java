@@ -269,12 +269,8 @@ public class ZksnarkUtils {
       result = true;
       shiled.saveCm(cmTuple);
     }
-    if (cmTuple == null) {
-      return false;
-    }
-    shiled.saveCm(cmTuple);
     //TODO: compute nf
-    return true;
+    return result;
   }
 
   public static BN128G1 byte2BN128G1(byte[] x, byte[] y) {
