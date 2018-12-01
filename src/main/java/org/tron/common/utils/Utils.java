@@ -54,6 +54,8 @@ import org.tron.protos.Contract.AccountCreateContract;
 import org.tron.protos.Contract.AccountUpdateContract;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.AssetIssueContract.FrozenSupply;
+import org.tron.protos.Contract.BN128G1;
+import org.tron.protos.Contract.BN128G2;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.ExchangeCreateContract;
 import org.tron.protos.Contract.ExchangeInjectContract;
@@ -64,6 +66,7 @@ import org.tron.protos.Contract.ParticipateAssetIssueContract;
 import org.tron.protos.Contract.ProposalApproveContract;
 import org.tron.protos.Contract.ProposalCreateContract;
 import org.tron.protos.Contract.ProposalDeleteContract;
+import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.TransferAssetContract;
 import org.tron.protos.Contract.TransferContract;
 import org.tron.protos.Contract.TriggerSmartContract;
@@ -75,6 +78,8 @@ import org.tron.protos.Contract.VoteWitnessContract;
 import org.tron.protos.Contract.WithdrawBalanceContract;
 import org.tron.protos.Contract.WitnessCreateContract;
 import org.tron.protos.Contract.WitnessUpdateContract;
+import org.tron.protos.Contract.ZksnarkV0TransferContract;
+import org.tron.protos.Contract.zkv0proof;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Account.AccountResource;
 import org.tron.protos.Protocol.Account.Frozen;
@@ -966,6 +971,81 @@ public class Utils {
           result += exchangeTransactionContract.getQuant();
           result += "\n";
           break;
+        case ZksnarkV0TransferContract:
+          ZksnarkV0TransferContract zksnarkV0TransferContract = contract.getParameter()
+              .unpack(ZksnarkV0TransferContract.class);
+          result += "owner_address: ";
+          result += WalletApi
+              .encode58Check(zksnarkV0TransferContract.getOwnerAddress().toByteArray());
+          result += "\n";
+
+          result += "to_address: ";
+          result += WalletApi
+              .encode58Check(zksnarkV0TransferContract.getToAddress().toByteArray());
+          result += "\n";
+
+          result += "v_from_pub: ";
+          result += zksnarkV0TransferContract.getVFromPub();
+          result += "\n";
+
+          result += "v_to_pub: ";
+          result += zksnarkV0TransferContract.getVToPub();
+          result += "\n";
+
+          result += "rt: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getRt().toByteArray());
+          result += "\n";
+
+          result += "nf1: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getNf1().toByteArray());
+          result += "\n";
+
+          result += "nf2: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getNf2().toByteArray());
+          result += "\n";
+
+          result += "cm1: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getCm1().toByteArray());
+          result += "\n";
+
+          result += "cm2: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getCm2().toByteArray());
+          result += "\n";
+
+          result += "pksig: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getPksig().toByteArray());
+          result += "\n";
+
+          result += "randomSeed: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getRandomSeed().toByteArray());
+          result += "\n";
+
+          result += "epk: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getEpk().toByteArray());
+          result += "\n";
+
+          result += "h1: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getH1().toByteArray());
+          result += "\n";
+
+          result += "h2: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getH2().toByteArray());
+          result += "\n";
+
+          result += "C1: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getC1().toByteArray());
+          result += "\n";
+
+          result += "C2: ";
+          result += ByteArray.toHexString(zksnarkV0TransferContract.getC2().toByteArray());
+          result += "\n";
+
+          result += "proof: ";
+          result += "\n";
+          result += printZkv0Proof(zksnarkV0TransferContract.getProof());
+          result += "\n";
+
+          break;
         // case BuyStorageContract:
         //   BuyStorageContract buyStorageContract = contract.getParameter()
         //       .unpack(BuyStorageContract.class);
@@ -1352,6 +1432,101 @@ public class Utils {
     return result;
   }
 
+  public static String printZkv0Proof(zkv0proof proof) {
+    String result = "";
+
+    result += "{";
+    result += "\n";
+
+    result += "a: ";
+    result += "\n";
+    result += printBN128G1(proof.getA());
+    result += "\n";
+
+    result += "a_p: ";
+    result += "\n";
+    result += printBN128G1(proof.getAP());
+    result += "\n";
+
+    result += "b: ";
+    result += "\n";
+    result += printBN128G2(proof.getB());
+    result += "\n";
+
+    result += "b_p: ";
+    result += "\n";
+    result += printBN128G1(proof.getBP());
+    result += "\n";
+
+    result += "c: ";
+    result += "\n";
+    result += printBN128G1(proof.getC());
+    result += "\n";
+
+    result += "c_p: ";
+    result += "\n";
+    result += printBN128G1(proof.getCP());
+    result += "\n";
+
+    result += "k: ";
+    result += "\n";
+    result += printBN128G1(proof.getK());
+    result += "\n";
+
+    result += "h: ";
+    result += "\n";
+    result += printBN128G1(proof.getH());
+    result += "\n";
+
+    result += "}";
+    result += "\n";
+
+    return result;
+  }
+
+  public static String printBN128G1(BN128G1 bn128G1) {
+    String result = "";
+
+    result += "{";
+    result += "\n";
+    result += "x: ";
+    result += ByteArray.toHexString(bn128G1.getX().toByteArray());
+    result += "\n";
+
+    result += "y: ";
+    result += ByteArray.toHexString(bn128G1.getY().toByteArray());
+    result += "\n";
+    result += "}";
+
+    return result;
+  }
+
+  public static String printBN128G2(BN128G2 bn128G2) {
+    String result = "";
+
+    result += "{";
+    result += "\n";
+    result += "x1: ";
+    result += ByteArray.toHexString(bn128G2.getX1().toByteArray());
+    result += "\n";
+
+    result += "x2: ";
+    result += ByteArray.toHexString(bn128G2.getX2().toByteArray());
+    result += "\n";
+
+    result += "y1: ";
+    result += ByteArray.toHexString(bn128G2.getY1().toByteArray());
+    result += "\n";
+
+    result += "y2: ";
+    result += ByteArray.toHexString(bn128G2.getY2().toByteArray());
+    result += "\n";
+    result += "}";
+    result += "\n";
+
+    return result;
+  }
+
   public static String printBlockRow(BlockHeader.raw raw) {
     String result = "";
 
@@ -1581,6 +1756,18 @@ public class Utils {
       }
     }
 
+    return result;
+  }
+
+
+  public static String printShieldAddress(ShieldAddress shieldAddress) {
+    String result = "";
+    result += "private_address: ";
+    result += WalletApi.encode58Check(shieldAddress.getPrivateAddress().toByteArray());
+    result += "\n";
+    result += "public_address: ";
+    result += WalletApi.encode58Check(shieldAddress.getPublicAddress().toByteArray());
+    result += "\n";
     return result;
   }
 

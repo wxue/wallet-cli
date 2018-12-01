@@ -43,7 +43,6 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
-import org.tron.common.utils.ZksnarkUtils;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
@@ -51,6 +50,7 @@ import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
+import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -1519,6 +1519,17 @@ public class Client {
     }
   }
 
+  private void generateShieldAddressRpc() {
+    Optional<ShieldAddress> result = WalletApi.generateShieldAddress();
+
+    if (result.isPresent()) {
+      ShieldAddress shieldAddress = result.get();
+      logger.info(Utils.printShieldAddress(shieldAddress));
+    } else {
+      logger.info("generateShieldAddress " + " failed !!");
+    }
+  }
+
   private void updateSetting(String[] parameters)
       throws IOException, CipherException, CancelException {
     if (parameters == null ||
@@ -1857,6 +1868,10 @@ public class Client {
           }
           case "generateshieldaddress": {
             generateShieldAddress();
+            break;
+          }
+          case "generateshieldaddress_rpc": {
+            generateShieldAddressRpc();
             break;
           }
           case "importwallet": {
