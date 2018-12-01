@@ -18,11 +18,9 @@ package org.tron.common.utils;
 import com.google.protobuf.ByteString;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Random;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.ZkGrpcAPI.IncrementalMerkleTreeMsg;
 import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.JSInputMsg;
@@ -31,14 +29,14 @@ import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
-import org.tron.common.crypto.chacha20.ChaCha20.WrongKeySizeException;
-import org.tron.common.crypto.chacha20.ChaCha20.WrongNonceSizeException;
+import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongKeySizeException;
+import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongNonceSizeException;
+import org.tron.common.crypto.chacha20poly1305.aead.WrongPolyMac;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
 import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
-import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CipherException;
@@ -50,8 +48,7 @@ import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Contract.zkv0proof;
 import org.tron.walletserver.ShiledWalletFile;
-import org.tron.walletserver.WalletApi;
-import org.tron.common.crypto.chacha20.*;
+import org.tron.common.crypto.chacha20poly1305.*;
 
 public class ZksnarkUtils {
 
@@ -190,7 +187,8 @@ public class ZksnarkUtils {
     return result;
   }
 
-  public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
+  public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter)
+      throws WrongPolyMac {
     byte[] result = new byte[cipher.length - 16];
 //    try {
 //      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);

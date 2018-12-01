@@ -1,4 +1,4 @@
-package org.tron.common.crypto.chacha20;
+package org.tron.common.crypto.chacha20poly1305;
 
 import org.junit.Assert;
 import org.junit.Test;

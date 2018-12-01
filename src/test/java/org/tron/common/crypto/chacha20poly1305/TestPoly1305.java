@@ -1,13 +1,6 @@
-package org.tron.common.crypto.chacha20;
+package org.tron.common.crypto.chacha20poly1305;
 
-import java.awt.SystemTray;
 import java.util.Arrays;
-import java.util.Random;
-import java.util.stream.IntStream;
-import org.bouncycastle.crypto.StreamCipher;
-import org.bouncycastle.crypto.engines.ChaChaEngine;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tron.common.utils.ByteArray;
@@ -37,8 +30,7 @@ public class TestPoly1305 {
         .fromHexString("746869732069732033322d62797465206b657920666f7220506f6c7931333035");
     c1.tag = ByteArray.fromHexString("a6f745008f81c916a20dcc74eef2b2f0");
 
-    byte[] out = Poly1305.poly1305_auth(c1.input, c1.key);
-    System.out.print(ByteArray.toHexString(out));
+    byte[] out = Poly1305.poly1305_auth(c1.input,c1.input.length, c1.key);
     Assert.assertTrue(Arrays.equals(out, c1.tag));
   }
 

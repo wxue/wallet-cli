@@ -1,10 +1,8 @@
-package org.tron.common.crypto.chacha20;
+package org.tron.common.crypto.chacha20poly1305;
 
 import java.util.Arrays;
-import org.apache.commons.lang3.ArrayUtils;
 import org.tron.common.crypto.digital.UnsignedInt;
 import org.tron.common.crypto.digital.UnsignedShort;
-import org.tron.common.utils.ByteArray;
 
 public class Poly1305 {
 

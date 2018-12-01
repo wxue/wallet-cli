@@ -1,4 +1,4 @@
-package org.tron.common.crypto.chacha20;
+package org.tron.common.crypto.chacha20poly1305;
 
 /*
  * Quick-n-dirty standalone implementation of ChaCha 256-bit
