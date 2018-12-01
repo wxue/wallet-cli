@@ -108,7 +108,7 @@ public class WalletApi {
   private static final String FilePath_Shiled = "WalletShiled";
   private WalletFile walletFile = null;
   private ShiledWalletFile walletFile_Shiled = null;
-  private ShiledWalletFile walletFile_Shiled_1 = null;  //Two address
+  private ShiledWalletFile walletFile_Shiled_1 = null;  //The second address
 
   private boolean loginState = false;
   private byte[] address = null;

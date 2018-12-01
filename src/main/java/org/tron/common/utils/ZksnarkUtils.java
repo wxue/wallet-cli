@@ -33,7 +33,7 @@ import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
 import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongKeySizeException;
 import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongNonceSizeException;
-import org.tron.common.crypto.chacha20poly1305.aead.WrongPolyMac;
+import org.tron.common.crypto.chacha20poly1305.ChaCha20Poly1305aead.WrongPolyMac;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
@@ -178,27 +178,35 @@ public class ZksnarkUtils {
     return output;
   }
 
-  public static byte[] encrypt(byte[] plain, byte[] key, byte[] nonce, int counter) {
-    byte[] result = new byte[plain.length];
+  public static byte[] encrypt(byte[] plain, byte[] key, byte[] nonce) {
     try {
-      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
-      chaCha20.encrypt(result, plain, plain.length);
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
+      byte[] result = new byte[plain.length];
+      ChaCha20Poly1305aead.chacha20poly1305_crypt(null, key, nonce, result, plain, 1);
+      return result;
+    } catch (WrongKeySizeException e) {
+      e.printStackTrace();
+    } catch (WrongNonceSizeException e) {
+      e.printStackTrace();
+    } catch (WrongPolyMac wrongPolyMac) {
+      wrongPolyMac.printStackTrace();
     }
-    return result;
+    return null;
   }
 
 
-  public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
-    byte[] result = new byte[cipher.length];
+  public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce) {
     try {
-      ChaCha20 chaCha20 = new ChaCha20(key, nonce, counter);
-      chaCha20.decrypt(result, cipher, cipher.length);
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
+      byte[] result = new byte[cipher.length];
+      ChaCha20Poly1305aead.chacha20poly1305_crypt(null, key, nonce, result, cipher, 0);
+      return result;
+    } catch (WrongKeySizeException e) {
+      e.printStackTrace();
+    } catch (WrongNonceSizeException e) {
+      e.printStackTrace();
+    } catch (WrongPolyMac wrongPolyMac) {
+      wrongPolyMac.printStackTrace();
     }
-    return result;
+    return null;
   }
 
   public static byte[] KDF(byte[] dh, byte[] epk, byte[] pkEnc, byte[] hSig, byte nonce) {
@@ -216,7 +224,10 @@ public class ZksnarkUtils {
       byte[] cm,
       byte[] publicAddress, byte[] privateAddress) {
     byte[] none = new byte[12];
-    byte[] plain = decrypt(cipher, K, none, 1);
+    byte[] plain = decrypt(cipher, K, none);
+    if (ArrayUtils.isEmpty(plain)) {
+      return null;
+    }
     if (plain[0] != 0) {
       return null;
     }
