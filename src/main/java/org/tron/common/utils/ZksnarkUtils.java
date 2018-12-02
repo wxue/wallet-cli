@@ -180,15 +180,13 @@ public class ZksnarkUtils {
 
   public static byte[] encrypt(byte[] plain, byte[] key, byte[] nonce) {
     try {
-      byte[] result = new byte[plain.length];
-      ChaCha20Poly1305aead.chacha20poly1305_crypt(null, key, nonce, result, plain, 1);
+      byte[] result = new byte[plain.length + 16];
+      ChaCha20Poly1305aead.chacha20poly1305Encrypt(null, key, nonce, result, plain);
       return result;
     } catch (WrongKeySizeException e) {
       e.printStackTrace();
     } catch (WrongNonceSizeException e) {
       e.printStackTrace();
-    } catch (WrongPolyMac wrongPolyMac) {
-      wrongPolyMac.printStackTrace();
     }
     return null;
   }
@@ -197,7 +195,7 @@ public class ZksnarkUtils {
   public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce) {
     try {
       byte[] result = new byte[cipher.length];
-      ChaCha20Poly1305aead.chacha20poly1305_crypt(null, key, nonce, result, cipher, 0);
+      ChaCha20Poly1305aead.chacha20poly1305Decrypt(null, key, nonce, result, cipher);
       return result;
     } catch (WrongKeySizeException e) {
       e.printStackTrace();

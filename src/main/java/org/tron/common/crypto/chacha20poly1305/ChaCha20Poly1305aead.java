@@ -25,8 +25,55 @@ public class ChaCha20Poly1305aead {
     return result;
   }
 
-  public static boolean chacha20poly1305_crypt(byte[] aad, byte[] key, byte[] nonce, byte[] dest,
-      byte[] src, int is_encrypt)
+  public static void chacha20poly1305Encrypt(byte[] aad, byte[] key, byte[] nonce, byte[] dest,
+      byte[] src)
+      throws WrongKeySizeException, WrongNonceSizeException {
+    byte[] poly_key = new byte[32];
+    byte[] zero = new byte[32];
+
+    ChaCha20 chaCha20 = new ChaCha20(key, nonce, 0);
+    chaCha20.decrypt(poly_key, zero, zero.length);
+
+    byte[] mac_data = null;
+    byte[] aadpad = null;
+    byte[] aadLen;
+    if (!ArrayUtils.isEmpty(aad)) {
+      aadpad = pad16(aad.length);
+      aadLen = ByteArray.fromLong(aad.length);
+      ZksnarkUtils.sort(aadLen);
+      mac_data = aad;
+      if (aadpad != null) {
+        mac_data = ByteUtil.merge(mac_data, aadpad);
+      }
+    } else {
+      aadLen = new byte[8];
+    }
+
+    chaCha20 = new ChaCha20(key, nonce, 1);
+
+    byte[] cipher = new byte[src.length];
+    chaCha20.decrypt(cipher, src, src.length);
+
+    byte[] cipherpad = pad16(cipher.length);
+    byte[] cipherLen = ByteArray.fromLong(cipher.length);
+    ZksnarkUtils.sort(cipherLen);
+    if (mac_data == null) {
+      mac_data = cipher;
+    } else {
+      mac_data = ByteUtil.merge(mac_data, cipher);
+    }
+    if (cipherpad != null) {
+      mac_data = ByteUtil.merge(mac_data, cipherpad);
+    }
+    mac_data = ByteUtil.merge(mac_data, aadLen, cipherLen);
+
+    byte[] tag = Poly1305.poly1305_auth(mac_data, mac_data.length, poly_key);
+    System.arraycopy(cipher, 0, dest, 0, cipher.length);
+    System.arraycopy(tag, 0, dest, cipher.length, tag.length);
+  }
+
+  public static boolean chacha20poly1305Decrypt(byte[] aad, byte[] key, byte[] nonce, byte[] dest,
+      byte[] src)
       throws WrongKeySizeException, WrongNonceSizeException, WrongPolyMac {
     byte[] poly_key = new byte[32];
     byte[] zero = new byte[32];
@@ -98,20 +145,26 @@ public class ChaCha20Poly1305aead {
     noncList.add(ByteArray.fromHexString("070000004041424344454647"));
     noncList.add(ByteArray.fromHexString("000000000102030405060708"));
 
-   ArrayList<byte[]> aadList = new ArrayList<>();
+    ArrayList<byte[]> aadList = new ArrayList<>();
     aadList.add(null);
     aadList.add(ByteArray.fromHexString("50515253c0c1c2c3c4c5c6c7"));
     aadList.add(ByteArray.fromHexString("f33388860000000000004e91"));
 
-    for (int i = 1; i < textlist.size(); i++){
+    for (int i = 1; i < textlist.size(); i++) {
       String text = textlist.get(i);
       byte[] key = ByteArray.fromHexString(keyList.get(i));
       byte[] aad = aadList.get(i);
       byte[] none = noncList.get(i);
       byte[] cipher = ByteArray.fromHexString(text);
-      byte[] plain = new byte[cipher.length];
-      chacha20poly1305_crypt(aad, key, none, plain, cipher, 0);
+      byte[] plain = new byte[cipher.length-16];
+      chacha20poly1305Decrypt(aad, key, none, plain, cipher);
+      System.out.println("plain :::");
       System.out.println(ByteArray.toHexString(plain));
+
+      byte[] cipher1 = new byte[plain.length+16];
+      chacha20poly1305Encrypt(aad, key, none, cipher1, plain);
+      System.out.println("cipher :::");
+      System.out.println(ByteArray.toHexString(cipher1));
     }
   }
 }
