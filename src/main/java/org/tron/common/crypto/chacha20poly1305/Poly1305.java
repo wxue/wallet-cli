@@ -211,7 +211,7 @@ public class Poly1305 {
     this.h[6] = this.h[7].rightShift(5).OR(this.h[8].leftShift(8));
     this.h[7] = this.h[8].rightShift(8).OR(this.h[9].leftShift(5));
 
-    f = new UnsignedInt(this.h[0].ADD(this.pad[0]).toLong());
+    f = new UnsignedInt(this.h[0].toLong()+this.pad[0].toLong());
     this.h[0] = new UnsignedShort(f.toLong());
     for (i = 1; i < 8; i++) {
       f = new UnsignedInt(this.h[i].toLong() + this.pad[i].toLong() + f.rightShift(16).toLong());
