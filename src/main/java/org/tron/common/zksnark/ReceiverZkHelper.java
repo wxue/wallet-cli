@@ -95,7 +95,9 @@ public class ReceiverZkHelper {
     Optional<BlockList> blocksOption = WalletApi
         .getBlockByLimitNext(localBlockNum + 1, currentTxBlockNumber);
 
-    //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
+    //todo：
+    // 1, segmentation query.
+    // 2, provide an interface, only return blocks containing anonymous transactions
     if (!blocksOption.isPresent()) {
       log.error("getBlock error !!");
       return Optional.empty();
@@ -141,7 +143,7 @@ public class ReceiverZkHelper {
         "start to sync block,localBlockNum < currentTxBlockNumber,localBlockNum:" + localBlockNum
             + ",currentTxBlockNumber:"
             + currentTxBlockNumber);
-    //需要更新已有的witness、tree
+    //Need to update existing witness, tree
     Optional<BlockList> blocksOption = getBlockByLimitNext(localBlockNum + 1, currentTxBlockNumber);
 
     if (!blocksOption.isPresent()) {
@@ -161,7 +163,7 @@ public class ReceiverZkHelper {
           ZksnarkV0TransferContract zkContract = contract1.getParameter()
               .unpack(ZksnarkV0TransferContract.class);
 
-          //getAllWitness，并存入cm（待优化，只更新未使用的witness）
+          //todo: getAllWitness and save cm inot it(to be optimized, only update unused usage)
           SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
           cmCapsule1.setContent(zkContract.getCm1());
           SHA256Compress cm1 = cmCapsule1.getInstance();
@@ -170,7 +172,7 @@ public class ReceiverZkHelper {
           cmCapsule2.setContent(zkContract.getCm2());
           SHA256Compress cm2 = cmCapsule2.getInstance();
 
-          //witness的写入可以优化
+          //todo :Witness write can be optimized
           Iterator<Entry<byte[], IncrementalMerkleWitnessCapsule>> iterator = dbManager
               .getMerkleWitnessStore().iterator();
           System.out.println("merkleWitnessStore:" + dbManager.getMerkleWitnessStore().size());
@@ -188,8 +190,6 @@ public class ReceiverZkHelper {
                 .put(entry.getKey(), container.getWitnessCapsule());
           }
 
-          //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
-          //todo，如果cm时需要记录的
           ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
           System.out.println("treeSizeBefore:" + tree.size());
           if (foundTx(transaction1, txid)) {
@@ -221,13 +221,13 @@ public class ReceiverZkHelper {
           }
 
           System.out.println("treeSizeAfter:" + tree.size());
-          //每一个交易，存一次currentTree
+          //Every transaction, save currentTree
           dbManager.getMerkleContainer().setCurrentMerkle(tree);
 
         }
       }
 
-      //每一个块，存一次currentTree
+      //Every block, save currentTree
       dbManager.getMerkleContainer().saveCurrentMerkleTreeAsBestMerkleTree();
       dbManager.getTreeBlockIndexStore()
           .put(++localBlockNum,
@@ -283,11 +283,10 @@ public class ReceiverZkHelper {
         "start to sync block,localBlockNum >= currentTxBlockNumber,localBlockNum:" + localBlockNum
             + ",currentTxBlockNumber:" + currentTxBlockNumber);
 
-    //不需要更新已有的witness、tree
-    //todo ,单独处理交易对应witness（需要优化）
-    //需要拿到前一个块的tree（blockNum到treeKey的映射关系），并获得这个块的所有匿名交易
+    //No need to update existing witness, tree
+    //Need to get the tree of the previous block (blockNum to treeKey mapping) and get all anonymous transactions for this block
 
-    //先需要校验第一个块是否有该witness , 然后依此获得后续块
+    //First need to verify that the first block has the witness, and then get the subsequent block accordingly.
     Block block = getBlock(currentTxBlockNumber);
     if (block == null) {
       log.error("getBlock error !!");
@@ -307,7 +306,7 @@ public class ReceiverZkHelper {
         ZksnarkV0TransferContract zkContract = contract1.getParameter()
             .unpack(ZksnarkV0TransferContract.class);
 
-        //getAllWitness，并存入cm（待优化，只更新未使用的witness）
+        //todo
         SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
         cmCapsule1.setContent(zkContract.getCm1());
         SHA256Compress cm1 = cmCapsule1.getInstance();
@@ -316,8 +315,8 @@ public class ReceiverZkHelper {
         cmCapsule2.setContent(zkContract.getCm2());
         SHA256Compress cm2 = cmCapsule2.getInstance();
 
-        System.out.println("更新已有的witness");
-        //更新已有的witness
+        System.out.println("Update existing witness");
+
         newWitness.forEach(wit -> {
           System.out.println("witSizeBefore:" + wit.getWitnessCapsule().size());
           wit.getWitnessCapsule().printSize();
@@ -330,7 +329,7 @@ public class ReceiverZkHelper {
 
         ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
         if (foundTx(transaction1, txid)) {
-          System.out.println("foundTx" );
+          System.out.println("foundTx");
           found = true;
 
           tree.append(cm1);
@@ -372,8 +371,8 @@ public class ReceiverZkHelper {
       return true;
     }
 
-    System.out.println("获取剩余block，并只更新newWitness");
-    //获取剩余block，并只更新newWitness
+    System.out.println("Get the remaining blocks and only update newWitness");
+    //Get the remaining blocks and only update newWitness
     Optional<BlockList> blocksOption = getBlockByLimitNext(currentTxBlockNumber + 1, localBlockNum);
 
     if (!blocksOption.isPresent()) {
@@ -389,7 +388,7 @@ public class ReceiverZkHelper {
           ZksnarkV0TransferContract zkContract = contract1.getParameter()
               .unpack(ZksnarkV0TransferContract.class);
 
-          //getAllWitness，并存入cm（待优化，只更新未使用的witness）
+          //todo
           SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
           cmCapsule1.setContent(zkContract.getCm1());
           SHA256Compress cm1 = cmCapsule1.getInstance();
