@@ -96,4 +96,9 @@ public class IncrementalMerkleWitnessCapsule implements ProtoCapsule<Incremental
   public IncrementalMerkleWitnessContainer toMerkleWitnessContainer() {
     return new IncrementalMerkleWitnessContainer(this);
   }
+
+  public int size() {
+    return  getTree().toMerkleTreeContainer().size() + getFilled().size() + getCursor()
+        .toMerkleTreeContainer().size();
+  }
 }

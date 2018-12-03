@@ -10,6 +10,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.api.GrpcAPI.BlockList;
 import org.tron.common.crypto.Sha256Hash;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
 import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
@@ -44,21 +45,30 @@ public class ReceiverZkHelper {
       return false;
     }
 
-    long localBlockNum = dbManager.getDynamicPropertiesStore()
-        .getLatestWitnessBlockNumber();
+    long localBlockNum = getLatestWitnessBlockNumber(currentTxBlockNumber);
+    if (localBlockNum < 0) {
+      return false;
+    }
 
     if (localBlockNum < currentTxBlockNumber) {
-      if (localBlockNum == 0) {
-        if (!getAndSaveBestMerkleTree(currentTxBlockNumber)) {
-          log.error("getAndSaveBestMerkleTree error");
-          return false;
-        }
-      }
       return processCase1(txid, localBlockNum, currentTxBlockNumber);
     } else {
       return processCase2(txid, currentTxBlockNumber, localBlockNum);
     }
 
+  }
+
+  protected long getLatestWitnessBlockNumber(long currentTxBlockNumber) {
+    long localBlockNum = dbManager.getDynamicPropertiesStore()
+        .getLatestWitnessBlockNumber();
+    if (localBlockNum == 0) {
+      if (!getAndSaveBestMerkleTree(currentTxBlockNumber)) {
+        log.error("getAndSaveBestMerkleTree error");
+        return -1;
+      }
+      localBlockNum = currentTxBlockNumber - 1;
+    }
+    return localBlockNum;
   }
 
   protected boolean getAndSaveBestMerkleTree(long currentTxBlockNumber) {
@@ -69,7 +79,8 @@ public class ReceiverZkHelper {
     dbManager.getTreeBlockIndexStore()
         .put(currentTxBlockNumber - 1,
             dbManager.getMerkleContainer().getBestMerkle().getMerkleTreeKey());
-
+    dbManager.getDynamicPropertiesStore()
+        .saveLatestWitnessBlockNumber(currentTxBlockNumber - 1);
     return true;
   }
 
@@ -124,7 +135,7 @@ public class ReceiverZkHelper {
     return currentTxBlockNumber;
   }
 
-  private boolean processCase1(String txid, long localBlockNum,
+  public boolean processCase1(String txid, long localBlockNum,
       long currentTxBlockNumber) throws InvalidProtocolBufferException, ItemNotFoundException {
 
     log.info(
@@ -152,33 +163,35 @@ public class ReceiverZkHelper {
               .unpack(ZksnarkV0TransferContract.class);
 
           //getAllWitness，并存入cm（待优化，只更新未使用的witness）
-          SHA256Compress cm1 = new SHA256CompressCapsule(
-              zkContract.getCm1().toByteArray()).getInstance();
-          SHA256Compress cm2 = new SHA256CompressCapsule(
-              zkContract.getCm2().toByteArray()).getInstance();
+          SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
+          cmCapsule1.setContent(zkContract.getCm1());
+          SHA256Compress cm1 = cmCapsule1.getInstance();
+
+          SHA256CompressCapsule cmCapsule2 = new SHA256CompressCapsule();
+          cmCapsule2.setContent(zkContract.getCm2());
+          SHA256Compress cm2 = cmCapsule2.getInstance();
 
           //witness的写入可以优化
           Iterator<Entry<byte[], IncrementalMerkleWitnessCapsule>> iterator = dbManager
               .getMerkleWitnessStore().iterator();
+          System.out.println( "merkleWitnessStore:"+ dbManager.getMerkleWitnessStore().size());
           while (iterator.hasNext()) {
             Entry<byte[], IncrementalMerkleWitnessCapsule> entry = iterator.next();
             IncrementalMerkleWitnessContainer container = entry.getValue()
                 .toMerkleWitnessContainer();
+            System.out.println( "witness before:"+ container.getWitnessCapsule().size());
             container.append(cm1);
             container.append(cm2);
+            System.out.println( "witness after:"+ container.getWitnessCapsule().size());
             dbManager.getMerkleWitnessStore()
                 .put(entry.getKey(), container.getWitnessCapsule());
           }
 
-          //getTree()，并写入cm
-          tree.append(cm1);
           //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
           //todo，如果cm时需要记录的
           ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
-          ByteString byteString = getTransactionId(transaction1).getByteString();
-
-          //found
-          if (byteString.toString().equals(txid)) {
+          System.out.println( "treeSizeBefore:"+ tree.size());
+          if (foundTx(transaction1, txid)) {
             found = true;
             tree.append(cm1);
             IncrementalMerkleWitnessContainer witness1 = tree.getTreeCapsule().deepCopy()
@@ -191,7 +204,8 @@ public class ReceiverZkHelper {
             IncrementalMerkleWitnessContainer witness2 = tree.getTreeCapsule().deepCopy()
                 .toMerkleTreeContainer().toWitness();
             witness2.getWitnessCapsule().setOutputPoint(contractId, 1);
-
+            System.out.println( "witness1 size after:"+ witness1.getWitnessCapsule().size());
+            System.out.println( "witness2 size after:"+ witness2.getWitnessCapsule().size());
             dbManager
                 .getMerkleWitnessStore()
                 .put(witness1.getMerkleWitnessKey(), witness1.getWitnessCapsule());
@@ -202,6 +216,8 @@ public class ReceiverZkHelper {
             tree.append(cm1);
             tree.append(cm2);
           }
+
+          System.out.println( "treeSizeAfter:"+ tree.size());
           //每一个交易，存一次currentTree
           dbManager.getMerkleContainer().setCurrentMerkle(tree);
 
@@ -223,6 +239,13 @@ public class ReceiverZkHelper {
     }
 
     return true;
+  }
+
+  private static boolean foundTx(Transaction transaction, String txId) {
+    ByteString byteString = getTransactionId(transaction).getByteString();
+
+    return ByteArray.toHexString(byteString.toByteArray()).equals(txId);
+
   }
 
   private boolean processCase2(String txid, long localBlockNum,
@@ -259,12 +282,14 @@ public class ReceiverZkHelper {
             .unpack(ZksnarkV0TransferContract.class);
 
         //getAllWitness，并存入cm（待优化，只更新未使用的witness）
-        SHA256Compress cm1 = new SHA256CompressCapsule(
-            zkContract.getCm1().toByteArray()).getInstance();
-        SHA256Compress cm2 = new SHA256CompressCapsule(
-            zkContract.getCm2().toByteArray()).getInstance();
+        SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
+        cmCapsule1.setContent(zkContract.getCm1());
+        SHA256Compress cm1 = cmCapsule1.getInstance();
 
-        tree.append(cm1);
+        SHA256CompressCapsule cmCapsule2 = new SHA256CompressCapsule();
+        cmCapsule2.setContent(zkContract.getCm2());
+        SHA256Compress cm2 = cmCapsule2.getInstance();
+
         //更新已有的witness
         newWitness.forEach(wit -> {
           wit.append(cm1);
@@ -272,8 +297,7 @@ public class ReceiverZkHelper {
         });
 
         ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
-        ByteString byteString = getTransactionId(transaction1).getByteString();
-        if (byteString.toString().equals(txid)) {
+        if (foundTx(transaction1, txid)) {
           found = true;
 
           tree.append(cm1);
@@ -329,10 +353,13 @@ public class ReceiverZkHelper {
               .unpack(ZksnarkV0TransferContract.class);
 
           //getAllWitness，并存入cm（待优化，只更新未使用的witness）
-          SHA256Compress cm1 = new SHA256CompressCapsule(
-              zkContract.getCm1().toByteArray()).getInstance();
-          SHA256Compress cm2 = new SHA256CompressCapsule(
-              zkContract.getCm2().toByteArray()).getInstance();
+          SHA256CompressCapsule cmCapsule1 = new SHA256CompressCapsule();
+          cmCapsule1.setContent(zkContract.getCm1());
+          SHA256Compress cm1 = cmCapsule1.getInstance();
+
+          SHA256CompressCapsule cmCapsule2 = new SHA256CompressCapsule();
+          cmCapsule2.setContent(zkContract.getCm2());
+          SHA256Compress cm2 = cmCapsule2.getInstance();
 
           newWitness.forEach(wit -> {
             wit.append(cm1);

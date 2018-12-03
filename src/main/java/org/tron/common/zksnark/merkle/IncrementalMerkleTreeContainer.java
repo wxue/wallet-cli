@@ -206,51 +206,29 @@ public class IncrementalMerkleTreeContainer {
     SHA256Compress combine_right =
         rightIsExist() ? treeCapsule.getRight() : filler.next(0);
 
-    log.info("leftIsExist:" + leftIsExist());
-    log.info("\n");
-    log.info("combine_left:" + ByteArray.toHexString(combine_left.getContent().toByteArray()));
-    log.info("\n");
-    log.info("rightIsExist:" + rightIsExist());
-    log.info("\n");
-    log.info("combine_right:" + ByteArray.toHexString(combine_right.getContent().toByteArray()));
-    log.info("\n");
 
     SHA256CompressCapsule root = SHA256CompressCapsule.combine(combine_left, combine_right, 0);
-    log.info("root:" + ByteArray.toHexString(root.getContent().toByteArray()));
-    log.info("\n");
+
     int d = 1;
-    log.info("parent size:" + treeCapsule.getParents().size());
-    log.info("\n");
+
     for (SHA256Compress parent : treeCapsule.getParents()) {
-      log.info("d:" + d);
-      log.info("\n");
+
       SHA256CompressCapsule parentCompressCapsule = new SHA256CompressCapsule(parent);
       if (parentCompressCapsule.isExist()) {
-        log.info(
-            "parent:" + ByteArray.toHexString(parentCompressCapsule.getContent().toByteArray()));
-        log.info("\n");
+
         root = SHA256CompressCapsule.combine(parent, root.getInstance(), d);
       } else {
         SHA256Compress next = filler.next(d);
-        log.info("filler.next(d):" + ByteArray.toHexString(next.getContent().toByteArray()));
-        log.info("\n");
+
         root = SHA256CompressCapsule.combine(root.getInstance(), next, d);
       }
       d++;
     }
 
     while (d < depth) {
-      log.info("d:" + d);
-      log.info("\n");
       SHA256Compress left = root.getInstance();
       SHA256Compress right = filler.next(d);
-      log.info("left:" + ByteArray.toHexString(left.getContent().toByteArray()));
-      log.info("\n");
-      log.info("right:" + ByteArray.toHexString(right.getContent().toByteArray()));
-      log.info("\n");
       SHA256CompressCapsule result = SHA256CompressCapsule.combine(left, right, d);
-      log.info("result:" + ByteArray.toHexString(right.getContent().toByteArray()));
-      log.info("\n");
       root = result;
       d++;
     }
