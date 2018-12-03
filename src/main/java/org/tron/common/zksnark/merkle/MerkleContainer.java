@@ -39,21 +39,7 @@ public class MerkleContainer {
   public IncrementalMerkleTreeContainer getBestMerkle() {
     IncrementalMerkleTreeCapsule capsule = manager.getMerkleTreeStore().get(lastTreeKey);
     if (capsule == null) {
-      IncrementalMerkleTreeContainer container =
-          (new IncrementalMerkleTreeCapsule()).toMerkleTreeContainer();
-
-      // tmp
-      String s1 = "2ec45f5ae2d1bc7a80df02abfb2814a1239f956c6fb3ac0e112c008ba2c1ab91";
-      SHA256CompressCapsule compressCapsule1 = new SHA256CompressCapsule();
-      compressCapsule1.setContent(ByteString.copyFrom(ByteArray.fromHexString(s1)));
-      SHA256Compress a = compressCapsule1.getInstance();
-
-      container.append(a);
-
-      this.manager
-          .getMerkleTreeStore()
-          .put(container.getMerkleTreeKey(), container.getTreeCapsule());
-      return container;
+      return null;
     }
     return capsule.toMerkleTreeContainer();
   }

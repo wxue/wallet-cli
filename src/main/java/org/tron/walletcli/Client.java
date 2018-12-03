@@ -1253,7 +1253,7 @@ public class Client {
         return;
       }
 
-      boolean r = ReceiverZkHelper.syncAndUpdateWitness(dbManager,txid);
+      boolean r = new ReceiverZkHelper(dbManager).syncAndUpdateWitness(txid);
       if(!r){
         return;
       }

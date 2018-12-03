@@ -19,6 +19,8 @@ public class Manager {
   @Autowired
   @Getter
   private IncrementalMerkleTreeStore merkleTreeStore;
+
+  //目前仅存储当前值
   @Autowired
   @Getter
   private IncrementalMerkleWitnessStore merkleWitnessStore;

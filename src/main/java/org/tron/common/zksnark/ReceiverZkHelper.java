@@ -30,8 +30,13 @@ import org.tron.walletserver.WalletApi;
 @Slf4j
 public class ReceiverZkHelper {
 
+  private Manager dbManager;
 
-  public static boolean syncAndUpdateWitness(Manager dbManager, String txid)
+  public ReceiverZkHelper(Manager dbManager) {
+    this.dbManager = dbManager;
+  }
+
+  public boolean syncAndUpdateWitness(String txid)
       throws InvalidProtocolBufferException, ItemNotFoundException {
 
     long currentTxBlockNumber = getCurrentTxBlockNumber(txid);
@@ -41,23 +46,71 @@ public class ReceiverZkHelper {
 
     long localBlockNum = dbManager.getDynamicPropertiesStore()
         .getLatestWitnessBlockNumber();
+
     if (localBlockNum < currentTxBlockNumber) {
-      return processCase1(dbManager, txid, localBlockNum, currentTxBlockNumber);
+      if (localBlockNum == 0) {
+        if (!getAndSaveBestMerkleTree(currentTxBlockNumber)) {
+          log.error("getAndSaveBestMerkleTree error");
+          return false;
+        }
+      }
+      return processCase1(txid, localBlockNum, currentTxBlockNumber);
     } else {
-      return processCase2(dbManager, txid, localBlockNum, currentTxBlockNumber);
+      return processCase2(txid, currentTxBlockNumber, localBlockNum);
     }
 
   }
 
-  private static long getCurrentTxBlockNumber(String txid) {
-    Optional<TransactionInfo> transactionInfoById = WalletApi.getTransactionInfoById(txid);
+  protected boolean getAndSaveBestMerkleTree(long currentTxBlockNumber) {
+//    WalletApi.getBestMerkleTree(currentTxBlockNumber-1); todo
+    IncrementalMerkleTreeContainer treeContainer = null;
+    dbManager.getMerkleContainer().setCurrentMerkle(treeContainer);
+    dbManager.getMerkleContainer().saveCurrentMerkleTreeAsBestMerkleTree();
+    dbManager.getTreeBlockIndexStore()
+        .put(currentTxBlockNumber - 1,
+            dbManager.getMerkleContainer().getBestMerkle().getMerkleTreeKey());
+
+    return true;
+  }
+
+  protected Optional<TransactionInfo> getTransactionInfoById(String txid) {
+    return WalletApi.getTransactionInfoById(txid);
+  }
+
+  protected Optional<DynamicProperties> getDynamicProperties() {
+    return WalletApi.getDynamicProperties();
+  }
+
+  protected Optional<BlockList> getBlockByLimitNext(long localBlockNum, long currentTxBlockNumber) {
+    Optional<BlockList> blocksOption = WalletApi
+        .getBlockByLimitNext(localBlockNum + 1, currentTxBlockNumber);
+
+    //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
+    if (!blocksOption.isPresent()) {
+      log.error("getBlock error !!");
+      return Optional.empty();
+    }
+
+    BlockList blockList = blocksOption.get();
+
+    if (blockList.getBlockList().size() != (currentTxBlockNumber - localBlockNum)) {
+      log
+          .error("num error,blockList:" + blockList.getBlockList().size() + ",localBlockNum:"
+              + localBlockNum + ",currentTxBlockNumber:" + currentTxBlockNumber);
+    }
+
+    return blocksOption;
+  }
+
+  public long getCurrentTxBlockNumber(String txid) {
+    Optional<TransactionInfo> transactionInfoById = getTransactionInfoById(txid);
     if (!transactionInfoById.isPresent()) {
       System.out.println("TransactionInfo not exists !!");
       return -1;
     }
     TransactionInfo transactionInfo = transactionInfoById.get();
     long currentTxBlockNumber = transactionInfo.getBlockNumber();
-    Optional<DynamicProperties> dynamicPropertiesOptional = WalletApi.getDynamicProperties();
+    Optional<DynamicProperties> dynamicPropertiesOptional = getDynamicProperties();
     if (!dynamicPropertiesOptional.isPresent()) {
       System.out.println("DynamicProperties not exists !!");
       return -1;
@@ -71,7 +124,7 @@ public class ReceiverZkHelper {
     return currentTxBlockNumber;
   }
 
-  private static boolean processCase1(Manager dbManager, String txid, long localBlockNum,
+  private boolean processCase1(String txid, long localBlockNum,
       long currentTxBlockNumber) throws InvalidProtocolBufferException, ItemNotFoundException {
 
     log.info(
@@ -79,20 +132,10 @@ public class ReceiverZkHelper {
             + ",currentTxBlockNumber:"
             + currentTxBlockNumber);
     //需要更新已有的witness、tree
-    Optional<BlockList> blocksOption = WalletApi
-        .getBlockByLimitNext(localBlockNum + 1, currentTxBlockNumber);
-    //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
+    Optional<BlockList> blocksOption = getBlockByLimitNext(localBlockNum + 1, currentTxBlockNumber);
+
     if (!blocksOption.isPresent()) {
-      log.error("getBlock error !!");
       return false;
-    }
-
-    BlockList blockList = blocksOption.get();
-
-    if (blockList.getBlockList().size() != (currentTxBlockNumber - localBlockNum)) {
-      log
-          .error("num error,blockList:" + blockList.getBlockList().size() + ",localBlockNum:"
-              + localBlockNum + ",currentTxBlockNumber:" + currentTxBlockNumber);
     }
 
     IncrementalMerkleTreeContainer tree = dbManager.getMerkleContainer()
@@ -100,7 +143,7 @@ public class ReceiverZkHelper {
 
     boolean found = false;
 
-    for (Block block : blockList.getBlockList()) {
+    for (Block block : blocksOption.get().getBlockList()) {
       for (Transaction transaction1 : block.getTransactionsList()) {
 
         Contract contract1 = transaction1.getRawData().getContract(0);
@@ -182,7 +225,7 @@ public class ReceiverZkHelper {
     return true;
   }
 
-  private static boolean processCase2(Manager dbManager, String txid, long localBlockNum,
+  private boolean processCase2(String txid, long localBlockNum,
       long currentTxBlockNumber) throws InvalidProtocolBufferException, ItemNotFoundException {
 
     log.info(
@@ -270,23 +313,13 @@ public class ReceiverZkHelper {
     }
 
     //获取剩余block，并只更新newWitness
-    Optional<BlockList> blocksOption = WalletApi
-        .getBlockByLimitNext(currentTxBlockNumber + 1, localBlockNum);
-    //todo：1、分段查询。2、提供接口，仅返回包含匿名交易的块
+    Optional<BlockList> blocksOption = getBlockByLimitNext(currentTxBlockNumber + 1, localBlockNum);
+
     if (!blocksOption.isPresent()) {
-      log.error("getBlock error !!");
       return false;
     }
 
-    BlockList blockList = blocksOption.get();
-
-    if (blockList.getBlockList().size() != (localBlockNum - currentTxBlockNumber)) {
-      log
-          .error("num error,blockList:" + blockList.getBlockList().size() + ",localBlockNum:"
-              + localBlockNum + ",currentTxBlockNumber:" + currentTxBlockNumber);
-    }
-
-    for (Block block1 : blockList.getBlockList()) {
+    for (Block block1 : blocksOption.get().getBlockList()) {
       for (Transaction transaction1 : block1.getTransactionsList()) {
 
         Contract contract1 = transaction1.getRawData().getContract(0);
