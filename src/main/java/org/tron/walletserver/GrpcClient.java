@@ -770,4 +770,18 @@ public class GrpcClient {
     BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
     return blockingStubFull.getContract(bytesMessage);
   }
+
+  public Optional<BlockListExtention> getZKBlockByLimitNext(long start, long end) {
+    BlockLimit.Builder builder = BlockLimit.newBuilder();
+    builder.setStartNum(start);
+    builder.setEndNum(end);
+    BlockListExtention blockListExtention = blockingStubFull.getZKBlockByLimitNext(builder.build());
+    return Optional.ofNullable(blockListExtention);
+  }
+
+  public Optional<GrpcAPI.BlockIncrementalMerkleTree> getMerkleTreeOfBlock(long num) {
+    NumberMessage numberMessage = NumberMessage.newBuilder().setNum(num).build();
+    GrpcAPI.BlockIncrementalMerkleTree merkleTree = blockingStubFull.getMerkleTreeOfBlock(numberMessage);
+    return Optional.ofNullable(merkleTree);
+  }
 }

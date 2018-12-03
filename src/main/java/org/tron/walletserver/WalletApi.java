@@ -1980,4 +1980,13 @@ public class WalletApi {
   public static SmartContract getContract(byte[] address) {
     return rpcCli.getContract(address);
   }
+
+  public static Optional<BlockListExtention> getZKBlockByLimitNext(long start, long end) {
+    return rpcCli.getZKBlockByLimitNext(start, end);
+  }
+
+  public static Optional<GrpcAPI.BlockIncrementalMerkleTree>  getMerkleTreeOfBlock(long num) {
+    return rpcCli.getMerkleTreeOfBlock(num);
+  }
+
 }
