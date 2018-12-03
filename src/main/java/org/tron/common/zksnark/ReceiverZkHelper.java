@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.BlockList;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
+import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.capsule.SHA256CompressCapsule;
 import org.tron.core.db.Manager;
@@ -71,9 +73,21 @@ public class ReceiverZkHelper {
   }
 
   protected boolean getAndSaveBestMerkleTree(long currentTxBlockNumber) {
-//    WalletApi.getMerkleTree(currentTxBlockNumber-1); todo
-    IncrementalMerkleTreeContainer treeContainer = null;
-    dbManager.getMerkleContainer().setCurrentMerkle(treeContainer);
+    Optional<GrpcAPI.BlockIncrementalMerkleTree> merkleTreeOfBlock = WalletApi
+        .getMerkleTreeOfBlock(currentTxBlockNumber - 1);
+    if (!merkleTreeOfBlock.isPresent()) {
+      log.error("getAndSaveBestMerkleTree error,block not exist");
+      return false;
+    }
+    if (merkleTreeOfBlock.get().getNumber() != currentTxBlockNumber) {
+      log.error(
+          "getAndSaveBestMerkleTree error,number error,require:" + currentTxBlockNumber + ",found:"
+              + merkleTreeOfBlock.get().getNumber());
+      return false;
+    }
+
+    dbManager.getMerkleContainer().setCurrentMerkle(new IncrementalMerkleTreeCapsule
+        (merkleTreeOfBlock.get().getMerkleTree()).toMerkleTreeContainer());
     dbManager.getMerkleContainer().saveCurrentMerkleTreeAsBestMerkleTree();
     dbManager.getTreeBlockIndexStore()
         .put(currentTxBlockNumber - 1,
@@ -256,23 +270,36 @@ public class ReceiverZkHelper {
     return WalletApi.getBlock(blockNum);
   }
 
-  protected IncrementalMerkleTreeContainer getMerkleTreeBeforeCurrentTxBlock(
+  protected Optional<IncrementalMerkleTreeContainer> getMerkleTreeBeforeCurrentTxBlock(
       long currentTxBlockNumber) throws ItemNotFoundException {
     byte[] key = dbManager.getTreeBlockIndexStore().get(currentTxBlockNumber - 1);
     if (dbManager.getMerkleTreeStore().contain(key)) {
       IncrementalMerkleTreeContainer tree = dbManager.getMerkleTreeStore()
           .get(key).toMerkleTreeContainer();
-      return tree;
+      return Optional.of(tree);
     } else {
 
-//    WalletApi.getMerkleTree(currentTxBlockNumber-1); todo
+      Optional<GrpcAPI.BlockIncrementalMerkleTree> merkleTreeOfBlock = WalletApi
+          .getMerkleTreeOfBlock(currentTxBlockNumber - 1);
+      if (!merkleTreeOfBlock.isPresent()) {
+        log.error("getAndSaveBestMerkleTree error,block not exist");
+        return Optional.empty();
+      }
+      if (merkleTreeOfBlock.get().getNumber() != currentTxBlockNumber) {
+        log.error(
+            "getAndSaveBestMerkleTree error,number error,require:" + currentTxBlockNumber
+                + ",found:"
+                + merkleTreeOfBlock.get().getNumber());
+        return Optional.empty();
+      }
+
       IncrementalMerkleTreeContainer treeContainer = null;
       dbManager.getTreeBlockIndexStore()
           .put(currentTxBlockNumber - 1,
               treeContainer.getMerkleTreeKey());
       dbManager.getMerkleTreeStore()
           .put(treeContainer.getMerkleTreeKey(), treeContainer.getTreeCapsule());
-      return treeContainer;
+      return Optional.of(treeContainer);
     }
   }
 
@@ -292,7 +319,14 @@ public class ReceiverZkHelper {
       log.error("getBlock error !!");
       return false;
     }
-    IncrementalMerkleTreeContainer tree = getMerkleTreeBeforeCurrentTxBlock(currentTxBlockNumber);
+    Optional<IncrementalMerkleTreeContainer> treeOptional = getMerkleTreeBeforeCurrentTxBlock(
+        currentTxBlockNumber);
+    if (!treeOptional.isPresent()) {
+      return false;
+    }
+
+    IncrementalMerkleTreeContainer tree = treeOptional.get();
+
     System.out.println("treeSize:" + tree.size());
 
     List<IncrementalMerkleWitnessContainer> newWitness = new ArrayList<>();
