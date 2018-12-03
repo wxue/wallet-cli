@@ -16,13 +16,13 @@
 package org.tron.common.utils;
 
 import com.google.protobuf.ByteString;
+
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Random;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.tron.api.GrpcAPI.BytesMessage;
 import org.tron.api.ZkGrpcAPI.IncrementalMerkleTreeMsg;
 import org.tron.api.ZkGrpcAPI.IncrementalWitnessMsg;
 import org.tron.api.ZkGrpcAPI.JSInputMsg;
@@ -31,12 +31,14 @@ import org.tron.api.ZkGrpcAPI.SproutNoteMsg;
 import org.tron.api.ZkGrpcAPI.Uint256Msg;
 import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.crypto.blake2b.Blake2b;
+import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongKeySizeException;
+import org.tron.common.crypto.chacha20poly1305.ChaCha20.WrongNonceSizeException;
+import org.tron.common.crypto.chacha20poly1305.aead.WrongPolyMac;
 import org.tron.common.crypto.dh25519.MontgomeryOperations;
 import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveSpec;
 import org.tron.common.crypto.eddsa.spec.EdDSANamedCurveTable;
 import org.tron.common.crypto.eddsa.spec.EdDSAPublicKeySpec;
-import org.tron.common.zksnark.CmUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
 import org.tron.common.zksnark.ShieldAddressGenerator;
 import org.tron.core.exception.CipherException;
@@ -48,8 +50,7 @@ import org.tron.protos.Contract.SHA256Compress;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Contract.zkv0proof;
 import org.tron.walletserver.ShiledWalletFile;
-import org.tron.walletserver.WalletApi;
-import org.tron.common.crypto.chacha20.*;
+import org.tron.common.crypto.chacha20poly1305.*;
 
 public class ZksnarkUtils {
 
@@ -188,6 +189,7 @@ public class ZksnarkUtils {
     return result;
   }
 
+
   public static byte[] decrypt(byte[] cipher, byte[] key, byte[] nonce, int counter) {
     byte[] result = new byte[cipher.length];
     try {
@@ -198,7 +200,6 @@ public class ZksnarkUtils {
     }
     return result;
   }
-
 
   public static byte[] KDF(byte[] dh, byte[] epk, byte[] pkEnc, byte[] hSig, byte nonce) {
     byte[] personal = new byte[]{'Z', 'c', 'a', 's', 'h', 'K', 'D', 'F', nonce, 0, 0, 0, 0,
@@ -211,21 +212,27 @@ public class ZksnarkUtils {
     return Sha256Hash.of(contract.toByteArray()).getBytes();
   }
 
-  private static CmTuple decrypC(int index, byte[] contractId, byte[] K, byte[] cipher, byte[] cm,
+  private static CmTuple decrypC(int index, byte[] contractId, byte[] K, byte[] cipher,
+      byte[] cm,
       byte[] publicAddress, byte[] privateAddress) {
     byte[] none = new byte[12];
     byte[] plain = decrypt(cipher, K, none, 1);
+    if (plain[0] != 0) {
+      return null;
+    }
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
     sort(v);
     BigInteger value = new BigInteger(v);
     System.out.println("You recive " + value + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
-    CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index, contractId);
+    CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index,
+        contractId);
     return cmTuple;
   }
 
-  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile shiled)
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile
+      shiled)
       throws CipherException {
     byte[] privateAddress = shiled.getPrivateAddress();
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
@@ -248,19 +255,22 @@ public class ZksnarkUtils {
     byte[] cipher = contract.getC1().toByteArray();
     byte[] cm = contract.getCm1().toByteArray();
 
+    boolean result = false;
     CmTuple cmTuple = decrypC(1, contractId, K, cipher, cm, publicAddress, privateAddress);
-    if (cmTuple == null) {
-      K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
-      cipher = contract.getC2().toByteArray();
-      cm = contract.getCm2().toByteArray();
-      cmTuple = decrypC(2, contractId, K, cipher, cm, publicAddress, privateAddress);
+    if (cmTuple != null) {
+      result = true;
+      shiled.saveCm(cmTuple);
     }
-    if (cmTuple == null) {
-      return false;
+    K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
+    cipher = contract.getC2().toByteArray();
+    cm = contract.getCm2().toByteArray();
+    cmTuple = decrypC(2, contractId, K, cipher, cm, publicAddress, privateAddress);
+    if (cmTuple != null) {
+      result = true;
+      shiled.saveCm(cmTuple);
     }
-    shiled.saveCm(cmTuple);
     //TODO: compute nf
-    return true;
+    return result;
   }
 
   public static BN128G1 byte2BN128G1(byte[] x, byte[] y) {
@@ -394,19 +404,27 @@ public class ZksnarkUtils {
     sort(Kx);
     byte[] Ky = Arrays.copyOfRange(in, offset + 32, offset + 64);
     sort(Ky);
-    builder.setA(BN128G1.newBuilder().setX(ByteString.copyFrom(Ax)).setY(ByteString.copyFrom(Ay)));
     builder
-        .setAP(BN128G1.newBuilder().setX(ByteString.copyFrom(Apx)).setY(ByteString.copyFrom(Apy)));
+        .setA(BN128G1.newBuilder().setX(ByteString.copyFrom(Ax)).setY(ByteString.copyFrom(Ay)));
     builder
-        .setB(BN128G2.newBuilder().setX1(ByteString.copyFrom(Bx1)).setX2(ByteString.copyFrom(Bx2))
-            .setY1(ByteString.copyFrom(By1)).setY2(ByteString.copyFrom(By2)));
+        .setAP(
+            BN128G1.newBuilder().setX(ByteString.copyFrom(Apx)).setY(ByteString.copyFrom(Apy)));
     builder
-        .setBP(BN128G1.newBuilder().setX(ByteString.copyFrom(Bpx)).setY(ByteString.copyFrom(Bpy)));
-    builder.setC(BN128G1.newBuilder().setX(ByteString.copyFrom(Cx)).setY(ByteString.copyFrom(Cy)));
+        .setB(
+            BN128G2.newBuilder().setX1(ByteString.copyFrom(Bx1)).setX2(ByteString.copyFrom(Bx2))
+                .setY1(ByteString.copyFrom(By1)).setY2(ByteString.copyFrom(By2)));
     builder
-        .setCP(BN128G1.newBuilder().setX(ByteString.copyFrom(Cpx)).setY(ByteString.copyFrom(Cpy)));
-    builder.setK(BN128G1.newBuilder().setX(ByteString.copyFrom(Kx)).setY(ByteString.copyFrom(Ky)));
-    builder.setH(BN128G1.newBuilder().setX(ByteString.copyFrom(Hx)).setY(ByteString.copyFrom(Hy)));
+        .setBP(
+            BN128G1.newBuilder().setX(ByteString.copyFrom(Bpx)).setY(ByteString.copyFrom(Bpy)));
+    builder
+        .setC(BN128G1.newBuilder().setX(ByteString.copyFrom(Cx)).setY(ByteString.copyFrom(Cy)));
+    builder
+        .setCP(
+            BN128G1.newBuilder().setX(ByteString.copyFrom(Cpx)).setY(ByteString.copyFrom(Cpy)));
+    builder
+        .setK(BN128G1.newBuilder().setX(ByteString.copyFrom(Kx)).setY(ByteString.copyFrom(Ky)));
+    builder
+        .setH(BN128G1.newBuilder().setX(ByteString.copyFrom(Hx)).setY(ByteString.copyFrom(Hy)));
     return builder.build();
   }
 
