@@ -13,7 +13,6 @@ import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.zksnark.merkle.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.merkle.IncrementalMerkleWitnessContainer;
-import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.capsule.SHA256CompressCapsule;
 import org.tron.core.db.Manager;
@@ -53,7 +52,7 @@ public class ReceiverZkHelper {
     if (localBlockNum < currentTxBlockNumber) {
       return processCase1(txid, localBlockNum, currentTxBlockNumber);
     } else {
-      return processCase2(txid, currentTxBlockNumber, localBlockNum);
+      return processCase2(txid, localBlockNum, currentTxBlockNumber);
     }
 
   }
@@ -72,7 +71,7 @@ public class ReceiverZkHelper {
   }
 
   protected boolean getAndSaveBestMerkleTree(long currentTxBlockNumber) {
-//    WalletApi.getBestMerkleTree(currentTxBlockNumber-1); todo
+//    WalletApi.getMerkleTree(currentTxBlockNumber-1); todo
     IncrementalMerkleTreeContainer treeContainer = null;
     dbManager.getMerkleContainer().setCurrentMerkle(treeContainer);
     dbManager.getMerkleContainer().saveCurrentMerkleTreeAsBestMerkleTree();
@@ -174,15 +173,15 @@ public class ReceiverZkHelper {
           //witness的写入可以优化
           Iterator<Entry<byte[], IncrementalMerkleWitnessCapsule>> iterator = dbManager
               .getMerkleWitnessStore().iterator();
-          System.out.println( "merkleWitnessStore:"+ dbManager.getMerkleWitnessStore().size());
+          System.out.println("merkleWitnessStore:" + dbManager.getMerkleWitnessStore().size());
           while (iterator.hasNext()) {
             Entry<byte[], IncrementalMerkleWitnessCapsule> entry = iterator.next();
             IncrementalMerkleWitnessContainer container = entry.getValue()
                 .toMerkleWitnessContainer();
-            System.out.println( "witness before:"+ container.getWitnessCapsule().size());
+            System.out.println("witness before:" + container.getWitnessCapsule().size());
             container.append(cm1);
             container.append(cm2);
-            System.out.println( "witness after:"+ container.getWitnessCapsule().size());
+            System.out.println("witness after:" + container.getWitnessCapsule().size());
             dbManager.getMerkleWitnessStore()
                 .put(entry.getKey(), container.getWitnessCapsule());
           }
@@ -190,7 +189,8 @@ public class ReceiverZkHelper {
           //当cm equels 当前cm时，tree "toWitness"，并 witnessList.add(witness);
           //todo，如果cm时需要记录的
           ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
-          System.out.println( "treeSizeBefore:"+ tree.size());
+          System.out.println("treeSizeBefore:" + tree.size());
+          System.out.println("treeSizeBefore:" + tree.size());
           if (foundTx(transaction1, txid)) {
             found = true;
             tree.append(cm1);
@@ -204,8 +204,8 @@ public class ReceiverZkHelper {
             IncrementalMerkleWitnessContainer witness2 = tree.getTreeCapsule().deepCopy()
                 .toMerkleTreeContainer().toWitness();
             witness2.getWitnessCapsule().setOutputPoint(contractId, 1);
-            System.out.println( "witness1 size after:"+ witness1.getWitnessCapsule().size());
-            System.out.println( "witness2 size after:"+ witness2.getWitnessCapsule().size());
+            System.out.println("witness1 size after:" + witness1.getWitnessCapsule().size());
+            System.out.println("witness2 size after:" + witness2.getWitnessCapsule().size());
             dbManager
                 .getMerkleWitnessStore()
                 .put(witness1.getMerkleWitnessKey(), witness1.getWitnessCapsule());
@@ -217,7 +217,7 @@ public class ReceiverZkHelper {
             tree.append(cm2);
           }
 
-          System.out.println( "treeSizeAfter:"+ tree.size());
+          System.out.println("treeSizeAfter:" + tree.size());
           //每一个交易，存一次currentTree
           dbManager.getMerkleContainer().setCurrentMerkle(tree);
 
@@ -244,11 +244,36 @@ public class ReceiverZkHelper {
   private static boolean foundTx(Transaction transaction, String txId) {
     ByteString byteString = getTransactionId(transaction).getByteString();
 
+//    System.out.println("txid:" + ByteArray.toHexString(byteString.toByteArray()));
     return ByteArray.toHexString(byteString.toByteArray()).equals(txId);
 
   }
 
-  private boolean processCase2(String txid, long localBlockNum,
+  public Block getBlock(long blockNum) {
+    return WalletApi.getBlock(blockNum);
+  }
+
+  protected IncrementalMerkleTreeContainer getMerkleTreeBeforeCurrentTxBlock(
+      long currentTxBlockNumber) throws ItemNotFoundException {
+    byte[] key = dbManager.getTreeBlockIndexStore().get(currentTxBlockNumber - 1);
+    if (dbManager.getMerkleTreeStore().contain(key)) {
+      IncrementalMerkleTreeContainer tree = dbManager.getMerkleTreeStore()
+          .get(key).toMerkleTreeContainer();
+      return tree;
+    } else {
+
+//    WalletApi.getMerkleTree(currentTxBlockNumber-1); todo
+      IncrementalMerkleTreeContainer treeContainer = null;
+      dbManager.getTreeBlockIndexStore()
+          .put(currentTxBlockNumber - 1,
+              treeContainer.getMerkleTreeKey());
+      dbManager.getMerkleTreeStore()
+          .put(treeContainer.getMerkleTreeKey(), treeContainer.getTreeCapsule());
+      return treeContainer;
+    }
+  }
+
+  public boolean processCase2(String txid, long localBlockNum,
       long currentTxBlockNumber) throws InvalidProtocolBufferException, ItemNotFoundException {
 
     log.info(
@@ -260,15 +285,12 @@ public class ReceiverZkHelper {
     //需要拿到前一个块的tree（blockNum到treeKey的映射关系），并获得这个块的所有匿名交易
 
     //先需要校验第一个块是否有该witness , 然后依此获得后续块
-    Block block = WalletApi.getBlock(currentTxBlockNumber);
+    Block block = getBlock(currentTxBlockNumber);
     if (block == null) {
       log.error("getBlock error !!");
       return false;
     }
-
-    byte[] key = dbManager.getTreeBlockIndexStore().get(currentTxBlockNumber - 1);
-    IncrementalMerkleTreeContainer tree = dbManager.getMerkleTreeStore()
-        .get(key).toMerkleTreeContainer();
+    IncrementalMerkleTreeContainer tree = getMerkleTreeBeforeCurrentTxBlock(currentTxBlockNumber);
 
     List<IncrementalMerkleWitnessContainer> newWitness = new ArrayList<>();
 
@@ -290,14 +312,18 @@ public class ReceiverZkHelper {
         cmCapsule2.setContent(zkContract.getCm2());
         SHA256Compress cm2 = cmCapsule2.getInstance();
 
+        System.out.println("更新已有的witness");
         //更新已有的witness
         newWitness.forEach(wit -> {
+          System.out.println("witSizeBefore:" + wit.getWitnessCapsule().size());
           wit.append(cm1);
           wit.append(cm1);
+          System.out.println("witSizeAfter:" + wit.getWitnessCapsule().size());
         });
 
         ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
         if (foundTx(transaction1, txid)) {
+          System.out.println("foundTx" );
           found = true;
 
           tree.append(cm1);
@@ -314,6 +340,9 @@ public class ReceiverZkHelper {
 
           newWitness.add(witness1);
           newWitness.add(witness2);
+
+          System.out.println("witness1SizeAfter:" + witness1.getWitnessCapsule().size());
+          System.out.println("witness2SizeAfter:" + witness2.getWitnessCapsule().size());
         } else {
           tree.append(cm1);
           tree.append(cm2);
@@ -336,6 +365,7 @@ public class ReceiverZkHelper {
       return true;
     }
 
+    System.out.println("获取剩余block，并只更新newWitness");
     //获取剩余block，并只更新newWitness
     Optional<BlockList> blocksOption = getBlockByLimitNext(currentTxBlockNumber + 1, localBlockNum);
 
@@ -362,8 +392,10 @@ public class ReceiverZkHelper {
           SHA256Compress cm2 = cmCapsule2.getInstance();
 
           newWitness.forEach(wit -> {
+            System.out.println("witSizeBefore:" + wit.getWitnessCapsule().size());
             wit.append(cm1);
             wit.append(cm2);
+            System.out.println("witSizeAfter:" + wit.getWitnessCapsule().size());
           });
 
         }
