@@ -172,7 +172,7 @@ public class StoreTest {
     SHA256Compress a = compressCapsule1.getInstance();
     tree.append(a);
     dbManager.getMerkleTreeStore().put(tree.getMerkleTreeKey(), tree.getTreeCapsule());
-    //这里初始化，只测试了本地包含currentTxBlockNumber的情况，不包含的情况待补充
+    //todo：Initialized here, only the case where the currentTxBlockNumber is included locally, and the case where currentTxBlockNumber is not included is to be added.
     dbManager.getTreeBlockIndexStore()
         .put(currentTxBlockNumber - 1, tree.getMerkleTreeKey());
 
@@ -212,7 +212,7 @@ public class StoreTest {
     //verify
     Assert.assertEquals(2, dbManager.getMerkleWitnessStore().getAllWitness().size());
     dbManager.getMerkleWitnessStore().getAllWitness().forEach(wit -> {
-      Assert.assertEquals(1+4+2, wit.size());
+      Assert.assertEquals(1 + 4 + 2, wit.size());
     });
 
 
