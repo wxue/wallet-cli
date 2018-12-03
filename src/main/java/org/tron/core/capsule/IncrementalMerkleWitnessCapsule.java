@@ -98,7 +98,13 @@ public class IncrementalMerkleWitnessCapsule implements ProtoCapsule<Incremental
   }
 
   public int size() {
-    return  getTree().toMerkleTreeContainer().size() + getFilled().size() + getCursor()
+    return getTree().toMerkleTreeContainer().size() + getFilled().size() + getCursor()
         .toMerkleTreeContainer().size();
+  }
+
+  public void printSize() {
+    System.out.println(
+        "TreeSize:" + getTree().toMerkleTreeContainer().size() + ",FillSize:" + getFilled().size()
+            + ",CursorSize:" + getCursor().toMerkleTreeContainer().size());
   }
 }

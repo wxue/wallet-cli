@@ -143,8 +143,7 @@ public class StoreTest {
     //verify
     Assert.assertEquals(3, dbManager.getMerkleWitnessStore().getAllWitness().size());
     dbManager.getMerkleWitnessStore().getAllWitness().forEach(wit -> {
-//      Assert.assertEquals(5, wit.size());//todo
-      System.out.println(wit.size());
+      Assert.assertEquals(5, wit.size());
     });
 
     Assert.assertEquals(5, dbManager.getMerkleContainer().getCurrentMerkle().size());
@@ -175,16 +174,7 @@ public class StoreTest {
     dbManager.getMerkleTreeStore().put(tree.getMerkleTreeKey(), tree.getTreeCapsule());
     //这里初始化，只测试了本地包含currentTxBlockNumber的情况，不包含的情况待补充
     dbManager.getTreeBlockIndexStore()
-        .put(currentTxBlockNumber-1, tree.getMerkleTreeKey());
-
-    tree.append(a);//简单添加
-    tree.append(a);//简单添加
-    dbManager.getMerkleContainer().setCurrentMerkle(tree);
-    dbManager.getMerkleContainer().saveCurrentMerkleTreeAsBestMerkleTree();
-    dbManager.getTreeBlockIndexStore()
-        .put(localBlockNum, dbManager.getMerkleContainer().getBestMerkle().getMerkleTreeKey());
-    dbManager.getDynamicPropertiesStore()
-        .saveLatestWitnessBlockNumber(localBlockNum);
+        .put(currentTxBlockNumber - 1, tree.getMerkleTreeKey());
 
     //create extend ReceiverZkHelper
     ReceiverZkHelper helper = new ReceiverZkHelper(dbManager) {
@@ -222,8 +212,7 @@ public class StoreTest {
     //verify
     Assert.assertEquals(2, dbManager.getMerkleWitnessStore().getAllWitness().size());
     dbManager.getMerkleWitnessStore().getAllWitness().forEach(wit -> {
-//      Assert.assertEquals(4, wit.size());//todo
-      System.out.println(wit.size());
+      Assert.assertEquals(1+4+2, wit.size());
     });
 
 

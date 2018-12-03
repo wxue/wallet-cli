@@ -179,9 +179,11 @@ public class ReceiverZkHelper {
             IncrementalMerkleWitnessContainer container = entry.getValue()
                 .toMerkleWitnessContainer();
             System.out.println("witness before:" + container.getWitnessCapsule().size());
+            container.getWitnessCapsule().printSize();
             container.append(cm1);
             container.append(cm2);
             System.out.println("witness after:" + container.getWitnessCapsule().size());
+            container.getWitnessCapsule().printSize();
             dbManager.getMerkleWitnessStore()
                 .put(entry.getKey(), container.getWitnessCapsule());
           }
@@ -190,8 +192,8 @@ public class ReceiverZkHelper {
           //todo，如果cm时需要记录的
           ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
           System.out.println("treeSizeBefore:" + tree.size());
-          System.out.println("treeSizeBefore:" + tree.size());
           if (foundTx(transaction1, txid)) {
+            System.out.println("foundTx");
             found = true;
             tree.append(cm1);
             IncrementalMerkleWitnessContainer witness1 = tree.getTreeCapsule().deepCopy()
@@ -213,6 +215,7 @@ public class ReceiverZkHelper {
                 .getMerkleWitnessStore()
                 .put(witness2.getMerkleWitnessKey(), witness2.getWitnessCapsule());
           } else {
+            System.out.println("not foundTx");
             tree.append(cm1);
             tree.append(cm2);
           }
@@ -291,6 +294,7 @@ public class ReceiverZkHelper {
       return false;
     }
     IncrementalMerkleTreeContainer tree = getMerkleTreeBeforeCurrentTxBlock(currentTxBlockNumber);
+    System.out.println("treeSize:" + tree.size());
 
     List<IncrementalMerkleWitnessContainer> newWitness = new ArrayList<>();
 
@@ -316,9 +320,12 @@ public class ReceiverZkHelper {
         //更新已有的witness
         newWitness.forEach(wit -> {
           System.out.println("witSizeBefore:" + wit.getWitnessCapsule().size());
+          wit.getWitnessCapsule().printSize();
           wit.append(cm1);
-          wit.append(cm1);
+          wit.append(cm2);
+
           System.out.println("witSizeAfter:" + wit.getWitnessCapsule().size());
+          wit.getWitnessCapsule().printSize();
         });
 
         ByteString contractId = ByteString.copyFrom(getContractId(zkContract));
@@ -393,9 +400,11 @@ public class ReceiverZkHelper {
 
           newWitness.forEach(wit -> {
             System.out.println("witSizeBefore:" + wit.getWitnessCapsule().size());
+            wit.getWitnessCapsule().printSize();
             wit.append(cm1);
             wit.append(cm2);
             System.out.println("witSizeAfter:" + wit.getWitnessCapsule().size());
+            wit.getWitnessCapsule().printSize();
           });
 
         }
