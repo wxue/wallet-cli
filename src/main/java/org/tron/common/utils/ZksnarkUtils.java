@@ -244,6 +244,31 @@ public class ZksnarkUtils {
     return cmTuple;
   }
 
+  private static byte[] NoteCommit(byte[] apk, byte[] v, byte[] rho, byte[] r) {
+    byte[] leadByte = new byte[1];
+    leadByte[0] = (byte) 0xB0;
+
+    byte[] input = ByteUtil.merge(leadByte, apk, v, rho, r);
+    return Sha256Hash.hash(input);
+  }
+
+  private static boolean checkCmTuple(CmTuple cmTuple) {
+    byte[] cm = NoteCommit(cmTuple.getAddr_pk(), cmTuple.getV(), cmTuple.getRho(), cmTuple.getV());
+    if (!Arrays.equals(cm, cmTuple.getCm())) {
+      System.out.println("Cm is wrong!");
+      return false;
+    }
+
+    byte[] nf = Prf.prfNf(cmTuple.getAddr_sk(), cmTuple.getRho());
+    Optional<BytesMessage> ret = WalletApi.getNullifier(ByteArray.toHexString(nf));
+    if (ret.isPresent()) {
+      System.out.println(ByteArray.toHexString(nf) + " is exist!");
+      return false;
+    }
+
+    return true;
+  }
+
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile
       shiled)
       throws CipherException {
@@ -271,13 +296,10 @@ public class ZksnarkUtils {
     boolean result = false;
     CmTuple cmTuple = decrypC(1, contractId, K, cipher, cm, publicAddress, privateAddress);
     if (cmTuple != null) {
-      result = true;
-      byte[] nf = Prf.prfNf(cmTuple.getAddr_sk(), cmTuple.getRho());
-      Optional<BytesMessage> ret = WalletApi.getNullifier(ByteArray.toHexString(nf));
-      if (ret.isPresent()) {
-        System.out.println(ByteArray.toHexString(nf) + " is exist!");
+      if (!checkCmTuple(cmTuple)) {
         return false;
       }
+      result = true;
       shiled.saveCm(cmTuple);
     }
     K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
@@ -285,13 +307,10 @@ public class ZksnarkUtils {
     cm = contract.getCm2().toByteArray();
     cmTuple = decrypC(2, contractId, K, cipher, cm, publicAddress, privateAddress);
     if (cmTuple != null) {
-      result = true;
-      byte[] nf = Prf.prfNf(cmTuple.getAddr_sk(), cmTuple.getRho());
-      Optional<BytesMessage> ret = WalletApi.getNullifier(ByteArray.toHexString(nf));
-      if (ret.isPresent()) {
-        System.out.println(ByteArray.toHexString(nf) + " is exist!");
+      if (!checkCmTuple(cmTuple)) {
         return false;
       }
+      result = true;
       shiled.saveCm(cmTuple);
     }
     return result;
