@@ -296,19 +296,20 @@ public class WalletApiWrapper {
     return wallet.sendCoin(to, amount);
   }
 
-  public boolean saveShieldCoin(ZksnarkV0TransferContract contract) throws CipherException {
+  public boolean saveShieldCoin(ZksnarkV0TransferContract contract,String txId )
+      throws CipherException {
     if (wallet == null || (wallet.getWalletFile_Shiled() == null
         && wallet.getWalletFile_Shiled_1() == null)) {
       System.out.println("Warning: saveShieldCoin failed, Please load Shiled Wallet first !!");
       return false;
     }
     if (wallet.getWalletFile_Shiled() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled())) {
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled(),txId)) {
         return true;
       }
     }
     if (wallet.getWalletFile_Shiled_1() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1())) {
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1(),txId)) {
         return true;
       }
     }

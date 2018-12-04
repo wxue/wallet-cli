@@ -1,6 +1,5 @@
 package org.tron.common.zksnark;
 
-import com.google.protobuf.ByteString;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -8,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.HashMap;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
@@ -88,7 +86,7 @@ public class CmUtils {
     private byte[] v;
     private byte[] rho;
     private byte[] r;
-    private byte[] contractId;
+    private byte[] txId;
     private int index;
     private byte used;
 
@@ -102,12 +100,12 @@ public class CmUtils {
       rho = Utils.hexToBytes(x[4]);
       r = Utils.hexToBytes(x[5]);
       used = (byte) Character.digit(x[6].charAt(0), 16);
-      contractId = Utils.hexToBytes(x[7]);
+      txId = Utils.hexToBytes(x[7]);
       index = Integer.parseInt(x[8]);
     }
 
     public CmTuple(byte[] cm, byte[] addr_pk, byte[] addr_sk, byte[] v, byte[] rho, byte[] r,
-        int index, byte[] contractId) {
+        int index, byte[] txId) {
       this.cm = cm;
       this.addr_pk = addr_pk;
       this.addr_sk = addr_sk;
@@ -116,7 +114,7 @@ public class CmUtils {
       this.r = r;
       this.used = 0x00;
       this.index = index;
-      this.contractId = contractId;
+      this.txId = txId;
     }
 
     public String getKeyString() {
@@ -139,7 +137,7 @@ public class CmUtils {
       line.append(":");
       line.append(used);
       line.append(":");
-      line.append(ByteArray.toHexString(contractId));
+      line.append(ByteArray.toHexString(txId));
       line.append(":");
       line.append(Integer.toString(index));
       line.append("\n");
@@ -183,8 +181,8 @@ public class CmUtils {
       return r;
     }
 
-    public byte[] getContractId() {
-      return contractId;
+    public byte[] getTxId() {
+      return txId;
     }
 
     public int getIndex() {

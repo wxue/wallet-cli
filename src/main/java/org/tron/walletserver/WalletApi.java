@@ -63,10 +63,8 @@ import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
-import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
-import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.CheckStrength;
@@ -630,13 +628,13 @@ public class WalletApi {
         return false;
       }
 
-      ByteString bsTxHash = ByteString.copyFrom(c_old1.getContractId());
+      ByteString bsTxHash = ByteString.copyFrom(c_old1.getTxId());
       OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
 
 //      WalletApi.getMerkleTreeWitnessInfo(,synBlockNum);
 
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
+          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getTxId()),
               c_old1.getIndex() - 1);
       if (!ret1.isPresent()) {
         System.out.println("Can not get merkle path by " + cm1);
@@ -653,7 +651,7 @@ public class WalletApi {
           return false;
         }
         Optional<IncrementalMerkleWitness> ret2 = WalletApi
-            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.getContractId()),
+            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.getTxId()),
                 c_old2.getIndex() - 1);
         if (!ret2.isPresent()) {
           System.out.println("Can not get merkle path by " + cm2);

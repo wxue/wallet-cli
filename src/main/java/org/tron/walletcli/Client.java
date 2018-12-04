@@ -44,6 +44,7 @@ import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
 import org.tron.common.application.TronApplicationContext;
+import org.tron.common.crypto.Sha256Hash;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
@@ -1239,8 +1240,8 @@ public class Client {
       System.out.println("receiveShieldTransaction needs 1 parameter, transactionId");
       return;
     }
-    String txid = parameters[0];
-    Optional<Transaction> result = WalletApi.getTransactionById(txid);
+    String txId = parameters[0];
+    Optional<Transaction> result = WalletApi.getTransactionById(txId);
     if (result.isPresent()) {
       Transaction transaction = result.get();
       System.out.println(Utils.printTransaction(transaction));
@@ -1250,14 +1251,9 @@ public class Client {
         return;
       }
 
-//      boolean r = new ReceiverZkHelper(dbManager).syncAndUpdateWitness(txid);
-//      if(!r){
-//        return;
-//      }
-
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
+      boolean ret = walletApiWrapper.saveShieldCoin(zkContract,txId);
       if (ret) {
         System.out.println("receiveShieldTransaction successful !!");
       } else {

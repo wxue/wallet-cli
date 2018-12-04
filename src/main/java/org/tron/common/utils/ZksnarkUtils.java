@@ -218,11 +218,11 @@ public class ZksnarkUtils {
     return Blake2b.blake2b_personal(input, personal);
   }
 
-  private static byte[] getContractId(ZksnarkV0TransferContract contract) {
-    return Sha256Hash.of(contract.toByteArray()).getBytes();
-  }
+//  private static byte[] getContractId(ZksnarkV0TransferContract contract) {
+//    return Sha256Hash.of(contract.toByteArray()).getBytes();
+//  }
 
-  private static CmTuple decrypC(int index, byte[] contractId, byte[] K, byte[] cipher,
+  private static CmTuple decrypC(int index, byte[] txIx, byte[] K, byte[] cipher,
       byte[] cm,
       byte[] publicAddress, byte[] privateAddress) {
     byte[] none = new byte[12];
@@ -240,7 +240,7 @@ public class ZksnarkUtils {
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index,
-        contractId);
+        txIx);
     return cmTuple;
   }
 
@@ -270,7 +270,7 @@ public class ZksnarkUtils {
   }
 
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile
-      shiled)
+      shiled,String txId)
       throws CipherException {
     byte[] privateAddress = shiled.getPrivateAddress();
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
@@ -287,14 +287,13 @@ public class ZksnarkUtils {
     byte[] hSig = computeHSig(contract);
     byte[] epk = contract.getEpk().toByteArray();
     byte[] dh = scalarMultiply(epk, skEnc);
-    byte[] contractId = getContractId(contract);
 
     byte[] K = KDF(dh, epk, pkEnc, hSig, (byte) (0));
     byte[] cipher = contract.getC1().toByteArray();
     byte[] cm = contract.getCm1().toByteArray();
 
     boolean result = false;
-    CmTuple cmTuple = decrypC(1, contractId, K, cipher, cm, publicAddress, privateAddress);
+    CmTuple cmTuple = decrypC(1, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress, privateAddress);
     if (cmTuple != null) {
       if (!checkCmTuple(cmTuple)) {
         return false;
@@ -305,7 +304,7 @@ public class ZksnarkUtils {
     K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
     cipher = contract.getC2().toByteArray();
     cm = contract.getCm2().toByteArray();
-    cmTuple = decrypC(2, contractId, K, cipher, cm, publicAddress, privateAddress);
+    cmTuple = decrypC(2, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress, privateAddress);
     if (cmTuple != null) {
       if (!checkCmTuple(cmTuple)) {
         return false;
