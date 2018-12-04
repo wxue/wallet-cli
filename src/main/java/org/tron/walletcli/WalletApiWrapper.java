@@ -39,12 +39,6 @@ public class WalletApiWrapper {
   private static final Logger logger = LoggerFactory.getLogger("WalletApiWrapper");
   private WalletApi wallet;
 
-  private Manager dbManager;
-
-  public WalletApiWrapper(Manager dbManager){
-    this.dbManager = dbManager;
-
-  }
 
   public String registerWallet(char[] password) throws CipherException, IOException {
     if (!WalletApi.passwordValid(password)) {
@@ -54,7 +48,6 @@ public class WalletApiWrapper {
     byte[] passwd = StringUtils.char2Byte(password);
 
     wallet = new WalletApi(passwd);
-    wallet.setDbManager(dbManager);
 
     StringUtils.clear(passwd);
 

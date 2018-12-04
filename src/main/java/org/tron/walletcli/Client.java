@@ -76,13 +76,7 @@ import org.tron.walletserver.WalletApi;
 public class Client {
 
   private static final Logger logger = LoggerFactory.getLogger("Client");
-  private WalletApiWrapper walletApiWrapper ;
-  private Manager dbManager;
-
-  public Client(Manager manager) {
-    this.dbManager = manager;
-    walletApiWrapper = new WalletApiWrapper(manager);
-  }
+  private WalletApiWrapper walletApiWrapper = new WalletApiWrapper();
 
   private char[] inputPassword2Twice() throws IOException {
     char[] password0;
@@ -1254,10 +1248,10 @@ public class Client {
         return;
       }
 
-      boolean r = new ReceiverZkHelper(dbManager).syncAndUpdateWitness(txid);
-      if(!r){
-        return;
-      }
+//      boolean r = new ReceiverZkHelper(dbManager).syncAndUpdateWitness(txid);
+//      if(!r){
+//        return;
+//      }
 
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
@@ -2265,17 +2259,7 @@ public class Client {
 
   public static void main(String[] args) {
 
-    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
-    beanFactory.setAllowCircularReferences(false);
-    TronApplicationContext context =
-        new TronApplicationContext(beanFactory);
-    context.register(DefaultConfig.class);
-
-    context.refresh();
-    Application appT = ApplicationFactory.create(context);
-    shutdown(appT);
-
-    Client cli = new Client(appT.getDbManager());
+    Client cli = new Client();
 
     JCommander.newBuilder()
         .addObject(cli)
