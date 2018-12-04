@@ -202,7 +202,7 @@ public class ZksnarkUtils {
     } catch (WrongNonceSizeException e) {
       e.printStackTrace();
     } catch (WrongPolyMac wrongPolyMac) {
-      wrongPolyMac.printStackTrace();
+      System.out.println("wrongPolyMac");
     }
     return null;
   }
