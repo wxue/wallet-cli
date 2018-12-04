@@ -35,7 +35,9 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class FileUtil {
 
   public static List<String> recursiveList(String path) throws IOException {
@@ -144,5 +146,23 @@ public class FileUtil {
       }
     }
     return null;
+  }
+
+
+  /**
+   * delete directory.
+   */
+  public static boolean deleteDir(File dir) {
+    if (dir.isDirectory()) {
+      String[] children = dir.list();
+      for (int i = 0; i < children.length; i++) {
+        boolean success = deleteDir(new File(dir, children[i]));
+        if (!success) {
+          log.warn("can't delete dir:" + dir);
+          return false;
+        }
+      }
+    }
+    return dir.delete();
   }
 }

@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AccountResourceMessage;
 import org.tron.api.GrpcAPI.AddressPrKeyPairMessage;
@@ -40,12 +41,19 @@ import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.common.zksnark.ReceiverZkHelper;
+import org.tron.core.config.DefaultConfig;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.core.exception.EncodingException;
+import org.tron.core.exception.ItemNotFoundException;
 import org.tron.keystore.StringUtils;
 import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
@@ -68,7 +76,13 @@ import org.tron.walletserver.WalletApi;
 public class Client {
 
   private static final Logger logger = LoggerFactory.getLogger("Client");
-  private WalletApiWrapper walletApiWrapper = new WalletApiWrapper();
+  private WalletApiWrapper walletApiWrapper ;
+  private Manager dbManager;
+
+  public Client(Manager manager) {
+    this.dbManager = manager;
+    walletApiWrapper = new WalletApiWrapper(manager);
+  }
 
   private char[] inputPassword2Twice() throws IOException {
     char[] password0;
@@ -1224,7 +1238,7 @@ public class Client {
   }
 
   private void receiveShieldTransaction(String[] parameters)
-      throws InvalidProtocolBufferException, CipherException {
+      throws InvalidProtocolBufferException, CipherException, ItemNotFoundException {
     if (parameters == null || parameters.length != 1) {
       System.out.println("receiveShieldTransaction needs 1 parameter, transactionId");
       return;
@@ -1239,6 +1253,12 @@ public class Client {
         System.out.println("Is not shield transaction.");
         return;
       }
+
+      boolean r = new ReceiverZkHelper(dbManager).syncAndUpdateWitness(txid);
+      if(!r){
+        return;
+      }
+
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
       boolean ret = walletApiWrapper.saveShieldCoin(zkContract);
@@ -2244,7 +2264,18 @@ public class Client {
   }
 
   public static void main(String[] args) {
-    Client cli = new Client();
+
+    DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+    beanFactory.setAllowCircularReferences(false);
+    TronApplicationContext context =
+        new TronApplicationContext(beanFactory);
+    context.register(DefaultConfig.class);
+
+    context.refresh();
+    Application appT = ApplicationFactory.create(context);
+    shutdown(appT);
+
+    Client cli = new Client(appT.getDbManager());
 
     JCommander.newBuilder()
         .addObject(cli)
@@ -2252,5 +2283,10 @@ public class Client {
         .parse(args);
 
     cli.run();
+  }
+
+  public static void shutdown(final Application app) {
+    logger.info("********register application shutdown hook********");
+    Runtime.getRuntime().addShutdownHook(new Thread(app::shutdown));
   }
 }

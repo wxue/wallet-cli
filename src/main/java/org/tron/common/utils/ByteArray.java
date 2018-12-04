@@ -18,6 +18,7 @@
 
 package org.tron.common.utils;
 
+import com.google.common.primitives.Ints;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -70,6 +71,9 @@ public class ByteArray {
         return ByteBuffer.allocate(8).putLong(val).array();
     }
 
+    public static byte[] fromInt(int val) {
+        return Ints.toByteArray(val);
+    }
     /**
      * Generate a subarray of a given byte array.
      *

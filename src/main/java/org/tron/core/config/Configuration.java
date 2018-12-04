@@ -20,6 +20,8 @@ package org.tron.core.config;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.iq80.leveldb.CompressionType;
+import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,4 +66,46 @@ public class Configuration {
     }
     return config;
   }
+
+  public static String getOutputDirectoryByDbName(){
+    Config config = Configuration.getByPath("config.conf");
+    String directory;
+
+    if (config.hasPath("storage.db.directory")) {
+      directory = config.getString("storage.db.directory");
+    }else {
+      directory = "database";
+    }
+
+    return directory;
+  }
+
+  public static Options getOptionsByDbName(String dbName) {
+    return createDefaultDbOptions();
+  }
+
+  private static Options createDefaultDbOptions() {
+    Options dbOptions = new Options();
+
+    dbOptions.createIfMissing(true);
+    dbOptions.paranoidChecks(true);
+    dbOptions.verifyChecksums(true);
+
+    dbOptions.compressionType(DEFAULT_COMPRESSION_TYPE);
+    dbOptions.blockSize(DEFAULT_BLOCK_SIZE);
+    dbOptions.writeBufferSize(DEFAULT_WRITE_BUFFER_SIZE);
+    dbOptions.cacheSize(DEFAULT_CACHE_SIZE);
+    dbOptions.maxOpenFiles(DEFAULT_MAX_OPEN_FILES);
+
+    return dbOptions;
+  }
+
+  private static final CompressionType DEFAULT_COMPRESSION_TYPE = CompressionType.SNAPPY;
+  private static final int DEFAULT_BLOCK_SIZE = 4 * 1024;
+  private static final int DEFAULT_WRITE_BUFFER_SIZE = 10 * 1024 * 1024;
+  private static final long DEFAULT_CACHE_SIZE = 10 * 1024 * 1024L;
+  private static final int DEFAULT_MAX_OPEN_FILES = 100;
+
+
+
 }

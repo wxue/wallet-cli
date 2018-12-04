@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tron.api.DatabaseGrpc;
 import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.AccountNetMessage;
 import org.tron.api.GrpcAPI.AccountPaginated;
@@ -52,6 +53,7 @@ import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
+import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -65,10 +67,12 @@ public class GrpcClient {
   private ManagedChannel channelFull = null;
   private ManagedChannel channelSolidity = null;
   private ManagedChannel channelZksnark = null;
+  private ManagedChannel channelDatabase = null;
   private WalletGrpc.WalletBlockingStub blockingStubFull = null;
   private WalletSolidityGrpc.WalletSolidityBlockingStub blockingStubSolidity = null;
   private WalletExtensionGrpc.WalletExtensionBlockingStub blockingStubExtension = null;
   private ProofServerGrpc.ProofServerBlockingStub blockingStubZksnark = null;
+  private DatabaseGrpc.DatabaseBlockingStub blockingStubDatabase = null;
 
 //  public GrpcClient(String host, int port) {
 //    channel = ManagedChannelBuilder.forAddress(host, port)
@@ -92,6 +96,11 @@ public class GrpcClient {
     if (!StringUtils.isEmpty(zksnark)) {
       channelZksnark = ManagedChannelBuilder.forTarget(zksnark).usePlaintext(true).build();
       blockingStubZksnark = ProofServerGrpc.newBlockingStub(channelZksnark);
+    }
+
+    {
+      channelDatabase = ManagedChannelBuilder.forTarget("database").usePlaintext(true).build();
+      blockingStubDatabase = DatabaseGrpc.newBlockingStub(channelDatabase);
     }
   }
 
@@ -119,6 +128,12 @@ public class GrpcClient {
     } else {
       return blockingStubFull.getAccount(request);
     }
+  }
+
+  public Optional<DynamicProperties> getDynamicProperties() {
+    DynamicProperties dynamicProperties = blockingStubDatabase
+        .getDynamicProperties(EmptyMessage.newBuilder().build());
+    return Optional.ofNullable(dynamicProperties);
   }
 
   public Account queryAccountById(String accountId) {
@@ -769,5 +784,19 @@ public class GrpcClient {
     ByteString byteString = ByteString.copyFrom(address);
     BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
     return blockingStubFull.getContract(bytesMessage);
+  }
+
+  public Optional<BlockListExtention> getZKBlockByLimitNext(long start, long end) {
+    BlockLimit.Builder builder = BlockLimit.newBuilder();
+    builder.setStartNum(start);
+    builder.setEndNum(end);
+    BlockListExtention blockListExtention = blockingStubFull.getZKBlockByLimitNext(builder.build());
+    return Optional.ofNullable(blockListExtention);
+  }
+
+  public Optional<GrpcAPI.BlockIncrementalMerkleTree> getMerkleTreeOfBlock(long num) {
+    NumberMessage numberMessage = NumberMessage.newBuilder().setNum(num).build();
+    GrpcAPI.BlockIncrementalMerkleTree merkleTree = blockingStubFull.getMerkleTreeOfBlock(numberMessage);
+    return Optional.ofNullable(merkleTree);
   }
 }

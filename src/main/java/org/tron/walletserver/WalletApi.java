@@ -63,8 +63,10 @@ import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.CmUtils.CmTuple;
+import org.tron.core.capsule.IncrementalMerkleWitnessCapsule;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter.CommonConstant;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.keystore.CheckStrength;
@@ -80,6 +82,7 @@ import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.MerklePath;
+import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.UnfreezeAssetContract;
@@ -91,6 +94,7 @@ import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.ChainParameters;
 import org.tron.protos.Protocol.DelegatedResourceAccountIndex;
+import org.tron.protos.Protocol.DynamicProperties;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Proposal;
 import org.tron.protos.Protocol.SmartContract;
@@ -114,6 +118,8 @@ public class WalletApi {
   private byte[] address = null;
   private static byte addressPreFixByte = CommonConstant.ADD_PRE_FIX_BYTE_TESTNET;
   private static int rpcVersion = 0;
+  private Manager dbManager;
+
 
   private static GrpcClient rpcCli = init();
 
@@ -201,7 +207,8 @@ public class WalletApi {
     return rpcVersion;
   }
 
-  public WalletApi() {
+  public void setDbManager(Manager dbManager) {
+    this.dbManager = dbManager;
   }
 
   /**
@@ -626,14 +633,21 @@ public class WalletApi {
         return false;
       }
 
-      Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
-              c_old1.getIndex() - 1);
-      if (!ret1.isPresent()) {
+      ByteString bsTxHash = ByteString.copyFrom(c_old1.getContractId());
+      OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
+
+      IncrementalMerkleWitnessCapsule ret1 = dbManager
+          .getMerkleWitnessStore().get(request.toByteArray());
+
+//      Optional<IncrementalMerkleWitness> ret1 = WalletApi
+//          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
+//              c_old1.getIndex() - 1);
+//      if (!ret1.isPresent()) {
+      if (ret1 == null) {
         System.out.println("Can not get merkle path by " + cm1);
         return false;
       }
-      IncrementalMerkleWitness witnessMsg1 = ret1.get();
+      IncrementalMerkleWitness witnessMsg1 = ret1.getInstance();
       rt = witnessMsg1.getRt();
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
@@ -1280,6 +1294,10 @@ public class WalletApi {
 
   public static Optional<TransactionInfo> getTransactionInfoById(String txID) {
     return rpcCli.getTransactionInfoById(txID);
+  }
+
+  public static Optional<DynamicProperties> getDynamicProperties() {
+    return rpcCli.getDynamicProperties();
   }
 
   public boolean freezeBalance(long frozen_balance, long frozen_duration, int resourceCode,
@@ -1980,4 +1998,13 @@ public class WalletApi {
   public static SmartContract getContract(byte[] address) {
     return rpcCli.getContract(address);
   }
+
+  public static Optional<BlockListExtention> getZKBlockByLimitNext(long start, long end) {
+    return rpcCli.getZKBlockByLimitNext(start, end);
+  }
+
+  public static Optional<GrpcAPI.BlockIncrementalMerkleTree>  getMerkleTreeOfBlock(long num) {
+    return rpcCli.getMerkleTreeOfBlock(num);
+  }
+
 }
