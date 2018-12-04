@@ -18,6 +18,10 @@ public class Prf {
     return prfAddr(a_sk, t);
   }
 
+  public static byte[] prfNf(final byte[] a_sk, final byte[] rho) {
+    return prf(true, true, true, false, a_sk, rho);
+  }
+
   private static byte[] prf(boolean a, boolean b, boolean c, boolean d,
       final byte[] x,
       final byte[] y) {
