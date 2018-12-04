@@ -81,6 +81,7 @@ import org.tron.protos.Contract.BuyStorageContract;
 import org.tron.protos.Contract.CreateSmartContract;
 import org.tron.protos.Contract.FreezeBalanceContract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
+import org.tron.protos.Contract.IncrementalMerkleWitnessInfo;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.OutputPoint;
 import org.tron.protos.Contract.SellStorageContract;
@@ -585,7 +586,7 @@ public class WalletApi {
   }
 
   public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
-      String cm2, byte[] to1, long v1, byte[] to2, long v2)
+      String cm2, byte[] to1, long v1, byte[] to2, long v2,long synBlockNum)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
 
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
@@ -631,6 +632,8 @@ public class WalletApi {
 
       ByteString bsTxHash = ByteString.copyFrom(c_old1.getContractId());
       OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
+
+//      WalletApi.getMerkleTreeWitnessInfo(,synBlockNum);
 
       Optional<IncrementalMerkleWitness> ret1 = WalletApi
           .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
@@ -1507,6 +1510,11 @@ public class WalletApi {
 
   public static Optional<IncrementalMerkleWitness> getMerkleTreeWitness(String hash, int index) {
     return rpcCli.getMerkleTreeWitness(hash, index);
+  }
+
+  public static Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1, int index1,String hash2,
+      int index2,int synBlockNum) {
+    return rpcCli.getMerkleTreeWitnessInfo(hash1, index1,hash2, index2,synBlockNum);
   }
 
   public static Optional<ShieldAddress> generateShieldAddress() {

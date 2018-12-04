@@ -203,7 +203,7 @@ public class WalletApiWrapper {
 
 
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
-      String cm2, String toAddress1, long v1, String toAddress2, long v2)
+      String cm2, String toAddress1, long v1, String toAddress2, long v2,long synBlockNum)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
     if (wallet == null) {
       System.out
@@ -255,7 +255,11 @@ public class WalletApiWrapper {
         return false;
       }
     }
-    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2);
+
+    if(synBlockNum<0){
+      return false;
+    }
+    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2,synBlockNum);
   }
 
   public void listCoin() {

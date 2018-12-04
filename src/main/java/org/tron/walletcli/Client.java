@@ -503,10 +503,10 @@ public class Client {
 
   private void sendCoinShield(String[] parameters)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
-    if (parameters == null || parameters.length != 9) {
+    if (parameters == null || parameters.length != 10) {
       System.out.println("SendCoinShield needs 8 parameters like following: ");
       System.out.println(
-          "SendCoinShield AmountFromPub ToPubAddress AmoutToPub CM1 CM2 ToAddress1 Amount1 ToAddress2 Amout2");
+          "SendCoinShield AmountFromPub ToPubAddress AmoutToPub CM1 CM2 ToAddress1 Amount1 ToAddress2 Amout2 synBlockNum");
       System.out.println("If donot input you can input null or 0");
       return;
     }
@@ -524,8 +524,10 @@ public class Client {
     String amout2 = parameters[8];
     long v2 = new Long(amout2);
 
+    long synBlockNum = new Long(parameters[9]);
+
     boolean result = walletApiWrapper
-        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2);
+        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2,synBlockNum);
     if (result) {
       System.out.println("SendCoinShield successful !!");
     } else {

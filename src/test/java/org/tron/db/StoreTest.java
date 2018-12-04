@@ -57,7 +57,7 @@ public class StoreTest {
     FileUtil.deleteDir(new File(dbPath));
   }
 
-  @Test
+//  @Test
   public void testGetCurrentTxBlockNumber() {
     ReceiverZkHelper helper = new ReceiverZkHelper(dbManager) {
 
@@ -156,7 +156,7 @@ public class StoreTest {
   }
 
   //two block,each block has one transaction,the first block is the currentTxBlock .
-  @Test
+//  @Test
   public void testProcess2() throws Exception {
     String txid = "5d36032d035301b4816cc0fd443b2fa3ed22a99099363173691863a5343b31b4";
     long currentTxBlockNumber = 99L;//test processing two block

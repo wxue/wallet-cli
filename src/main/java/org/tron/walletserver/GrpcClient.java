@@ -46,8 +46,10 @@ import org.tron.api.ZkGrpcAPI.ProofOutputMsg;
 import org.tron.common.utils.ByteArray;
 import org.tron.protos.Contract;
 import org.tron.protos.Contract.IncrementalMerkleWitness;
+import org.tron.protos.Contract.IncrementalMerkleWitnessInfo;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.OutputPoint;
+import org.tron.protos.Contract.OutputPointInfo;
 import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -759,6 +761,21 @@ public class GrpcClient {
 
     IncrementalMerkleWitness witness = blockingStubFull
         .getMerkleTreeWitness(request);
+    return Optional.ofNullable(witness);
+  }
+
+  public Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1, int index1,String hash2, int index2,int synBlockNum) {
+
+    ByteString bsTxHash = ByteString.copyFrom(ByteArray.fromHexString(hash1));
+    OutputPoint outputPoint = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(index1).build();
+    ByteString bsTxHash2 = ByteString.copyFrom(ByteArray.fromHexString(hash2));
+    OutputPoint outputPoint2 = OutputPoint.newBuilder().setHash(bsTxHash2).setIndex(index2).build();
+    OutputPointInfo request = OutputPointInfo.newBuilder().setOutPoint1(outputPoint).
+        setOutPoint2(outputPoint2).setBlockNum(synBlockNum).
+        build();
+
+    IncrementalMerkleWitnessInfo witness = blockingStubFull
+        .getMerkleTreeWitnessInfo(request);
     return Optional.ofNullable(witness);
   }
 
