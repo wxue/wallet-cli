@@ -118,7 +118,6 @@ public class WalletApi {
   private byte[] address = null;
   private static byte addressPreFixByte = CommonConstant.ADD_PRE_FIX_BYTE_TESTNET;
   private static int rpcVersion = 0;
-  private Manager dbManager;
 
 
   private static GrpcClient rpcCli = init();
@@ -207,9 +206,6 @@ public class WalletApi {
     return rpcVersion;
   }
 
-  public void setDbManager(Manager dbManager) {
-    this.dbManager = dbManager;
-  }
 
   /**
    * Creates a new WalletApi with a random ECKey or no ECKey.
@@ -636,18 +632,14 @@ public class WalletApi {
       ByteString bsTxHash = ByteString.copyFrom(c_old1.getContractId());
       OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
 
-      IncrementalMerkleWitnessCapsule ret1 = dbManager
-          .getMerkleWitnessStore().get(request.toByteArray());
-
-//      Optional<IncrementalMerkleWitness> ret1 = WalletApi
-//          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
-//              c_old1.getIndex() - 1);
-//      if (!ret1.isPresent()) {
-      if (ret1 == null) {
+      Optional<IncrementalMerkleWitness> ret1 = WalletApi
+          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getContractId()),
+              c_old1.getIndex() - 1);
+      if (!ret1.isPresent()) {
         System.out.println("Can not get merkle path by " + cm1);
         return false;
       }
-      IncrementalMerkleWitness witnessMsg1 = ret1.getInstance();
+      IncrementalMerkleWitness witnessMsg1 = ret1.get();
       rt = witnessMsg1.getRt();
       builder.addInputs(ZksnarkUtils
           .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
