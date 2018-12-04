@@ -11,6 +11,8 @@ src/gen
 tools
 src/main/resources/static/js/tronjs/tron-protoc.js
 Wallet
+WalletShiled
+database
 logs
 FileTest
 cmInfoFile.data
