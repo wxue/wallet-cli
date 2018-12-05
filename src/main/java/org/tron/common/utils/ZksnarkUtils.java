@@ -235,8 +235,7 @@ public class ZksnarkUtils {
     }
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
     sort(v);
-    BigInteger value = new BigInteger(v);
-    System.out.println("You recive " + value + " sun. cm is " + ByteArray.toHexString(cm));
+    System.out.println("You recive " + ByteArray.toLong(v) + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index,
@@ -244,24 +243,26 @@ public class ZksnarkUtils {
     return cmTuple;
   }
 
-  private static byte[] NoteCommit(byte[] apk, byte[] v, byte[] rho, byte[] r) {
+  public static byte[] NoteCommit(byte[] apk, byte[] v, byte[] rho, byte[] r) {
     byte[] leadByte = new byte[1];
     leadByte[0] = (byte) 0xB0;
-
-    byte[] input = ByteUtil.merge(leadByte, apk, v, rho, r);
+    byte[] v1 = Arrays.copyOf(v, v.length);
+    sort(v1);
+    byte[] input = ByteUtil.merge(leadByte, apk, v1, rho, r);
     return Sha256Hash.hash(input);
   }
 
   private static boolean checkCmTuple(CmTuple cmTuple) {
-    byte[] cm = NoteCommit(cmTuple.getAddr_pk(), cmTuple.getV(), cmTuple.getRho(), cmTuple.getV());
+    byte[] cm = NoteCommit(Arrays.copyOfRange(cmTuple.getAddr_pk(), 0, 32), cmTuple.getV(),
+        cmTuple.getRho(), cmTuple.getR());
     if (!Arrays.equals(cm, cmTuple.getCm())) {
       System.out.println("Cm is wrong!");
       return false;
     }
 
-    byte[] nf = Prf.prfNf(cmTuple.getAddr_sk(), cmTuple.getRho());
+    byte[] nf = Prf.prfNf(Arrays.copyOfRange(cmTuple.getAddr_sk(), 0, 32), cmTuple.getRho());
     Optional<BytesMessage> ret = WalletApi.getNullifier(ByteArray.toHexString(nf));
-    if (ret.isPresent()) {
+    if (ret.isPresent() && !ret.get().getValue().isEmpty()) {
       System.out.println(ByteArray.toHexString(nf) + " is exist!");
       return false;
     }
@@ -270,7 +271,7 @@ public class ZksnarkUtils {
   }
 
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile
-      shiled,String txId)
+      shiled, String txId)
       throws CipherException {
     byte[] privateAddress = shiled.getPrivateAddress();
     if (ArrayUtils.isEmpty(privateAddress) || privateAddress.length != 64) {
@@ -293,7 +294,8 @@ public class ZksnarkUtils {
     byte[] cm = contract.getCm1().toByteArray();
 
     boolean result = false;
-    CmTuple cmTuple = decrypC(1, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress, privateAddress);
+    CmTuple cmTuple = decrypC(1, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
+        privateAddress);
     if (cmTuple != null) {
       if (!checkCmTuple(cmTuple)) {
         return false;
@@ -304,7 +306,8 @@ public class ZksnarkUtils {
     K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
     cipher = contract.getC2().toByteArray();
     cm = contract.getCm2().toByteArray();
-    cmTuple = decrypC(2, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress, privateAddress);
+    cmTuple = decrypC(2, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
+        privateAddress);
     if (cmTuple != null) {
       if (!checkCmTuple(cmTuple)) {
         return false;

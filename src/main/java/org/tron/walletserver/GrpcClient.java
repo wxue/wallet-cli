@@ -764,7 +764,13 @@ public class GrpcClient {
     return Optional.ofNullable(witness);
   }
 
-  public Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1, int index1,String hash2, int index2,int synBlockNum) {
+  public Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(OutputPointInfo request) {
+    IncrementalMerkleWitnessInfo witness = blockingStubFull.getMerkleTreeWitnessInfo(request);
+    return Optional.ofNullable(witness);
+  }
+
+  public Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1, int index1,
+      String hash2, int index2, int synBlockNum) {
 
     ByteString bsTxHash = ByteString.copyFrom(ByteArray.fromHexString(hash1));
     OutputPoint outputPoint = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(index1).build();
@@ -813,7 +819,8 @@ public class GrpcClient {
 
   public Optional<GrpcAPI.BlockIncrementalMerkleTree> getMerkleTreeOfBlock(long num) {
     NumberMessage numberMessage = NumberMessage.newBuilder().setNum(num).build();
-    GrpcAPI.BlockIncrementalMerkleTree merkleTree = blockingStubFull.getMerkleTreeOfBlock(numberMessage);
+    GrpcAPI.BlockIncrementalMerkleTree merkleTree = blockingStubFull
+        .getMerkleTreeOfBlock(numberMessage);
     return Optional.ofNullable(merkleTree);
   }
 }

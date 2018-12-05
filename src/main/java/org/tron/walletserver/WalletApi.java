@@ -15,6 +15,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +60,7 @@ import org.tron.common.crypto.eddsa.EdDSAPublicKey;
 import org.tron.common.crypto.eddsa.KeyPairGenerator;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.common.utils.ZksnarkUtils;
@@ -82,6 +84,7 @@ import org.tron.protos.Contract.IncrementalMerkleWitness;
 import org.tron.protos.Contract.IncrementalMerkleWitnessInfo;
 import org.tron.protos.Contract.MerklePath;
 import org.tron.protos.Contract.OutputPoint;
+import org.tron.protos.Contract.OutputPointInfo;
 import org.tron.protos.Contract.SellStorageContract;
 import org.tron.protos.Contract.ShieldAddress;
 import org.tron.protos.Contract.UnfreezeAssetContract;
@@ -584,7 +587,7 @@ public class WalletApi {
   }
 
   public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
-      String cm2, byte[] to1, long v1, byte[] to2, long v2,long synBlockNum)
+      String cm2, byte[] to1, long v1, byte[] to2, long v2, long synBlockNum)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
 
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
@@ -615,11 +618,13 @@ public class WalletApi {
 
     ProofInputMsg.Builder builder = ProofInputMsg.newBuilder();
 
-    CmTuple c_old1 = null;
-    CmTuple c_old2 = null;
     if (StringUtils.isEmpty(cm1) && StringUtils.isEmpty(cm2)) {
       rt = WalletApi.getBestMerkleRoot().get().getValue();
     } else {
+      CmTuple c_old1 = null;
+      CmTuple c_old2 = null;
+
+      OutputPointInfo.Builder outputPointInfo = OutputPointInfo.newBuilder();
 
       c_old1 = getCm(cm1);
 
@@ -627,37 +632,47 @@ public class WalletApi {
         System.out.printf("Can not find c_old by cm : %s.\n", cm1);
         return false;
       }
-
-      ByteString bsTxHash = ByteString.copyFrom(c_old1.getTxId());
-      OutputPoint request = OutputPoint.newBuilder().setHash(bsTxHash).setIndex(c_old1.getIndex() - 1).build();;
-
-//      WalletApi.getMerkleTreeWitnessInfo(,synBlockNum);
-
-      Optional<IncrementalMerkleWitness> ret1 = WalletApi
-          .getMerkleTreeWitness(ByteArray.toHexString(c_old1.getTxId()),
-              c_old1.getIndex() - 1);
-      if (!ret1.isPresent()) {
-        System.out.println("Can not get merkle path by " + cm1);
+      if (c_old1.getUsed() == 1) {
+        System.out.printf("Cm : %s is used.\n", cm1);
         return false;
       }
-      IncrementalMerkleWitness witnessMsg1 = ret1.get();
-      rt = witnessMsg1.getRt();
-      builder.addInputs(ZksnarkUtils
-          .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
+      ByteString bsTxHash1 = ByteString.copyFrom(c_old1.getTxId());
+      OutputPoint.Builder outputPoint1 = OutputPoint.newBuilder();
+      outputPoint1.setHash(bsTxHash1);
+      outputPoint1.setIndex(c_old1.getIndex()-1);
+      outputPointInfo.setOutPoint1(outputPoint1);
+
       if (!StringUtils.isEmpty(cm2)) {
         c_old2 = getCm(cm2);
         if (c_old2 == null) {
           System.out.printf("Can not find c_old by cm : %s.\n", cm2);
           return false;
         }
-        Optional<IncrementalMerkleWitness> ret2 = WalletApi
-            .getMerkleTreeWitness(ByteArray.toHexString(c_old2.getTxId()),
-                c_old2.getIndex() - 1);
-        if (!ret2.isPresent()) {
-          System.out.println("Can not get merkle path by " + cm2);
+        if (c_old2.getUsed() == 1) {
+          System.out.printf("Cm : %s is used.\n", cm2);
           return false;
         }
-        IncrementalMerkleWitness witnessMsg2 = ret2.get();
+
+        ByteString bsTxHash2 = ByteString.copyFrom(c_old2.getTxId());
+        OutputPoint.Builder outputPoint2 = OutputPoint.newBuilder();
+        outputPoint1.setHash(bsTxHash2);
+        outputPoint1.setIndex(c_old2.getIndex()-1);
+        outputPointInfo.setOutPoint2(outputPoint2);
+      }
+      //TODO: blockNUM
+      outputPointInfo.setBlockNum(0);
+      Optional<IncrementalMerkleWitnessInfo> ret = rpcCli
+          .getMerkleTreeWitnessInfo(outputPointInfo.build());
+      if (!ret.isPresent() || !ret.get().hasWitness1()) {
+        System.out.println("Can not get merkle witness!");
+        return false;
+      }
+      IncrementalMerkleWitness witnessMsg1 = ret.get().getWitness1();
+      rt = witnessMsg1.getRt();
+      builder.addInputs(ZksnarkUtils
+          .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
+      if (ret.get().hasWitness2()) {
+        IncrementalMerkleWitness witnessMsg2 = ret.get().getWitness2();
         if (!rt.equals(witnessMsg2.getRt())) {
           System.out.println("Rt is not same between " + cm1 + " and " + cm2);
           return false;
@@ -678,7 +693,6 @@ public class WalletApi {
     builder.setRt(Uint256Msg.newBuilder().setHash(rt));
     builder.setComputeProof(true);
 
-//    ProofOutputMsg outputMsg = proofMap.get(ByteArray.toHexString(key));
     ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
     if (outputMsg.getRet().getResultCode() != 0) {
       System.out.println("Proof faild return " + outputMsg.getRet().getResultDesc());
@@ -1510,9 +1524,9 @@ public class WalletApi {
     return rpcCli.getMerkleTreeWitness(hash, index);
   }
 
-  public static Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1, int index1,String hash2,
-      int index2,int synBlockNum) {
-    return rpcCli.getMerkleTreeWitnessInfo(hash1, index1,hash2, index2,synBlockNum);
+  public static Optional<IncrementalMerkleWitnessInfo> getMerkleTreeWitnessInfo(String hash1,
+      int index1, String hash2, int index2, int synBlockNum) {
+    return rpcCli.getMerkleTreeWitnessInfo(hash1, index1, hash2, index2, synBlockNum);
   }
 
   public static Optional<ShieldAddress> generateShieldAddress() {
@@ -2001,7 +2015,7 @@ public class WalletApi {
     return rpcCli.getZKBlockByLimitNext(start, end);
   }
 
-  public static Optional<GrpcAPI.BlockIncrementalMerkleTree>  getMerkleTreeOfBlock(long num) {
+  public static Optional<GrpcAPI.BlockIncrementalMerkleTree> getMerkleTreeOfBlock(long num) {
     return rpcCli.getMerkleTreeOfBlock(num);
   }
 
