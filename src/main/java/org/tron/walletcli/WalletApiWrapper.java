@@ -203,7 +203,7 @@ public class WalletApiWrapper {
 
 
   public boolean sendCoinShield(long vFromPub, String toPubAddress, long vToPub, String cm1,
-      String cm2, String toAddress1, long v1, String toAddress2, long v2,long synBlockNum)
+      String cm2, String toAddress1, long v1, String toAddress2, long v2, int synBlockNum)
       throws IOException, CipherException, CancelException, SignatureException, InvalidKeyException {
     if (wallet == null) {
       System.out
@@ -256,10 +256,10 @@ public class WalletApiWrapper {
       }
     }
 
-    if(synBlockNum<0){
+    if (synBlockNum < 0) {
       return false;
     }
-    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2,synBlockNum);
+    return wallet.sendCoinShield(vFromPub, toPub, vToPub, cm1, cm2, to1, v1, to2, v2, synBlockNum);
   }
 
   public void listCoin() {
@@ -296,7 +296,7 @@ public class WalletApiWrapper {
     return wallet.sendCoin(to, amount);
   }
 
-  public boolean saveShieldCoin(ZksnarkV0TransferContract contract,String txId )
+  public boolean saveShieldCoin(ZksnarkV0TransferContract contract, String txId)
       throws CipherException {
     if (wallet == null || (wallet.getWalletFile_Shiled() == null
         && wallet.getWalletFile_Shiled_1() == null)) {
@@ -304,12 +304,12 @@ public class WalletApiWrapper {
       return false;
     }
     if (wallet.getWalletFile_Shiled() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled(),txId)) {
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled(), txId)) {
         return true;
       }
     }
     if (wallet.getWalletFile_Shiled_1() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1(),txId)) {
+      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1(), txId)) {
         return true;
       }
     }

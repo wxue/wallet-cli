@@ -212,7 +212,7 @@ public class ZksnarkUtils {
   }
 
   public static byte[] KDF(byte[] dh, byte[] epk, byte[] pkEnc, byte[] hSig, byte nonce) {
-    byte[] personal = new byte[]{'Z', 'c', 'a', 's', 'h', 'K', 'D', 'F', nonce, 0, 0, 0, 0,
+    byte[] personal = new byte[]{'T', 'r', 'o', 'n', 'K', 'D', 'F', 0, nonce, 0, 0, 0, 0,
         0, 0, 0};
     byte[] input = ByteUtil.merge(hSig, dh, epk, pkEnc);
     return Blake2b.blake2b_personal(input, personal);
@@ -235,7 +235,8 @@ public class ZksnarkUtils {
     }
     byte[] v = Arrays.copyOfRange(plain, 1, 9);
     sort(v);
-    System.out.println("You recive " + ByteArray.toLong(v) + " sun. cm is " + ByteArray.toHexString(cm));
+    System.out
+        .println("You recive " + ByteArray.toLong(v) + " sun. cm is " + ByteArray.toHexString(cm));
     byte[] rho = Arrays.copyOfRange(plain, 9, 41);
     byte[] r = Arrays.copyOfRange(plain, 41, 73);
     CmTuple cmTuple = new CmTuple(cm, publicAddress, privateAddress, v, rho, r, index,

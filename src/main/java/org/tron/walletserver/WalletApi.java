@@ -587,7 +587,7 @@ public class WalletApi {
   }
 
   public boolean sendCoinShield(long vFromPub, byte[] toPub, long vToPub, String cm1,
-      String cm2, byte[] to1, long v1, byte[] to2, long v2, long synBlockNum)
+      String cm2, byte[] to1, long v1, byte[] to2, long v2, int synBlockNum)
       throws CipherException, IOException, CancelException, SignatureException, InvalidKeyException {
 
     ZksnarkV0TransferContract.Builder zkBuilder = ZksnarkV0TransferContract.newBuilder();
@@ -659,8 +659,7 @@ public class WalletApi {
         outputPoint1.setIndex(c_old2.getIndex()-1);
         outputPointInfo.setOutPoint2(outputPoint2);
       }
-      //TODO: blockNUM
-      outputPointInfo.setBlockNum(0);
+      outputPointInfo.setBlockNum(synBlockNum);
       Optional<IncrementalMerkleWitnessInfo> ret = rpcCli
           .getMerkleTreeWitnessInfo(outputPointInfo.build());
       if (!ret.isPresent() || !ret.get().hasWitness1()) {

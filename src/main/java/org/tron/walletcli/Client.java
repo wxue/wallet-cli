@@ -525,10 +525,11 @@ public class Client {
     String amout2 = parameters[8];
     long v2 = new Long(amout2);
 
-    long synBlockNum = new Long(parameters[9]);
+    int synBlockNum = new Integer(parameters[9]);
 
     boolean result = walletApiWrapper
-        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2,synBlockNum);
+        .sendCoinShield(vFromPub, toPubAddress, vToPub, cm1, cm2, toAddress1, v1, toAddress2, v2,
+            synBlockNum);
     if (result) {
       System.out.println("SendCoinShield successful !!");
     } else {
@@ -1253,7 +1254,7 @@ public class Client {
 
       ZksnarkV0TransferContract zkContract = contract.getParameter()
           .unpack(ZksnarkV0TransferContract.class);
-      boolean ret = walletApiWrapper.saveShieldCoin(zkContract,txId);
+      boolean ret = walletApiWrapper.saveShieldCoin(zkContract, txId);
       if (ret) {
         System.out.println("receiveShieldTransaction successful !!");
       } else {
