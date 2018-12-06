@@ -655,8 +655,8 @@ public class WalletApi {
 
         ByteString bsTxHash2 = ByteString.copyFrom(c_old2.getTxId());
         OutputPoint.Builder outputPoint2 = OutputPoint.newBuilder();
-        outputPoint1.setHash(bsTxHash2);
-        outputPoint1.setIndex(c_old2.getIndex()-1);
+        outputPoint2.setHash(bsTxHash2);
+        outputPoint2.setIndex(c_old2.getIndex()-1);
         outputPointInfo.setOutPoint2(outputPoint2);
       }
       outputPointInfo.setBlockNum(synBlockNum);
