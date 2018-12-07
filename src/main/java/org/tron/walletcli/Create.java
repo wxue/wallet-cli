@@ -1,6 +1,7 @@
 package org.tron.walletcli;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -10,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.tron.common.crypto.ECKey;
 import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
+import org.tron.keystore.Wallet;
 import org.tron.walletserver.WalletApi;
 
 public class Create {
@@ -20,6 +22,7 @@ public class Create {
     api.login("Aa113113".toCharArray());
 
     Object lock = new Object();
+
 
     HashMap<String, String> address = new HashMap<>();
     IntStream.range(0,16).parallel().forEach(index -> {
