@@ -27,7 +27,10 @@ public class Go {
   public static void main(String[] args) throws IOException, CipherException {
     walletApiWrapper.login("Aa113113".toCharArray());
 
-    IntStream.range(0, 544409).parallel().forEach( i -> {
+    //544408
+    int begin = Integer.parseInt(args[0]);
+    int end = Integer.parseInt(args[1]);
+    for (int i = begin; i <= end; i++) {
         System.out.print(i + " ");
         try {
           String[] parameters = new String[]{"TP82MkFYwLXzM5WowhJ4FfMHSP8RPzrhSC",
@@ -39,7 +42,7 @@ public class Go {
         // walletApiWrapper.sendCoin();
 //    }, 2000, 10000, TimeUnit.MILLISECONDS);
 
-    });
+    }
 
   }
 
