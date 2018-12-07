@@ -1680,7 +1680,8 @@ public class WalletApi {
       byte[] result = transactionExtention.getConstantResult(0).toByteArray();
 //      System.out.println("message:" + transaction.getRet(0).getRet());
 //      System.out.println(":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
-      System.out.println("Result:" + Long.parseUnsignedLong(Hex.toHexString(result), 16));
+//      System.out.println("Result:" + Long.parseUnsignedLong(Hex.toHexString(result), 16));
+      System.out.println("Result:" + Hex.toHexString(result));
       return true;
     }
 
