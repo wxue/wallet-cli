@@ -5,6 +5,8 @@ import java.security.SecureRandom;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
 import org.bouncycastle.util.encoders.Hex;
 import org.tron.common.utils.AbiUtil;
 import org.tron.core.exception.CancelException;
@@ -25,8 +27,7 @@ public class Go {
   public static void main(String[] args) throws IOException, CipherException {
     walletApiWrapper.login("Aa113113".toCharArray());
 
-    for (int i = 0; i <= 544408; i++) {
-
+    IntStream.range(0, 544409).parallel().forEach( i -> {
         System.out.print(i + " ");
         try {
           String[] parameters = new String[]{"TP82MkFYwLXzM5WowhJ4FfMHSP8RPzrhSC",
@@ -38,7 +39,7 @@ public class Go {
         // walletApiWrapper.sendCoin();
 //    }, 2000, 10000, TimeUnit.MILLISECONDS);
 
-    }
+    });
 
   }
 
