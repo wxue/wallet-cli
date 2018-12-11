@@ -33,7 +33,7 @@ public class SolidityTest extends AutoCompiler {
       long l = bytesToLong(t1.getConstantResult(0).toByteArray());
       Assert.assertTrue(l == 0);
 
-    }catch (Exception e){
+    }catch (Exception e) {
       logger.error("test error", e);
     }
   }
