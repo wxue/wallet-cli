@@ -1,10 +1,7 @@
 package org.tron.common.utils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -329,13 +326,14 @@ public class AbiUtil {
     return data;
   }
 
+
   public static String parseMethod(String methodSign, String params) throws EncodingException {
     return parseMethod(methodSign, params, false);
   }
 
   public static byte[] parseMethod(String methodSign, List<Object> inputList, boolean isHex) throws EncodingException {
-    if (inputList == null || inputList.size() == 0){
-      throw new EncodingException("input list empty");
+    if (inputList == null){
+      inputList = new LinkedList<>();
     }
     String[] inputArr = new String[inputList.size()];
     int i = 0;
@@ -364,7 +362,7 @@ public class AbiUtil {
   public static byte[] encodeInput(String methodSign, String input) throws EncodingException {
     ObjectMapper mapper = new ObjectMapper();
     input = "[" + input + "]";
-    List<Object> items = null;
+    List items = null;
     try {
       items = mapper.readValue(input, List.class);
     } catch (IOException e) {

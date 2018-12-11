@@ -68,6 +68,7 @@ dependencies {
     compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
     compile 'com.maxmind.geoip2:geoip2:2.10.0'
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
 
     // google grpc
     compile group: 'io.grpc', name: 'grpc-netty', version: '1.9.0'
@@ -83,6 +84,7 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-consul-discovery:${springCloudConsulVersion}"
     compile "org.apache.commons:commons-collections4:4.0"
     compile "org.apache.commons:commons-lang3:3.4"
+    compile group: 'org.apache.commons', name: 'commons-math', version: '2.2'
     compile group: 'com.google.api.grpc', name: 'googleapis-common-protos', version: '0.0.3'
 }
 

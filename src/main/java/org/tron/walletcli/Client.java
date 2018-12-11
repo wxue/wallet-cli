@@ -1778,6 +1778,7 @@ public class Client {
     System.out.println("GetExchange");
     System.out.println("GetNextMaintenanceTime");
     System.out.println("GetProposal");
+    System.out.println("GetProposalById");
     System.out.println("GetTotalTransaction");
     System.out.println("GetTransactionById");
     System.out.println("GetTransactionCountByBlockNum");

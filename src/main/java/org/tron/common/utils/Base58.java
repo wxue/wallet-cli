@@ -1,5 +1,7 @@
 package org.tron.common.utils;
 
+import io.netty.util.internal.StringUtil;
+
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
@@ -62,7 +64,7 @@ public class Base58 {
   }
 
   public static byte[] decode(String input) throws IllegalArgumentException {
-    if (input.length() == 0) {
+    if (StringUtil.isNullOrEmpty(input)) {
       return new byte[0];
     }
     byte[] input58 = new byte[input.length()];

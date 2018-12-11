@@ -173,9 +173,7 @@ public class TransactionUtils {
       transactionBuilderSigned.addSignature(
           bsSign);//Each contract may be signed with a different private key in the future.
     }
-
-    transaction = transactionBuilderSigned.build();
-    return transaction;
+    return transactionBuilderSigned.build();
   }
 
   public static Transaction setTimestamp(Transaction transaction) {

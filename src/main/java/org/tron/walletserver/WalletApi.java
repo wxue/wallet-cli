@@ -1509,7 +1509,7 @@ public class WalletApi {
     return createSmartContractBuilder.build();
   }
 
-  private static byte[] replaceLibraryAddress(String code, String libraryAddressPair) {
+  public static byte[] replaceLibraryAddress(String code, String libraryAddressPair) {
 
     String[] libraryAddressList = libraryAddressPair.split("[,]");
 
@@ -1553,11 +1553,10 @@ public class WalletApi {
     return builder.build();
   }
 
-  public byte[] generateContractAddress(Transaction trx) {
+  public static byte[] generateContractAddress(byte[] ownerAddress, Transaction trx) {
 
     // get owner address
     // this address should be as same as the onweraddress in trx, DONNOT modify it
-    byte[] ownerAddress = getAddress();
 
     // get tx hash
     byte[] txRawDataHash = Sha256Hash.of(trx.getRawData().toByteArray()).getBytes();
@@ -1652,7 +1651,7 @@ public class WalletApi {
     texBuilder.setTxid(transactionExtention.getTxid());
     transactionExtention = texBuilder.build();
 
-    byte[] contractAddress = generateContractAddress(transactionExtention.getTransaction());
+    byte[] contractAddress = generateContractAddress(owner, transactionExtention.getTransaction());
     System.out.println(
         "Your smart contract address will be: " + WalletApi.encode58Check(contractAddress));
     return processTransactionExtention(transactionExtention);

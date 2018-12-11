@@ -41,6 +41,8 @@ import org.tron.common.utils.ByteArray;
  */
 public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
 
+  private static final long serialVersionUID = 0L;
+
   public static final int LENGTH = 32; // bytes
   public static final Sha256Hash ZERO_HASH = wrap(new byte[LENGTH]);
 
