@@ -36,6 +36,7 @@ import org.tron.api.GrpcAPI.Return.response_code;
 import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.GrpcAPI.TransactionList;
 import org.tron.api.GrpcAPI.TransactionListExtention;
+import org.tron.api.GrpcAPI.TransactionSignWeight;
 import org.tron.api.GrpcAPI.WitnessList;
 import org.tron.api.ProofServerGrpc;
 import org.tron.api.WalletExtensionGrpc;
@@ -156,6 +157,15 @@ public class GrpcClient {
   //Warning: do not invoke this interface provided by others.
   public TransactionExtention signTransaction2(TransactionSign transactionSign) {
     return blockingStubFull.getTransactionSign2(transactionSign);
+  }
+
+  //Warning: do not invoke this interface provided by others.
+  public TransactionExtention addSign(TransactionSign transactionSign) {
+    return blockingStubFull.addSign(transactionSign);
+  }
+
+  public TransactionSignWeight getTransactionSignWeight(Transaction transaction){
+    return  blockingStubFull.getTransactionSignWeight(transaction);
   }
 
   //Warning: do not invoke this interface provided by others.
@@ -443,7 +453,7 @@ public class GrpcClient {
       response = blockingStubFull.broadcastTransaction(signaturedTransaction);
       logger.info("repeate times = " + (11 - i));
       try {
-        Thread.sleep(3000);
+        Thread.sleep(300);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -850,6 +860,22 @@ public class GrpcClient {
     ByteString byteString = ByteString.copyFrom(address);
     BytesMessage bytesMessage = BytesMessage.newBuilder().setValue(byteString).build();
     return blockingStubFull.getContract(bytesMessage);
+  }
+
+  public TransactionExtention accountPermissionUpdate(Contract.AccountPermissionUpdateContract request) {
+    return blockingStubFull.accountPermissionUpdate(request);
+  }
+
+  public TransactionExtention permissionAddKey(Contract.PermissionAddKeyContract request) {
+    return blockingStubFull.permissionAddKey(request);
+  }
+
+  public TransactionExtention permissionUpdateKey(Contract.PermissionUpdateKeyContract request) {
+    return blockingStubFull.permissionUpdateKey(request);
+  }
+
+  public TransactionExtention permissionDeleteKey(Contract.PermissionDeleteKeyContract request) {
+    return blockingStubFull.permissionDeleteKey(request);
   }
 
   public Optional<BlockListExtention> getZKBlockByLimitNext(long start, long end) {
