@@ -16,6 +16,7 @@ import org.tron.api.GrpcAPI.ExchangeList;
 import org.tron.api.GrpcAPI.NodeList;
 import org.tron.api.GrpcAPI.ProposalList;
 import org.tron.api.GrpcAPI.WitnessList;
+import org.tron.common.utils.Utils;
 import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.ZksnarkUtils;
 import org.tron.common.zksnark.ShieldAddressGenerator;
@@ -25,6 +26,7 @@ import org.tron.core.exception.CipherException;
 import org.tron.keystore.StringUtils;
 import org.tron.keystore.WalletFile;
 import org.tron.protos.Contract;
+import org.tron.protos.Contract.AssetIssueContract;
 import org.tron.protos.Contract.ZksnarkV0TransferContract;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Block;
@@ -39,7 +41,6 @@ public class WalletApiWrapper {
   private static final Logger logger = LoggerFactory.getLogger("WalletApiWrapper");
   private WalletApi wallet;
 
-
   public String registerWallet(char[] password) throws CipherException, IOException {
     if (!WalletApi.passwordValid(password)) {
       return null;
@@ -47,11 +48,10 @@ public class WalletApiWrapper {
 
     byte[] passwd = StringUtils.char2Byte(password);
 
-    wallet = new WalletApi(passwd);
-
+    WalletFile walletFile = WalletApi.CreateWalletFile(passwd);
     StringUtils.clear(passwd);
 
-    String keystoreName = wallet.store2Keystore();
+    String keystoreName = WalletApi.store2Keystore(walletFile);
     logout();
     return keystoreName;
   }
@@ -89,10 +89,10 @@ public class WalletApiWrapper {
 
     byte[] passwd = StringUtils.char2Byte(password);
 
-    wallet = new WalletApi(passwd, priKey);
+    WalletFile walletFile = WalletApi.CreateWalletFile(passwd, priKey);
     StringUtils.clear(passwd);
 
-    String keystoreName = wallet.store2Keystore();
+    String keystoreName = WalletApi.store2Keystore(walletFile);
     logout();
     return keystoreName;
   }
@@ -115,15 +115,19 @@ public class WalletApiWrapper {
     return result;
   }
 
-  public boolean login(char[] password) throws IOException, CipherException {
+  public boolean login() throws IOException, CipherException {
     ShiledWalletFile shiled = null;
     if (wallet != null) {
       shiled = wallet.getWalletFile_Shiled();
     }
     wallet = WalletApi.loadWalletFromKeystore();
 
+    System.out.println("Please input your password.");
+    char[] password = Utils.inputPassword(false);
     byte[] passwd = StringUtils.char2Byte(password);
-    wallet.checkPassword(wallet.getWalletFile(), passwd);
+    wallet.checkPassword(passwd);
+    StringUtils.clear(password);
+    wallet.checkPassword(passwd);
     StringUtils.clear(passwd);
     wallet.setLogin();
     wallet.setWalletFile_Shiled(shiled);
@@ -140,7 +144,7 @@ public class WalletApiWrapper {
       wallet.setWalletFile_Shiled(shiled);
     }
 
-    wallet.checkPassword(wallet.getWalletFile_Shiled().getWalletFile(), passwd);
+    wallet.checkPassword(passwd);
     StringUtils.clear(passwd);
 
     return true;
@@ -155,19 +159,19 @@ public class WalletApiWrapper {
   }
 
   //password is current, will be enc by password2.
-  public byte[] backupWallet(char[] password) throws IOException, CipherException {
-    byte[] passwd = StringUtils.char2Byte(password);
-
+  public byte[] backupWallet() throws IOException, CipherException {
     if (wallet == null || !wallet.isLoginState()) {
       wallet = WalletApi.loadWalletFromKeystore();
-
       if (wallet == null) {
-        StringUtils.clear(passwd);
         System.out.println("Warning: BackupWallet failed, no wallet can be backup !!");
         return null;
       }
     }
 
+    System.out.println("Please input your password.");
+    char[] password = Utils.inputPassword(false);
+    byte[] passwd = StringUtils.char2Byte(password);
+    StringUtils.clear(password);
     byte[] privateKey = wallet.getPrivateBytes(passwd);
     StringUtils.clear(passwd);
 
@@ -349,7 +353,7 @@ public class WalletApiWrapper {
     return wallet.participateAssetIssue(to, assertName.getBytes(), amount);
   }
 
-  public boolean assetIssue(String name, long totalSupply, int trxNum, int icoNum,
+  public boolean assetIssue(String name, long totalSupply, int trxNum, int icoNum, int precision,
       long startTime, long endTime, int voteScore, String description, String url,
       long freeNetLimit, long publicFreeNetLimit, HashMap<String, String> frozenSupply)
       throws CipherException, IOException, CancelException {
@@ -361,18 +365,27 @@ public class WalletApiWrapper {
     Contract.AssetIssueContract.Builder builder = Contract.AssetIssueContract.newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(wallet.getAddress()));
     builder.setName(ByteString.copyFrom(name.getBytes()));
+
     if (totalSupply <= 0) {
       return false;
     }
     builder.setTotalSupply(totalSupply);
+
     if (trxNum <= 0) {
       return false;
     }
     builder.setTrxNum(trxNum);
+
     if (icoNum <= 0) {
       return false;
     }
     builder.setNum(icoNum);
+
+    if (precision < 0) {
+      return false;
+    }
+    builder.setPrecision(precision);
+
     long now = System.currentTimeMillis();
     if (startTime <= now) {
       return false;
@@ -380,6 +393,7 @@ public class WalletApiWrapper {
     if (endTime <= startTime) {
       return false;
     }
+
     if (freeNetLimit < 0) {
       return false;
     }
@@ -496,6 +510,23 @@ public class WalletApiWrapper {
     }
   }
 
+  public AssetIssueContract getAssetIssueByName(String assetName) {
+    return WalletApi.getAssetIssueByName(assetName);
+  }
+
+  public Optional<AssetIssueList> getAssetIssueListByName(String assetName) {
+    try {
+      return WalletApi.getAssetIssueListByName(assetName);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return Optional.empty();
+    }
+  }
+
+  public AssetIssueContract getAssetIssueById(String assetId) {
+    return WalletApi.getAssetIssueById(assetId);
+  }
+
   public Optional<ProposalList> getProposalListPaginated(long offset, long limit) {
     try {
       return WalletApi.getProposalListPaginated(offset, limit);
@@ -606,14 +637,14 @@ public class WalletApiWrapper {
   }
 
 
-  public boolean unfreezeBalance(int resourceCode)
+  public boolean unfreezeBalance(int resourceCode, String receiverAddress)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {
       logger.warn("Warning: unfreezeBalance failed, Please login first !!");
       return false;
     }
 
-    return wallet.unfreezeBalance(resourceCode);
+    return wallet.unfreezeBalance(resourceCode, receiverAddress);
   }
 
 
@@ -763,8 +794,19 @@ public class WalletApiWrapper {
 
   }
 
+  public boolean updateEnergyLimit(byte[] contractAddress, long originEnergyLimit)
+      throws CipherException, IOException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: updateSetting failed,  Please login first !!");
+      return false;
+    }
+    return wallet.updateEnergyLimit(contractAddress, originEnergyLimit);
+
+  }
+
   public boolean deployContract(String name, String abiStr, String codeStr,
-      long feeLimit, long value, long consumeUserResourcePercent, String libraryAddressPair)
+      long feeLimit, long value, long consumeUserResourcePercent, long originEnergyLimit,
+      long tokenValue, String tokenId, String libraryAddressPair)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {
       logger.warn("Warning: createContract failed,  Please login first !!");
@@ -772,17 +814,54 @@ public class WalletApiWrapper {
     }
     return wallet
         .deployContract(name, abiStr, codeStr, feeLimit, value, consumeUserResourcePercent,
+            originEnergyLimit, tokenValue, tokenId,
             libraryAddressPair);
   }
 
-  public boolean callContract(byte[] contractAddress, long callValue, byte[] data, long feeLimit)
+  public boolean callContract(byte[] contractAddress, long callValue, byte[] data, long feeLimit,
+      long tokenValue, String tokenId)
       throws CipherException, IOException, CancelException {
     if (wallet == null || !wallet.isLoginState()) {
       logger.warn("Warning: callContract failed,  Please login first !!");
       return false;
     }
 
-    return wallet.triggerContract(contractAddress, callValue, data, feeLimit);
+    return wallet.triggerContract(contractAddress, callValue, data, feeLimit, tokenValue, tokenId);
   }
 
+  public boolean accountPermissionUpdate(String permission)
+      throws IOException, CipherException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: accountPermissionUpdate failed,  Please login first !!");
+      return false;
+    }
+    return wallet.accountPermissionUpdate(permission);
+  }
+
+  public boolean permissionAddKey(String permission, String address, int weight)
+      throws IOException, CipherException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: permissionAddKey failed,  Please login first !!");
+      return false;
+    }
+    return wallet.permissionAddKey(permission, address, weight);
+  }
+
+  public boolean permissionUpdateKey(String permission, String address, int weight)
+      throws IOException, CipherException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: permissionUpdateKey failed,  Please login first !!");
+      return false;
+    }
+    return wallet.permissionUpdateKey(permission, address, weight);
+  }
+
+  public boolean permissionDeleteKey(String permission, String address)
+      throws IOException, CipherException, CancelException {
+    if (wallet == null || !wallet.isLoginState()) {
+      logger.warn("Warning: permissionDeleteKey failed,  Please login first !!");
+      return false;
+    }
+    return wallet.permissionDeleteKey(permission, address);
+  }
 }
