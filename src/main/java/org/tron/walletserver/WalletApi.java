@@ -121,7 +121,6 @@ public class WalletApi {
   private static byte addressPreFixByte = CommonConstant.ADD_PRE_FIX_BYTE_TESTNET;
   private static int rpcVersion = 0;
 
-
   private static GrpcClient rpcCli = init();
 
 //  static {
@@ -686,9 +685,16 @@ public class WalletApi {
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to1, v1, "Out 1"));
     builder.addOutputs(ZksnarkUtils.computeOutputMsg(to2, v2, "Out 2"));
     builder.setPubkeyhash(Uint256Msg.newBuilder().setHash(ByteString.copyFrom(pkSig)));
-    //TODO: vToPub + Fee();
     builder.setVpubOld(vFromPub);
+
+    long zkSnarkFee = GetZksnarkTransactionFee();
+    if (zkSnarkFee < 0) {
+      System.out.println("Get ZksnarkTransaction fee failure.");
+      return false;
+    }
+    vToPub = Math.addExact(vToPub, zkSnarkFee);
     builder.setVpubNew(vToPub);
+
     builder.setRt(Uint256Msg.newBuilder().setHash(rt));
     builder.setComputeProof(true);
 
@@ -715,6 +721,7 @@ public class WalletApi {
     }
     zkBuilder.setNf1(ByteString.copyFrom(nf1));
     zkBuilder.setNf2(ByteString.copyFrom(nf2));
+    zkBuilder.setFee(zkSnarkFee);
 
     if (outputMsg.getOutCommitmentsCount() != 2) {
       System.out.printf("Cm count is %d\n", outputMsg.getOutCommitmentsCount());
@@ -1505,6 +1512,18 @@ public class WalletApi {
 
   public static Optional<ChainParameters> getChainParameters() {
     return rpcCli.getChainParameters();
+  }
+
+  public long GetZksnarkTransactionFee() {
+    long fee = -1;
+    Optional<ChainParameters> getChainParameters = rpcCli.getChainParameters();
+    for (Integer i = 0; i < getChainParameters.get().getChainParameterCount(); i++) {
+      if ( getChainParameters.get().getChainParameter(i).getKey().equals("getZksnarkTransactionFee")) {
+        fee = getChainParameters.get().getChainParameter(i).getValue();
+        break;
+      }
+    }
+    return fee;
   }
 
   public static Optional<BytesMessage> getNullifier(String nfID) {

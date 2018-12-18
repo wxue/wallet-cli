@@ -234,6 +234,11 @@ public class WalletApiWrapper {
       return false;
     }
 
+    if (vToPub < 0) {
+      System.out.println("Warning: To pub should not less than 0.");
+      return false;
+    }
+
     byte[] toPub = null;
     if (toPubAddress != null) {
       toPub = WalletApi.decodeFromBase58Check(toPubAddress);
@@ -685,7 +690,6 @@ public class WalletApiWrapper {
       return Optional.empty();
     }
   }
-
 
   public boolean approveProposal(long id, boolean is_add_approval)
       throws CipherException, IOException, CancelException {
