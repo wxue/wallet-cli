@@ -136,10 +136,19 @@ public class Utils {
    * yyyy-MM-dd
    */
   public static Date strToDateLong(String strDate) {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-    ParsePosition pos = new ParsePosition(0);
-    Date strtodate = formatter.parse(strDate, pos);
-    return strtodate;
+    if (strDate.length() == 10) {
+      SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+      ParsePosition pos = new ParsePosition(0);
+      Date strtodate = formatter.parse(strDate, pos);
+      return strtodate;
+    } else if (strDate.length() == 19) {
+      strDate = strDate.replace("_", " ");
+      SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      ParsePosition pos = new ParsePosition(0);
+      Date strtodate = formatter.parse(strDate, pos);
+      return strtodate;
+    }
+    return null;
   }
 
   public static String printAccount(Account account) {
@@ -230,6 +239,31 @@ public class Utils {
         }
       }
     }
+    result += "asset issued id:";
+    result += account.getAssetIssuedID().toStringUtf8();
+    result += "\n";
+    if (account.getAssetV2Count() > 0) {
+      for (String id : account.getAssetV2Map().keySet()) {
+        result += "assetV2";
+        result += "\n";
+        result += "{";
+        result += "\n";
+        result += "  id: ";
+        result += id;
+        result += "\n";
+        result += "  balance: ";
+        result += account.getAssetV2Map().get(id);
+        result += "\n";
+        result += "  latest_asset_operation_timeV2: ";
+        result += account.getLatestAssetOperationTimeV2Map().get(id);
+        result += "\n";
+        result += "  free_asset_net_usageV2: ";
+        result += account.getFreeAssetNetUsageV2Map().get(id);
+        result += "\n";
+        result += "}";
+        result += "\n";
+      }
+    }
     if (account.getFrozenSupplyCount() > 0) {
       for (Frozen frozen : account.getFrozenSupplyList()) {
         result += "frozen_supply";
@@ -283,6 +317,18 @@ public class Utils {
     result += "\n";
     result += "accountResource: {\n";
     result += printAccountResource(account.getAccountResource());
+    result += "\n";
+    result += "acquiredDelegatedFrozenBalanceForBandwidth: ";
+    result += account.getAcquiredDelegatedFrozenBalanceForBandwidth();
+    result += "\n";
+    result += "delegatedFrozenBalanceForBandwidth: ";
+    result += account.getDelegatedFrozenBalanceForBandwidth();
+    result += "\n";
+    result += "acquiredDelegatedFrozenBalanceForEnergy: ";
+    result += account.getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy();
+    result += "\n";
+    result += "delegatedFrozenBalanceForEnergy: ";
+    result += account.getAccountResource().getDelegatedFrozenBalanceForEnergy();
     result += "}\n";
     return result;
   }
@@ -542,6 +588,9 @@ public class Utils {
 
   public static String printAssetIssue(AssetIssueContract assetIssue) {
     String result = "";
+    result += "id: ";
+    result += assetIssue.getId();
+    result += "\n";
     result += "owner_address: ";
     result += WalletApi.encode58Check(assetIssue.getOwnerAddress().toByteArray());
     result += "\n";
@@ -559,6 +608,9 @@ public class Utils {
     result += "\n";
     result += "num: ";
     result += assetIssue.getNum();
+    result += "\n";
+    result += "precision ";
+    result += assetIssue.getPrecision();
     result += "\n";
     result += "start_time: ";
     result += new Date(assetIssue.getStartTime());
@@ -605,6 +657,11 @@ public class Utils {
       }
     }
 
+    if (assetIssue.getId().equals("")) {
+      result += "\n";
+      result += "Note: In 3.2, you can use getAssetIssueById or getAssetIssueListByName, because 3.2 allows same token name.";
+      result += "\n";
+    }
     return result;
   }
 
@@ -1291,6 +1348,36 @@ public class Utils {
     result += "\n";
     result += printReceipt(transactionInfo.getReceipt());
     result += "\n";
+    if (transactionInfo.getUnfreezeAmount() != 0) {
+      result += "UnfreezeAmount: ";
+      result += transactionInfo.getUnfreezeAmount();
+      result += "\n";
+    }
+    if (transactionInfo.getWithdrawAmount() != 0) {
+      result += "WithdrawAmount: ";
+      result += transactionInfo.getWithdrawAmount();
+      result += "\n";
+    }
+    if (transactionInfo.getExchangeReceivedAmount() != 0) {
+      result += "ExchangeReceivedAmount: ";
+      result += transactionInfo.getExchangeReceivedAmount();
+      result += "\n";
+    }
+    if (transactionInfo.getExchangeInjectAnotherAmount() != 0) {
+      result += "ExchangeInjectAnotherAmount: ";
+      result += transactionInfo.getExchangeInjectAnotherAmount();
+      result += "\n";
+    }
+    if (transactionInfo.getExchangeWithdrawAnotherAmount() != 0) {
+      result += "ExchangeWithdrawAnotherAmount: ";
+      result += transactionInfo.getExchangeWithdrawAnotherAmount();
+      result += "\n";
+    }
+    if (transactionInfo.getExchangeId() != 0) {
+      result += "ExchangeId: ";
+      result += transactionInfo.getExchangeId();
+      result += "\n";
+    }
     result += "InternalTransactionList: ";
     result += "\n";
     result += printInternalTransactionList(transactionInfo.getInternalTransactionsList());
@@ -1318,18 +1405,27 @@ public class Utils {
           StringBuilder callValueInfo = new StringBuilder("");
 
           internalTransaction.getCallValueInfoList().forEach(token -> {
-            callValueInfo.append("  TokenName(Default trx):\n");
-            if (null == token.getTokenName() || token.getTokenName().size() == 0) {
-              callValueInfo.append("  TRX(SUN)");
+            callValueInfo.append("  [\n");
+            callValueInfo.append("    TokenName(Default trx):\n");
+            if (null == token.getTokenId() || token.getTokenId().length() == 0) {
+              callValueInfo.append("    TRX(SUN)");
             } else {
-              callValueInfo.append("  " + ByteArray.toHexString(token.getTokenName().toByteArray()));
+              callValueInfo.append("    " + token.getTokenId());
             }
+            callValueInfo.append("    \n");
+            callValueInfo.append("    callValue:\n");
+            callValueInfo.append("    " + token.getCallValue());
             callValueInfo.append("  \n");
-            callValueInfo.append("  callValue:\n");
-            callValueInfo.append("  " + token.getCallValue());
-            callValueInfo.append("  \n");
+            callValueInfo.append("  ]\n");
+            callValueInfo.append("    \n");
           });
           result.append(callValueInfo);
+          result.append("  note:\n");
+          result.append("  " + new String(internalTransaction.getNote().toByteArray()));
+          result.append("  \n");
+          result.append("  rejected:\n");
+          result.append("  " + internalTransaction.getRejected());
+          result.append("  \n");
           result.append("]\n");
         }
     );
@@ -1851,4 +1947,3 @@ public class Utils {
   }
 
 }
-
