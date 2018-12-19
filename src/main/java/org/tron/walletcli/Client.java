@@ -216,11 +216,8 @@ public class Client {
   }
 
   private void loadShiledWallet() throws IOException, CipherException {
-    System.out.println("Please input your password.");
-    char[] password = Utils.inputPassword(false);
 
-    boolean result = walletApiWrapper.loadShiledWallet(password);
-    StringUtils.clear(password);
+    boolean result = walletApiWrapper.loadShiledWallet();
 
     if (result) {
       System.out.println("loadShiledWallet successful !!!");

@@ -134,17 +134,20 @@ public class WalletApiWrapper {
     return true;
   }
 
-  public boolean loadShiledWallet(char[] password) throws IOException, CipherException {
+  public boolean loadShiledWallet() throws IOException, CipherException {
+    WalletFile walletFile = WalletApi.loadShiledWalletFile();
+
+    System.out.println("Please input your password.");
+    char[] password = Utils.inputPassword(false);
     byte[] passwd = StringUtils.char2Byte(password);
+    StringUtils.clear(password);
+
+    ShiledWalletFile shiled = new ShiledWalletFile(walletFile, passwd);
     if (wallet == null) {
-      wallet = WalletApi.loadShiledWallet(passwd);
+      wallet = new WalletApi(null, shiled);
     } else {
-      WalletFile walletFile = WalletApi.loadShiledWalletFile();
-      ShiledWalletFile shiled = new ShiledWalletFile(walletFile, passwd);
       wallet.setWalletFile_Shiled(shiled);
     }
-
-    wallet.checkPassword(passwd);
     StringUtils.clear(passwd);
 
     return true;
