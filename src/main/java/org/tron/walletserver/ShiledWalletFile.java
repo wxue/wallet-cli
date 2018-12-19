@@ -19,6 +19,9 @@ public class ShiledWalletFile {
 
   public ShiledWalletFile(WalletFile walletFile, byte[] password)
       throws CipherException, IOException {
+    if (!Wallet.validPassword(password, walletFile)) {
+      return;
+    }
     this.walletFile = walletFile;
     if (!ArrayUtils.isEmpty(password)) {
       String fileName = walletFile.getAddress() + ".cm";
