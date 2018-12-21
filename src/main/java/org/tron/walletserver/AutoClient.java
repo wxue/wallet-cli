@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
+import org.apache.commons.io.DirectoryWalker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -36,9 +37,7 @@ import org.tron.protos.Protocol.TransactionInfo;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.tron.walletserver.WalletApi.generateContractAddress;
 import static org.tron.walletserver.WalletApi.jsonStr2ABI;
@@ -341,6 +340,95 @@ public class AutoClient {
 
     public static Optional<TransactionInfo> getTransactionInfoById(String txID) {
         return rpcCli.getTransactionInfoById(txID);
+    }
+
+    public String assetIssue(String name, long totalSupply, int trxNum, int icoNum, int precision,
+                              long startTime, long endTime, int voteScore, String description, String url,
+                              long freeNetLimit, long publicFreeNetLimit, HashMap<Long, Long> frozenSupply)
+    {
+
+        Contract.AssetIssueContract.Builder builder = Contract.AssetIssueContract.newBuilder();
+        builder.setOwnerAddress(ByteString.copyFrom(address));
+        builder.setName(ByteString.copyFrom(name.getBytes()));
+
+//        if (totalSupply <= 0) {
+//            throw new CancelException("totalSupply zero");
+//        }
+        builder.setTotalSupply(totalSupply);
+
+//        if (trxNum <= 0) {
+//            throw new CancelException("trxNum zero");
+//        }
+        builder.setTrxNum(trxNum);
+//
+//        if (icoNum <= 0) {
+//            throw new CancelException("icoNum zero");
+//        }
+        builder.setNum(icoNum);
+//
+//        if (precision < 0) {
+//            throw new CancelException("precision zero");
+//        }
+        builder.setPrecision(precision);
+//
+//        long now = System.currentTimeMillis();
+//        if (startTime <= now) {
+//            throw new CancelException("startTime <= now");
+//        }
+//        if (endTime <= startTime) {
+//            throw new CancelException("startTime <= endTime");
+//        }
+//
+//        if (freeNetLimit < 0) {
+//            throw new CancelException("freeNetLimit < 0");
+//        }
+//        if (publicFreeNetLimit < 0) {
+//            throw new CancelException("publicFreeNetLimit < 0");
+//        }
+
+        builder.setStartTime(startTime);
+        builder.setEndTime(endTime);
+        builder.setVoteScore(voteScore);
+        builder.setDescription(ByteString.copyFrom(description.getBytes()));
+        builder.setUrl(ByteString.copyFrom(url.getBytes()));
+        builder.setFreeAssetNetLimit(freeNetLimit);
+        builder.setPublicFreeAssetNetLimit(publicFreeNetLimit);
+
+        if (frozenSupply != null && frozenSupply.size() > 0){
+            for (Map.Entry<Long, Long> entry: frozenSupply.entrySet()) {
+                long days = entry.getKey();
+                long amount = entry.getValue();
+                Contract.AssetIssueContract.FrozenSupply.Builder frozenSupplyBuilder
+                    = Contract.AssetIssueContract.FrozenSupply.newBuilder();
+                frozenSupplyBuilder.setFrozenAmount(amount);
+                frozenSupplyBuilder.setFrozenDays(days);
+                builder.addFrozenSupply(frozenSupplyBuilder.build());
+            }
+        }
+
+        TransactionExtention transactionExtention = rpcCli.createAssetIssue2(builder.build());
+        return processTransactionExtention(transactionExtention);
+    }
+
+    public String transferAsset(String toAddress, String assertName, long amount)
+        throws CancelException {
+        byte[] to = decodeFromBase58Check(toAddress);
+        if (to == null) {
+            throw new CancelException("to address empty");
+        }
+        Contract.TransferAssetContract.Builder builder = Contract.TransferAssetContract.newBuilder();
+        ByteString bsTo = ByteString.copyFrom(to);
+        ByteString bsName = ByteString.copyFrom(assertName.getBytes());
+        ByteString bsOwner = ByteString.copyFrom(address);
+        builder.setToAddress(bsTo);
+        builder.setAssetName(bsName);
+        builder.setOwnerAddress(bsOwner);
+        builder.setAmount(amount);
+
+        Contract.TransferAssetContract contract = builder.build();
+        TransactionExtention transactionExtention = rpcCli.createTransferAssetTransaction2(contract);
+        return processTransactionExtention(transactionExtention);
+
     }
 
     public static void main(String[] args) {

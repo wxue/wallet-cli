@@ -19,6 +19,7 @@ contract TestLib {
 
 contract GetCode {
 
+
     event ttEvent(uint256 val);
 
     function isContract() public view returns (bool result) {
@@ -33,5 +34,10 @@ contract GetCode {
         // isContract(_addr);
         // require(isContract(_addr) == false);
         // log1(bytes32(0x001), bytes32(_addr));
+    }
+
+    function close(address addr) public {
+        log1(0x00003, bytes32(address(this).balance));
+        selfdestruct(addr);
     }
 }

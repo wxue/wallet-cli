@@ -231,6 +231,8 @@ public class Utils {
     result += "asset issued id:";
     result += account.getAssetIssuedID().toStringUtf8();
     result += "\n";
+    result += "assert account: " + account.getAssetV2Count() + "\n";
+
     if (account.getAssetV2Count() > 0) {
       for (String id : account.getAssetV2Map().keySet()) {
         result += "assetV2";
