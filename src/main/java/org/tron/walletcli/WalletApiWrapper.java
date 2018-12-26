@@ -4,7 +4,9 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +118,7 @@ public class WalletApiWrapper {
   }
 
   public boolean login() throws IOException, CipherException {
-    ShiledWalletFile shiled = null;
+    List shiled = new ArrayList();
     if (wallet != null) {
       shiled = wallet.getWalletFile_Shiled();
     }
@@ -146,7 +148,7 @@ public class WalletApiWrapper {
     if (wallet == null) {
       wallet = new WalletApi(null, shiled);
     } else {
-      wallet.setWalletFile_Shiled(shiled);
+      wallet.addWalletFile_Shiled(shiled);
     }
     StringUtils.clear(passwd);
 
@@ -190,13 +192,14 @@ public class WalletApiWrapper {
     return WalletApi.encode58Check(wallet.getAddress());
   }
 
-  public String getShiledAddress() {
-    if (wallet == null || wallet.getWalletFile_Shiled() == null) {
+  public List<ShiledWalletFile> getShiledAddress() {
+    if (wallet == null || wallet.getWalletFile_Shiled() == null || wallet.getWalletFile_Shiled()
+        .isEmpty()) {
       System.out.println("Warning: GetShiledAddress failed,  Please LoadShiledWallet first !!");
       return null;
     }
 
-    return wallet.getWalletFile_Shiled().getWalletFile().getAddress();
+    return wallet.getWalletFile_Shiled();
   }
 
   public Account queryAccount() {
@@ -222,7 +225,7 @@ public class WalletApiWrapper {
       return false;
     }
     if (cm1 != null || cm2 != null) {
-      if (wallet.getWalletFile_Shiled() == null && wallet.getWalletFile_Shiled_1() == null) {
+      if (wallet.getWalletFile_Shiled() == null || wallet.getWalletFile_Shiled().isEmpty()) {
         System.out
             .println("Warning: sendCoinShield failed,  Please loadShiledWallet first !!");
         return false;
@@ -275,22 +278,18 @@ public class WalletApiWrapper {
   }
 
   public void listCoin() {
-    if (wallet == null || (wallet.getWalletFile_Shiled() == null
-        && wallet.getWalletFile_Shiled_1() == null)) {
+    if (wallet == null || wallet.getWalletFile_Shiled() == null || wallet.getWalletFile_Shiled()
+        .isEmpty()) {
       System.out
           .println("Warning: listCoin failed,  Please loadShiledWallet first !!");
       return;
     }
-    if (wallet.getWalletFile_Shiled() != null) {
-      WalletFile walletFile = wallet.getWalletFile_Shiled().getWalletFile();
+    for (ShiledWalletFile shiled : wallet.getWalletFile_Shiled()) {
+      WalletFile walletFile = shiled.getWalletFile();
       System.out.printf("Address is %s :\n", walletFile.getAddress());
-      wallet.getWalletFile_Shiled().listCoin();
+      shiled.listCoin();
     }
-    if (wallet.getWalletFile_Shiled_1() != null) {
-      WalletFile walletFile = wallet.getWalletFile_Shiled_1().getWalletFile();
-      System.out.printf("Address is %s :\n", walletFile.getAddress());
-      wallet.getWalletFile_Shiled_1().listCoin();
-    }
+
   }
 
 
@@ -310,21 +309,15 @@ public class WalletApiWrapper {
 
   public boolean saveShieldCoin(ZksnarkV0TransferContract contract, String txId)
       throws CipherException {
-    if (wallet == null || (wallet.getWalletFile_Shiled() == null
-        && wallet.getWalletFile_Shiled_1() == null)) {
+    if (wallet == null || wallet.getWalletFile_Shiled() == null || wallet.getWalletFile_Shiled()
+        .isEmpty()) {
       System.out.println("Warning: saveShieldCoin failed, Please load Shiled Wallet first !!");
       return false;
     }
-    if (wallet.getWalletFile_Shiled() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled(), txId)) {
-        return true;
-      }
+    if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled(), txId)) {
+      return true;
     }
-    if (wallet.getWalletFile_Shiled_1() != null) {
-      if (ZksnarkUtils.saveShieldCoin(contract, wallet.getWalletFile_Shiled_1(), txId)) {
-        return true;
-      }
-    }
+
     return false;
   }
 

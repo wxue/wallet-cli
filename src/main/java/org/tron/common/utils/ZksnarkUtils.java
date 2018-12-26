@@ -19,6 +19,7 @@ import com.google.protobuf.ByteString;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -269,6 +270,18 @@ public class ZksnarkUtils {
 
     return true;
   }
+
+  public static boolean saveShieldCoin(ZksnarkV0TransferContract contract,
+      List<ShiledWalletFile> shiledList, String txId)
+      throws CipherException {
+    for (ShiledWalletFile shile : shiledList) {
+      if (saveShieldCoin(contract, shile, txId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract, ShiledWalletFile
       shiled, String txId)

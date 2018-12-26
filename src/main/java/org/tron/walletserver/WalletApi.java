@@ -121,8 +121,7 @@ public class WalletApi {
   private static final String FilePath = "Wallet";
   private List<WalletFile> walletFile = new ArrayList<>();
   private static final String FilePath_Shiled = "WalletShiled";
-  private ShiledWalletFile walletFile_Shiled = null;
-  private ShiledWalletFile walletFile_Shiled_1 = null;  //The second address
+  private List<ShiledWalletFile> walletFile_Shiled = new ArrayList<>();
 
   private boolean loginState = false;
   private byte[] address;
@@ -246,16 +245,16 @@ public class WalletApi {
     loginState = true;
   }
 
-  public void setWalletFile_Shiled(ShiledWalletFile walletFile_Shiled) {
-    this.walletFile_Shiled = walletFile_Shiled;
+  public void addWalletFile_Shiled(ShiledWalletFile walletFile_Shiled) {
+    this.walletFile_Shiled.add(walletFile_Shiled);
   }
 
-  public ShiledWalletFile getWalletFile_Shiled() {
+  public void setWalletFile_Shiled(List<ShiledWalletFile> shiled) {
+    this.walletFile_Shiled = shiled;
+  }
+
+  public List<ShiledWalletFile> getWalletFile_Shiled() {
     return walletFile_Shiled;
-  }
-
-  public ShiledWalletFile getWalletFile_Shiled_1() {
-    return walletFile_Shiled_1;
   }
 
   public boolean checkPassword(byte[] passwd) throws CipherException {
@@ -274,7 +273,7 @@ public class WalletApi {
         this.walletFile.set(0, walletFile);
       }
     }
-    this.walletFile_Shiled = shiled;
+    this.walletFile_Shiled.add(shiled);
   }
 
   public ECKey getEcKey(WalletFile walletFile, byte[] password) throws CipherException {
@@ -606,23 +605,25 @@ public class WalletApi {
 
   public CmTuple getCm(String cm) {
     CmTuple cmTuple = null;
-    if (walletFile_Shiled != null) {
-      cmTuple = walletFile_Shiled.getCm(cm);
-    }
-    if (cmTuple == null && walletFile_Shiled_1 != null) {
-      cmTuple = walletFile_Shiled_1.getCm(cm);
+    if (!walletFile_Shiled.isEmpty()) {
+      for (ShiledWalletFile walletFile : walletFile_Shiled) {
+        cmTuple = walletFile.getCm(cm);
+        if (cmTuple != null) {
+          break;
+        }
+      }
     }
     return cmTuple;
   }
 
   public void useCm(String cm) throws CipherException {
-    if (walletFile_Shiled != null) {
-      if (walletFile_Shiled.useCmInfo(cm)) {
-        return;
+    if (!walletFile_Shiled.isEmpty()) {
+      for (ShiledWalletFile walletFile : walletFile_Shiled) {
+        if (walletFile.hashCm(cm)) {
+          walletFile.useCmInfo(cm);
+          return;
+        }
       }
-    }
-    if (walletFile_Shiled_1 != null) {
-      walletFile_Shiled_1.useCmInfo(cm);
     }
   }
 
@@ -709,7 +710,8 @@ public class WalletApi {
       IncrementalMerkleWitness witnessMsg1 = ret.get().getWitness1();
       rt = witnessMsg1.getRt();
       builder.addInputs(ZksnarkUtils
-          .CmTuple2JSInputMsg(c_old1, ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
+          .CmTuple2JSInputMsg(c_old1,
+              ZksnarkUtils.MerkleWitness2IncrementalWitness(witnessMsg1)));
       if (ret.get().hasWitness2()) {
         IncrementalMerkleWitness witnessMsg2 = ret.get().getWitness2();
         if (!rt.equals(witnessMsg2.getRt())) {
@@ -849,7 +851,6 @@ public class WalletApi {
     transaction = signTransaction(transaction);
     return rpcCli.broadcastTransaction(transaction);
   }
-
 
   public boolean updateAsset(byte[] description, byte[] url, long newLimit,
       long newPublicLimit)
@@ -1046,7 +1047,6 @@ public class WalletApi {
 
     return builder.build();
   }
-
 
   public static Contract.UpdateAssetContract createUpdateAssetContract(
       byte[] address,
@@ -1287,7 +1287,6 @@ public class WalletApi {
     return rpcCli.getExchangeListPaginated(offset, limit);
   }
 
-
   public static Optional<NodeList> listNodes() {
     return rpcCli.listNodes();
   }
@@ -1456,7 +1455,6 @@ public class WalletApi {
       return processTransaction(transaction);
     }
   }
-
 
   private UnfreezeBalanceContract createUnfreezeBalanceContract(int resourceCode,
       String receiverAddress) {
@@ -1650,7 +1648,8 @@ public class WalletApi {
 
   public static Contract.ProposalDeleteContract createProposalDeleteContract(byte[] owner,
       long id) {
-    Contract.ProposalDeleteContract.Builder builder = Contract.ProposalDeleteContract.newBuilder();
+    Contract.ProposalDeleteContract.Builder builder = Contract.ProposalDeleteContract
+        .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(owner));
     builder.setProposalId(id);
     return builder.build();
@@ -1669,7 +1668,8 @@ public class WalletApi {
   public static Contract.ExchangeCreateContract createExchangeCreateContract(byte[] owner,
       byte[] firstTokenId, long firstTokenBalance,
       byte[] secondTokenId, long secondTokenBalance) {
-    Contract.ExchangeCreateContract.Builder builder = Contract.ExchangeCreateContract.newBuilder();
+    Contract.ExchangeCreateContract.Builder builder = Contract.ExchangeCreateContract
+        .newBuilder();
     builder
         .setOwnerAddress(ByteString.copyFrom(owner))
         .setFirstTokenId(ByteString.copyFrom(firstTokenId))
@@ -1690,7 +1690,8 @@ public class WalletApi {
 
   public static Contract.ExchangeInjectContract createExchangeInjectContract(byte[] owner,
       long exchangeId, byte[] tokenId, long quant) {
-    Contract.ExchangeInjectContract.Builder builder = Contract.ExchangeInjectContract.newBuilder();
+    Contract.ExchangeInjectContract.Builder builder = Contract.ExchangeInjectContract
+        .newBuilder();
     builder
         .setOwnerAddress(ByteString.copyFrom(owner))
         .setExchangeId(exchangeId)
@@ -1729,7 +1730,8 @@ public class WalletApi {
     return processTransactionExtention(transactionExtention);
   }
 
-  public static Contract.ExchangeTransactionContract createExchangeTransactionContract(byte[] owner,
+  public static Contract.ExchangeTransactionContract createExchangeTransactionContract(
+      byte[] owner,
       long exchangeId, byte[] tokenId, long quant, long expected) {
     Contract.ExchangeTransactionContract.Builder builder = Contract.ExchangeTransactionContract
         .newBuilder();
@@ -1741,7 +1743,6 @@ public class WalletApi {
         .setExpected(expected);
     return builder.build();
   }
-
 
   public static SmartContract.ABI.Entry.EntryType getEntryType(String type) {
     switch (type) {
@@ -1925,7 +1926,8 @@ public class WalletApi {
     createSmartContractBuilder.setOwnerAddress(ByteString.copyFrom(address)).
         setNewContract(builder.build());
     if (tokenId != null && !tokenId.equalsIgnoreCase("") && !tokenId.equalsIgnoreCase("#")) {
-      createSmartContractBuilder.setCallTokenValue(tokenValue).setTokenId(Long.parseLong(tokenId));
+      createSmartContractBuilder.setCallTokenValue(tokenValue)
+          .setTokenId(Long.parseLong(tokenId));
     }
     return createSmartContractBuilder.build();
   }
@@ -2082,7 +2084,8 @@ public class WalletApi {
 
   }
 
-  public boolean triggerContract(byte[] contractAddress, long callValue, byte[] data, long feeLimit,
+  public boolean triggerContract(byte[] contractAddress, long callValue, byte[] data,
+      long feeLimit,
       long tokenValue, String tokenId)
       throws IOException, CipherException, CancelException {
     byte[] owner = getAddress();
@@ -2134,7 +2137,6 @@ public class WalletApi {
   public static SmartContract getContract(byte[] address) {
     return rpcCli.getContract(address);
   }
-
 
   public boolean accountPermissionUpdate(String permissionJson)
       throws CipherException, IOException, CancelException {

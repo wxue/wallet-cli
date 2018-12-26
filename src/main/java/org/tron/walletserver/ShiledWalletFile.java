@@ -38,6 +38,10 @@ public class ShiledWalletFile {
     return cmInfoMap.get(cm);
   }
 
+  public boolean hashCm(String cm){
+    return cmInfoMap.containsKey(cm);
+  }
+
   public void listCoin() {
     for (String cm : cmInfoMap.keySet()) {
       CmTuple cmTuple = cmInfoMap.get(cm);

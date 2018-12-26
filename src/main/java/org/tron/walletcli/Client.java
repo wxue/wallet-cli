@@ -72,6 +72,7 @@ import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.Protocol.TransactionInfo;
+import org.tron.walletserver.ShiledWalletFile;
 import org.tron.walletserver.WalletApi;
 
 public class Client {
@@ -263,16 +264,18 @@ public class Client {
   private void getAddress() {
     String address = walletApiWrapper.getAddress();
     if (address != null) {
-      logger.info("GetAddress successful !!");
-      logger.info("address = " + address);
+      System.out.println("GetAddress successful !!");
+      System.out.println("address = " + address);
     }
   }
 
   private void getShiledAddress() {
-    String address = walletApiWrapper.getShiledAddress();
-    if (address != null) {
-      logger.info("GetAddress successful !!");
-      logger.info("address = " + address);
+    List<ShiledWalletFile> list = walletApiWrapper.getShiledAddress();
+    if (list != null) {
+      System.out.println("GetAddress successful !!");
+      for (ShiledWalletFile shiled : list) {
+        System.out.println("address = " + shiled.getWalletFile().getAddress());
+      }
     }
   }
 
@@ -1787,7 +1790,8 @@ public class Client {
     }
   }
 
-  private void updateAccountPermission(String[] parameters) throws CipherException, IOException, CancelException {
+  private void updateAccountPermission(String[] parameters)
+      throws CipherException, IOException, CancelException {
     boolean ret = walletApiWrapper.accountPermissionUpdate(parameters[0]);
     if (ret) {
       logger.info("updateAccountPermission successful !!!!");
@@ -1799,7 +1803,8 @@ public class Client {
   private void permissionAddKey(String[] parameters)
       throws CipherException, IOException, CancelException {
     if (parameters == null || parameters.length != 3) {
-      System.out.println("permissionAddKey needs 3 parameters, like permissionAddKey permissionName address weight");
+      System.out.println(
+          "permissionAddKey needs 3 parameters, like permissionAddKey permissionName address weight");
       return;
     }
     String permission = parameters[0];
@@ -1822,7 +1827,8 @@ public class Client {
   private void permissionUpdateKey(String[] parameters)
       throws CipherException, IOException, CancelException {
     if (parameters == null || parameters.length != 3) {
-      System.out.println("permissionUpdateKey needs 3 parameters, like permissionUpdateKey permissionName address weight");
+      System.out.println(
+          "permissionUpdateKey needs 3 parameters, like permissionUpdateKey permissionName address weight");
       return;
     }
     String permission = parameters[0];
@@ -1845,7 +1851,8 @@ public class Client {
   private void permissionDeleteKey(String[] parameters)
       throws CipherException, IOException, CancelException {
     if (parameters == null || parameters.length != 2) {
-      System.out.println("permissionDeleteKey needs 2 parameters, like permissionDeleteKey permissionName address");
+      System.out.println(
+          "permissionDeleteKey needs 2 parameters, like permissionDeleteKey permissionName address");
       return;
     }
     String permission = parameters[0];
