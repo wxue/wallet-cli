@@ -324,7 +324,7 @@ public class WalletApi {
     return WalletUtils.generateWalletFile(walletFile, file);
   }
 
-  public static File selcetWalletFile(String filePath) {
+  public static File selcetWalletFile(String filePath, List<String> ignoreAddress) {
     File file = new File(filePath);
     if (!file.exists() || !file.isDirectory()) {
       return null;
@@ -338,6 +338,12 @@ public class WalletApi {
     List<File> walletList = new ArrayList<>();
     for (File wallet : wallets) {
       if (wallet.getName().endsWith(".json")) {
+        if (ignoreAddress != null && !ignoreAddress.isEmpty()) {
+          if (ignoreAddress
+              .contains(wallet.getName().substring(0, wallet.getName().length() - 5))) {
+            continue;
+          }
+        }
         walletList.add(wallet);
       }
     }
@@ -379,7 +385,7 @@ public class WalletApi {
   }
 
   public WalletFile selcetWalletFileE() throws IOException {
-    File file = selcetWalletFile(FilePath);
+    File file = selcetWalletFile(FilePath, null);
     if (file == null) {
       throw new IOException(
           "No keystore file found, please use registerwallet or importwallet first!");
@@ -399,7 +405,7 @@ public class WalletApi {
 
   public static boolean changeKeystorePassword(byte[] oldPassword, byte[] newPassowrd)
       throws IOException, CipherException {
-    File wallet = selcetWalletFile(FilePath);
+    File wallet = selcetWalletFile(FilePath, null);
     if (wallet == null) {
       throw new IOException(
           "No keystore file found, please use registerwallet or importwallet first!");
@@ -409,9 +415,18 @@ public class WalletApi {
     return true;
   }
 
+  private static WalletFile loadWalletFile(String filePath, List<String> ignoreAddress)
+      throws IOException {
+    File wallet = selcetWalletFile(filePath, ignoreAddress);
+    if (wallet == null) {
+      throw new IOException(
+          "No keystore file found, please use registerwallet or importwallet first!");
+    }
+    return WalletUtils.loadWalletFile(wallet);
+  }
 
   private static WalletFile loadWalletFile(String filePath) throws IOException {
-    File wallet = selcetWalletFile(filePath);
+    File wallet = selcetWalletFile(filePath, null);
     if (wallet == null) {
       throw new IOException(
           "No keystore file found, please use registerwallet or importwallet first!");
@@ -429,8 +444,8 @@ public class WalletApi {
     return walletApi;
   }
 
-  public static WalletFile loadShiledWalletFile() throws IOException {
-    return loadWalletFile(FilePath_Shiled);
+  public static WalletFile loadShiledWalletFile(List<String> ignoreAddress) throws IOException {
+    return loadWalletFile(FilePath_Shiled, ignoreAddress);
   }
 
   public Account queryAccount() {

@@ -137,7 +137,14 @@ public class WalletApiWrapper {
   }
 
   public boolean loadShiledWallet() throws IOException, CipherException {
-    WalletFile walletFile = WalletApi.loadShiledWalletFile();
+    List<String> ignoreAddress = new ArrayList<>();
+    if (wallet != null && wallet.getWalletFile_Shiled() != null && !wallet.getWalletFile_Shiled()
+        .isEmpty()) {
+      for (ShiledWalletFile shiled : wallet.getWalletFile_Shiled()) {
+        ignoreAddress.add(shiled.getWalletFile().getAddress());
+      }
+    }
+    WalletFile walletFile = WalletApi.loadShiledWalletFile(ignoreAddress);
 
     System.out.println("Please input your password.");
     char[] password = Utils.inputPassword(false);
