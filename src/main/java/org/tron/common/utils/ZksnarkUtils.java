@@ -274,12 +274,13 @@ public class ZksnarkUtils {
   public static boolean saveShieldCoin(ZksnarkV0TransferContract contract,
       List<ShiledWalletFile> shiledList, String txId)
       throws CipherException {
+    boolean result = false;
     for (ShiledWalletFile shile : shiledList) {
       if (saveShieldCoin(contract, shile, txId)) {
-        return true;
+        result = true;
       }
     }
-    return false;
+    return result;
   }
 
 

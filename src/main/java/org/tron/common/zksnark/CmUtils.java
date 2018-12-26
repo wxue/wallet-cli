@@ -15,7 +15,7 @@ import org.tron.keystore.Wallet;
 
 public class CmUtils {
 
-  public static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] password)
+  public static HashMap<String, CmTuple> loadCmFile(String fileName, byte[] derivedKey)
       throws CipherException, IOException {
 
     HashMap<String, CmTuple> cmInfoMap = new HashMap<>();
@@ -30,7 +30,7 @@ public class CmUtils {
       String line;
       while ((line = file.readLine()) != null) {
         byte[] cipher = ByteArray.fromHexString(line);
-        byte[] plain = Wallet.commonDec(password, cipher);
+        byte[] plain = Wallet.commonDec(derivedKey, cipher);
         CmTuple cmTuple = CmTuple.parseFromBytes(plain);
         cmInfoMap.put(cmTuple.getKeyString(), cmTuple);
       }
@@ -47,7 +47,7 @@ public class CmUtils {
     return cmInfoMap;
   }
 
-  public static void saveCmFile(String fileName, byte[] password,
+  public static void saveCmFile(String fileName, byte[] derivedKey,
       HashMap<String, CmTuple> cmInfoMap) throws CipherException {
     BufferedWriter bufWriter = null;
     try {
@@ -56,7 +56,7 @@ public class CmUtils {
       for (CmTuple cmTuple : cmInfoMap.values()) {
         try {
           byte[] plain = cmTuple.toByteArray();
-          byte[] cipher = Wallet.commonEnc(password, plain);
+          byte[] cipher = Wallet.commonEnc(derivedKey, plain);
           bufWriter.write(ByteArray.toHexString(cipher));
           bufWriter.write("\n");
         } catch (IOException e) {

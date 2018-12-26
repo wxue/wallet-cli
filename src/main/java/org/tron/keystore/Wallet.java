@@ -60,40 +60,37 @@ public class Wallet {
   static final String AES_128_CTR = "pbkdf2";
   static final String SCRYPT = "scrypt";
 
-  public static byte[] commonEnc(byte[] password, byte[] plain) throws CipherException {
-    if (ArrayUtils.isEmpty(password)) {
-      throw new CipherException("Password is Empty!");
+  public static byte[] commonEnc(byte[] derivedKey, byte[] plain) throws CipherException {
+    if (ArrayUtils.isEmpty(derivedKey)) {
+      throw new CipherException("derivedKey is Empty!");
     }
     if (ArrayUtils.isEmpty(plain)) {
       throw new CipherException("Plain is Empty!");
     }
-    byte[] salt = generateRandomBytes(32);
-    byte[] derivedKey = generateDerivedScryptKey(password, salt, N_STANDARD, R, P_STANDARD, DKLEN);
+
     byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
     byte[] iv = generateRandomBytes(16);
     byte[] cipherText = performCipherOperation(Cipher.ENCRYPT_MODE, iv, encryptKey, plain);
     byte[] mac = generateMac(derivedKey, cipherText);
-    byte[] result = ByteUtil.merge(salt, iv, mac, cipherText);
+    byte[] result = ByteUtil.merge(iv, mac, cipherText);
     return result;
   }
 
-  public static byte[] commonDec(byte[] password, byte[] cipherText) throws CipherException {
-    if (ArrayUtils.isEmpty(password)) {
-      throw new CipherException("Password is Empty!");
+  public static byte[] commonDec(byte[] derivedKey, byte[] cipherText) throws CipherException {
+    if (ArrayUtils.isEmpty(derivedKey)) {
+      throw new CipherException("derivedKey is Empty!");
     }
     if (ArrayUtils.isEmpty(cipherText)) {
       throw new CipherException("CipherText is Empty!");
     }
-    if (cipherText.length <= 80) {
+    if (cipherText.length <= 48) {
       throw new CipherException("CipherText length need more than 80!");
     }
 
-    byte[] salt = Arrays.copyOfRange(cipherText, 0, 32);
-    byte[] iv = Arrays.copyOfRange(cipherText, 32, 48);
-    byte[] mac = Arrays.copyOfRange(cipherText, 48, 80);
-    cipherText = Arrays.copyOfRange(cipherText, 80, cipherText.length);
+    byte[] iv = Arrays.copyOfRange(cipherText, 0, 16);
+    byte[] mac = Arrays.copyOfRange(cipherText, 16, 48);
+    cipherText = Arrays.copyOfRange(cipherText, 48, cipherText.length);
 
-    byte[] derivedKey = generateDerivedScryptKey(password, salt, N_STANDARD, R, P_STANDARD, DKLEN);
     byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
     byte[] plain = performCipherOperation(Cipher.DECRYPT_MODE, iv, encryptKey, cipherText);
     byte[] mac1 = generateMac(derivedKey, cipherText);
@@ -227,6 +224,49 @@ public class Wallet {
     System.arraycopy(cipherText, 0, result, 16, cipherText.length);
 
     return Hash.sha3(result);
+  }
+
+  public static byte[] getDerivedKey(byte[] password, WalletFile walletFile)
+      throws CipherException {
+
+    validate(walletFile);
+
+    WalletFile.Crypto crypto = walletFile.getCrypto();
+
+    byte[] mac = ByteArray.fromHexString(crypto.getMac());
+    byte[] cipherText = ByteArray.fromHexString(crypto.getCiphertext());
+
+    byte[] derivedKey;
+
+    WalletFile.KdfParams kdfParams = crypto.getKdfparams();
+    if (kdfParams instanceof WalletFile.ScryptKdfParams) {
+      WalletFile.ScryptKdfParams scryptKdfParams =
+          (WalletFile.ScryptKdfParams) crypto.getKdfparams();
+      int dklen = scryptKdfParams.getDklen();
+      int n = scryptKdfParams.getN();
+      int p = scryptKdfParams.getP();
+      int r = scryptKdfParams.getR();
+      byte[] salt = ByteArray.fromHexString(scryptKdfParams.getSalt());
+      derivedKey = generateDerivedScryptKey(password, salt, n, r, p, dklen);
+    } else if (kdfParams instanceof WalletFile.Aes128CtrKdfParams) {
+      WalletFile.Aes128CtrKdfParams aes128CtrKdfParams =
+          (WalletFile.Aes128CtrKdfParams) crypto.getKdfparams();
+      int c = aes128CtrKdfParams.getC();
+      String prf = aes128CtrKdfParams.getPrf();
+      byte[] salt = ByteArray.fromHexString(aes128CtrKdfParams.getSalt());
+
+      derivedKey = generateAes128CtrDerivedKey(password, salt, c, prf);
+    } else {
+      throw new CipherException("Unable to deserialize params: " + crypto.getKdf());
+    }
+
+    byte[] derivedMac = generateMac(derivedKey, cipherText);
+
+    if (!Arrays.equals(derivedMac, mac)) {
+      throw new CipherException("Invalid password provided");
+    }
+
+    return derivedKey;
   }
 
   public static byte[] decrypt2PrivateBytes(byte[] password, WalletFile walletFile)

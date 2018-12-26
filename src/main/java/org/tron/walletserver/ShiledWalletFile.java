@@ -25,7 +25,8 @@ public class ShiledWalletFile {
     this.walletFile = walletFile;
     if (!ArrayUtils.isEmpty(password)) {
       String fileName = walletFile.getAddress() + ".cm";
-      cmInfoMap = CmUtils.loadCmFile(FilePath_Shiled + fileName, password);
+      byte[] key = Wallet.getDerivedKey(password, walletFile);
+      cmInfoMap = CmUtils.loadCmFile(FilePath_Shiled + fileName, key);
     }
     this.password = ArrayUtils.clone(password);
   }
@@ -53,7 +54,8 @@ public class ShiledWalletFile {
   public void saveCm(CmTuple cmTuple) throws CipherException {
     cmInfoMap.put(ByteArray.toHexString(cmTuple.getCm()), cmTuple);
     String fileName = walletFile.getAddress() + ".cm";
-    CmUtils.saveCmFile(FilePath_Shiled + fileName, password, cmInfoMap);
+    byte[] key = Wallet.getDerivedKey(password, walletFile);
+    CmUtils.saveCmFile(FilePath_Shiled + fileName, key, cmInfoMap);
   }
 
   public boolean useCmInfo(String cm) throws CipherException {
@@ -62,7 +64,8 @@ public class ShiledWalletFile {
       cmTuple.setUsed();
       cmInfoMap.put(cm, cmTuple);
       String fileName = walletFile.getAddress() + ".cm";
-      CmUtils.saveCmFile(FilePath_Shiled + fileName, password, cmInfoMap);
+      byte[] key = Wallet.getDerivedKey(password, walletFile);
+      CmUtils.saveCmFile(FilePath_Shiled + fileName, key, cmInfoMap);
       return true;
     }
     return false;
