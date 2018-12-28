@@ -654,9 +654,19 @@ public class WalletApi {
       zkBuilder.setVFromPub(vFromPub);
       havePubInput = true;
     }
+
+    long createAccountFee = 0;
     if (toPub != null && vToPub != 0) {
       zkBuilder.setToAddress(ByteString.copyFrom(toPub));
       zkBuilder.setVToPub(vToPub);
+      Account account = queryAccount(toPub);
+      if (account == null || account.equals(Account.getDefaultInstance())) {
+        createAccountFee = GetCreateAccountFee();
+        if (createAccountFee < 0) {
+          System.out.println("Get create account fee failure.");
+          return false;
+        }
+      }
     }
     if (StringUtils.isEmpty(cm1) && !StringUtils.isEmpty(cm2)) {
       return false;
@@ -750,7 +760,9 @@ public class WalletApi {
       System.out.println("Get ZksnarkTransaction fee failure.");
       return false;
     }
-    vToPub = Math.addExact(vToPub, zkSnarkFee);
+
+    long fee = Math.addExact(zkSnarkFee, createAccountFee);
+    vToPub = Math.addExact(vToPub, fee);
     builder.setVpubNew(vToPub);
 
     builder.setRt(Uint256Msg.newBuilder().setHash(rt));
@@ -779,7 +791,7 @@ public class WalletApi {
     }
     zkBuilder.setNf1(ByteString.copyFrom(nf1));
     zkBuilder.setNf2(ByteString.copyFrom(nf2));
-    zkBuilder.setFee(zkSnarkFee);
+    zkBuilder.setFee(fee);
 
     if (outputMsg.getOutCommitmentsCount() != 2) {
       System.out.printf("Cm count is %d\n", outputMsg.getOutCommitmentsCount());
@@ -1593,6 +1605,19 @@ public class WalletApi {
     for (Integer i = 0; i < getChainParameters.get().getChainParameterCount(); i++) {
       if (getChainParameters.get().getChainParameter(i).getKey()
           .equals("getZksnarkTransactionFee")) {
+        fee = getChainParameters.get().getChainParameter(i).getValue();
+        break;
+      }
+    }
+    return fee;
+  }
+
+  public long GetCreateAccountFee() {
+    long fee = -1;
+    Optional<ChainParameters> getChainParameters = rpcCli.getChainParameters();
+    for (Integer i = 0; i < getChainParameters.get().getChainParameterCount(); i++) {
+      if (getChainParameters.get().getChainParameter(i).getKey()
+          .equals("getCreateAccountFee")) {
         fee = getChainParameters.get().getChainParameter(i).getValue();
         break;
       }
