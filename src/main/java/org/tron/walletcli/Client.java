@@ -529,7 +529,7 @@ public class Client {
     if (parameters == null || parameters.length != 10) {
       System.out.println("SendCoinShield needs 8 parameters like following: ");
       System.out.println(
-          "SendCoinShield AmountFromPub ToPubAddress AmoutToPub CM1 CM2 ToAddress1 Amount1 ToAddress2 Amout2 synBlockNum");
+          "SendCoinShield AmountFromPub ToPubAddress AmoutToPub CM1 CM2 ToAddress1 Amount1 ToAddress2 Amount2 synBlockNum");
       System.out.println("If donot input you can input null or 0");
       return;
     }

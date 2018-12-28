@@ -728,7 +728,8 @@ public class WalletApi {
       outputPointInfo.setBlockNum(synBlockNum);
       Optional<IncrementalMerkleWitnessInfo> ret = rpcCli
           .getMerkleTreeWitnessInfo(outputPointInfo.build());
-      if (!ret.isPresent() || !ret.get().hasWitness1()) {
+
+      if (!ret.isPresent() || !ret.get().hasWitness1() || (!StringUtils.isEmpty(cm2) && !ret.get().hasWitness2())) {
         System.out.println("Can not get merkle witness!");
         return false;
       }
