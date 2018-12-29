@@ -1280,6 +1280,10 @@ public class Client {
     Optional<Transaction> result = WalletApi.getTransactionById(txId);
     if (result.isPresent()) {
       Transaction transaction = result.get();
+      if(transaction==null || transaction.equals(Transaction.getDefaultInstance())){
+        System.out.printf("No transaction that id is: %s.", txId);
+        return;
+      }
       System.out.println(Utils.printTransaction(transaction));
       Contract contract = transaction.getRawData().getContract(0);
       if (contract.getType() != ContractType.ZksnarkV0TransferContract) {

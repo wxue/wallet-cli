@@ -308,26 +308,34 @@ public class ZksnarkUtils {
     byte[] cm = contract.getCm1().toByteArray();
 
     boolean result = false;
-    CmTuple cmTuple = decrypC(1, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
-        privateAddress);
-    if (cmTuple != null) {
-      if (!checkCmTuple(cmTuple)) {
-        return false;
+    if (shiled.hashCm(ByteArray.toHexString(cm))) {
+      System.out.printf("%s already in wallet.\n", ByteArray.toHexString(cm));
+    } else {
+      CmTuple cmTuple = decrypC(1, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
+          privateAddress);
+      if (cmTuple != null) {
+        if (!checkCmTuple(cmTuple)) {
+          return false;
+        }
+        result = true;
+        shiled.saveCm(cmTuple);
       }
-      result = true;
-      shiled.saveCm(cmTuple);
     }
     K = KDF(dh, epk, pkEnc, hSig, (byte) (1));
     cipher = contract.getC2().toByteArray();
     cm = contract.getCm2().toByteArray();
-    cmTuple = decrypC(2, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
-        privateAddress);
-    if (cmTuple != null) {
-      if (!checkCmTuple(cmTuple)) {
-        return false;
+    if (shiled.hashCm(ByteArray.toHexString(cm))) {
+      System.out.printf("%s alreadt in wallet.\n", ByteArray.toHexString(cm));
+    } else {
+      CmTuple cmTuple = decrypC(2, ByteArray.fromHexString(txId), K, cipher, cm, publicAddress,
+          privateAddress);
+      if (cmTuple != null) {
+        if (!checkCmTuple(cmTuple)) {
+          return false;
+        }
+        result = true;
+        shiled.saveCm(cmTuple);
       }
-      result = true;
-      shiled.saveCm(cmTuple);
     }
     return result;
   }
