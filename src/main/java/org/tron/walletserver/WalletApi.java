@@ -771,7 +771,7 @@ public class WalletApi {
 
     ProofOutputMsg outputMsg = rpcCli.proof(builder.build());
     if (outputMsg.getRet().getResultCode() != 0) {
-      System.out.println("Proof faild return " + outputMsg.getRet().getResultDesc());
+      System.out.println("Proof failed return " + outputMsg.getRet().getResultDesc());
       return false;
     }
 

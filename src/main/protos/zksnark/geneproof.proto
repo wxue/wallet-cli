@@ -33,6 +33,7 @@ message SproutNoteMsg {
   Uint256Msg      a_pk = 2;
   Uint256Msg      rho = 3;
   Uint256Msg      r = 4;
+  bytes           memo = 5;
 }
 
 message JSInputMsg {
@@ -53,7 +54,6 @@ message Result {
   string      result_desc = 2;
 }
 
-// proof函数的所有输入参数
 message ProofInputMsg {
   repeated JSInputMsg      inputs = 1;
   repeated JSOutputMsg     outputs = 2;
@@ -64,7 +64,6 @@ message ProofInputMsg {
   bool            compute_proof = 7;
 }
 
-// proof函数的所有输出参数
 message ProofOutputMsg {
   repeated SproutNoteMsg     out_notes = 1;
   repeated bytes           out_ciphertexts = 2;
