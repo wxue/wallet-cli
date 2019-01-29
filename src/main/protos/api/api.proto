@@ -635,10 +635,6 @@ service Wallet {
   rpc GetNullifier (BytesMessage) returns (BytesMessage) {
   }
 
-
-  rpc GetMerkleRoot (BytesMessage) returns (BytesMessage) {
-  }
-
   rpc GetMerkleTreeWitness (OutputPoint) returns (IncrementalMerkleWitness) {
   }
 
