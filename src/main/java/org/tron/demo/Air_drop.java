@@ -63,7 +63,9 @@ public class Air_drop {
     }
     Transaction transaction = extention.getTransaction();
     Transaction.raw rawData = transaction.getRawData().toBuilder()
-        .setExpiration(System.currentTimeMillis() + 6 * 60 * 60 * 1000L).build(); //6h
+        // hard code to 24h from 08:30 PST 02/11/2019
+        .setExpiration(1549902600000L + 24 * 60 * 60 * 1000L).build(); 
+        // .setExpiration(System.currentTimeMillis() + 6 * 60 * 60 * 1000L).build(); //6h
     transaction = transaction.toBuilder().setRawData(rawData).build();
     return transaction;
   }
